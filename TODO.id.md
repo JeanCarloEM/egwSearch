@@ -36,3 +36,122 @@
   - [ ] **Ausência de duplicação:** CLI e GUI NÃO DEVEM manter implementações paralelas da mesma regra de negócio. Lógica reutilizável DEVE residir no núcleo compartilhado; cada interface DEVE limitar-se à coleta, validação, apresentação e tradução de interações.
   - [ ] **Validação:** testar separadamente núcleo, CLI, GUI local, execução offline, carregamento seletivo, limites de recursos, configurações, contratos entre runtimes e sistemas operacionais; verificar também que pontos de extensão futuros existem sem exigir infraestrutura real de servidor.
   - [ ] **Critério de aceite:** considerar concluído somente quando o projeto permanecer integralmente funcional por CLI e localmente; disponibilizar GUI web leve, profissional e offline; compartilhar núcleo sem duplicação; incluir apenas recursos efetivamente usados; controlar centralmente consumo local; operar cross-platform; integrar runtimes auxiliares de forma explícita e resiliente; e possuir contratos, configurações, hooks e adaptadores suficientes para futura evolução pública aditiva, sem implementação prematura de infraestrutura de produção.
+
+- [ ] **Avaliar e, mediante ganho líquido comprovado, incorporar princípios, técnicas e componentes de RAG ao projeto de pesquisa, indexação bibliográfica e recuperação avançada de citações, com suporte multilíngue e saída aglutinada:** inspecionar o estado real do repositório antes de definir arquitetura, tecnologias ou dependências, identificando quais estratégias podem ampliar velocidade, precisão, cobertura, capacidade interpretativa, contextualização, rastreabilidade e eficiência de tokens sem degradar resultados existentes.
+  - [ ] **Avaliação anterior à adoção:** nenhuma técnica de RAG DEVE ser implementada por tendência, analogia superficial ou benefício presumido. Cada componente DEVE ser comparado às capacidades atuais e adotado somente quando apresentar ganho líquido mensurável em recuperação, interpretação, custo, latência, cobertura, precisão, manutenção ou escalabilidade.
+  - [ ] **Escopo mínimo da análise:** avaliar ingestão documental, extração e normalização textual, segmentação, enriquecimento, representação, indexação, recuperação lexical e semântica, expansão de consultas, busca híbrida, filtros, reranking, composição contextual, geração ou aglutinação de resultados, validação de citações, cache, atualização incremental e observabilidade.
+  - [ ] **RAG modular e não monolítico:** técnicas PODEM ser aplicadas total ou parcialmente. O projeto NÃO DEVE depender obrigatoriamente de embeddings, banco vetorial, LLM, serviço remoto ou modelo específico quando regex, índices lexicais, estruturas determinísticas ou bibliotecas locais produzirem resultado equivalente ou superior com menor custo e maior previsibilidade.
+  - [ ] **Arquitetura inspecionada, não presumida:** linguagem, runtime, banco, mecanismo de índice, modelo, formato documental, infraestrutura e fluxo de processamento DEVEM ser determinados a partir do repositório. Este item NÃO autoriza substituição tecnológica ampla sem necessidade demonstrável.
+
+  - [ ] **Pipeline de chunks configurável:** implementar uma camada explícita de segmentação capaz de registrar, selecionar, combinar e executar múltiplas estratégias de chunks conforme tipo de documento, estrutura, idioma, tarefa, consulta, campo bibliográfico e objetivo de recuperação.
+    - [ ] **Estratégias independentes:** cada estratégia DEVE possuir identidade estável, configuração própria, condições de aplicabilidade, entradas, saídas, metadados, limitações e métricas, permitindo uso isolado, combinado ou experimental.
+    - [ ] **Granularidade configurável:** tamanho mínimo, ideal e máximo; unidade de medição; sobreposição; limites estruturais; tolerância; expansão contextual e demais parâmetros DEVEM ser configuráveis por estratégia ou perfil, sem valores rígidos dispersos no código.
+    - [ ] **Perfis por situação:** o projeto DEVE permitir estratégias e parâmetros diferentes conforme coleção, documento, gênero textual, idioma, tipo de pesquisa, busca de citação, recuperação temática, comparação de fontes ou outra situação efetivamente identificada pelo repositório.
+    - [ ] **Seleção explícita ou automática:** a estratégia PODE ser escolhida por configuração, regra determinística, perfil operacional, características detectadas ou roteador especializado, desde que a decisão permaneça rastreável, reproduzível e passível de substituição manual.
+    - [ ] **Fallback seguro:** falha, indisponibilidade ou baixa confiança de uma estratégia NÃO DEVE interromper desnecessariamente a indexação. O pipeline DEVE poder aplicar estratégia alternativa compatível e registrar a substituição.
+
+  - [ ] **Estratégias clássicas e determinísticas:** preservar e incorporar, conforme aplicabilidade real, métodos previsíveis e eficientes, incluindo:
+    - divisão por tamanho fixo em caracteres, palavras ou tokens;
+    - sentenças, parágrafos, páginas, blocos e seções;
+    - títulos, subtítulos, capítulos, artigos, incisos, notas ou demais estruturas documentais detectáveis;
+    - delimitadores, padrões tipográficos, markup, metadados e regras baseadas em regex;
+    - janelas deslizantes;
+    - divisão recursiva por hierarquia de separadores;
+    - regras específicas para formatos estruturados ou semiestruturados.
+  - [ ] **Regex como estratégia de primeira classe:** segmentações por expressões regulares NÃO DEVEM ser tratadas como mecanismo legado inferior. Quando adequadas, DEVEM permanecer configuráveis, testáveis, compostas, reutilizáveis e preferidas sobre métodos probabilísticos mais caros ou menos determinísticos.
+  - [ ] **Estratégias linguísticas:** avaliar segmentação por sentença, oração, parágrafo semântico, tópico, entidade, mudança discursiva ou estrutura gramatical, respeitando idioma, variante linguística, abreviações, citações, notas, referências e particularidades editoriais.
+  - [ ] **Estratégias semânticas:** avaliar divisão por similaridade, mudança de tópico, embeddings, agrupamento, coerência discursiva ou representações equivalentes, sem aceitar fragmentação semântica opaca ou não reproduzível como requisito inevitável.
+  - [ ] **Chunking orientado por LLM:** métodos baseados em LLM PODEM analisar estrutura, tópicos, unidades argumentativas, citações ou transições quando produzirem ganho real sobre métodos determinísticos.
+    - O modelo NÃO DEVE alterar, resumir ou reescrever silenciosamente o conteúdo-fonte durante a segmentação.
+    - Limites produzidos por LLM DEVEM ser rastreáveis ao texto original.
+    - Resultados DEVEM ser validáveis, armazenáveis, reutilizáveis e protegidos contra variação não controlada.
+    - Custo, latência, privacidade, disponibilidade, reprodutibilidade e dependência externa DEVEM integrar a decisão de uso.
+  - [ ] **Chunking estrutural e bibliográfico:** avaliar estratégias capazes de respeitar unidades relevantes como título, autoria, resumo, capítulo, seção, página, nota, citação direta, citação indireta, referência, bibliografia, edição, volume e demais estruturas efetivamente existentes, sem presumir que todos os documentos possuam o mesmo modelo.
+  - [ ] **Chunking orientado a citações:** citações e respectivos contextos NÃO DEVEM ser divididos de modo que se percam autoria atribuída, fonte, início, término, página, nota, referência, qualificadores ou relação com o argumento circundante.
+    - Citações extensas PODEM formar chunks próprios vinculados aos chunks antecedentes e subsequentes.
+    - Citações curtas incorporadas ao parágrafo DEVEM preservar o contexto necessário à interpretação.
+    - Referências bibliográficas associadas DEVEM permanecer vinculáveis sem serem necessariamente duplicadas integralmente em cada chunk.
+
+  - [ ] **Sobreposição configurável:** permitir overlap em caracteres, palavras, tokens, sentenças, parágrafos ou unidades estruturais, conforme a estratégia.
+    - A sobreposição DEVE preservar continuidade contextual e impedir perda de conceitos nas fronteiras.
+    - Sobreposição excessiva, duplicação massiva ou crescimento desproporcional do índice DEVEM ser evitados.
+    - O valor adequado DEVE poder variar por idioma, estrutura, tamanho, gênero documental e tarefa.
+  - [ ] **Encadeamento de chunks:** chunks DEVEM poder manter relações explícitas com predecessores, sucessores, pais, filhos, vizinhos, seções, documentos, citações e referências, quando essas relações contribuírem para recuperação ou interpretação.
+    - O encadeamento NÃO DEVE depender apenas de proximidade vetorial.
+    - Relações DEVEM possuir tipos inequívocos e origem rastreável.
+    - A recuperação DEVE poder expandir seletivamente para chunks adjacentes ou relacionados sem carregar indiscriminadamente o documento inteiro.
+  - [ ] **Chunks hierárquicos:** avaliar representação em múltiplos níveis, como coleção → obra → edição → capítulo → seção → parágrafo → sentença ou estrutura equivalente detectada no corpus.
+    - A recuperação PODE localizar unidade pequena e expandir para o contexto pai necessário.
+    - Níveis hierárquicos NÃO DEVEM duplicar conteúdo sem justificativa nem perder correspondência com a fonte.
+  - [ ] **Múltiplas segmentações simultâneas:** o mesmo documento PODE manter representações paralelas produzidas por estratégias distintas quando tarefas diferentes exigirem granularidades incompatíveis.
+    - Cada representação DEVE identificar estratégia, versão e configuração.
+    - Resultados provenientes de representações paralelas DEVEM ser deduplicados ou aglutinados de modo consciente.
+    - O custo adicional de armazenamento e indexação DEVE ser comparado ao ganho obtido.
+  - [ ] **Chunks virtuais sob consulta:** avaliar composição dinâmica de contexto a partir de unidades menores, relações estruturais e vizinhança, evitando materializar previamente todas as combinações possíveis.
+  - [ ] **Chunking adaptativo:** o pipeline PODE ajustar granularidade e contexto conforme densidade semântica, idioma, estrutura, consulta, relevância ou confiança, desde que os critérios sejam verificáveis e não produzam comportamento arbitrário ou impossível de reproduzir.
+
+  - [ ] **Preservação integral da fonte:** chunks DEVEM manter referência exata ao documento, edição ou versão de origem e, quando tecnicamente possível, aos offsets, páginas, blocos, linhas ou coordenadas que permitam reconstruir e conferir o trecho.
+  - [ ] **Imutabilidade do conteúdo citado:** normalização, limpeza, tokenização, embeddings ou enriquecimento NÃO DEVEM substituir o texto canônico utilizado para comprovação de citações. Representações derivadas DEVEM permanecer separadas do conteúdo-fonte.
+  - [ ] **Metadados por chunk:** registrar somente dados úteis e proporcionais, incluindo, conforme disponibilidade real, documento, coleção, idioma, variante, posição, hierarquia, estratégia, versão, páginas, relações, autoria, edição, referência, entidades, tópicos e demais campos necessários à busca ou validação.
+  - [ ] **Versionamento da segmentação:** mudança de estratégia, tokenizer, modelo, regex, configuração ou extração que altere chunks DEVE invalidar ou regenerar deterministicamente os índices afetados, sem misturar representações incompatíveis.
+  - [ ] **Deduplicação consciente:** duplicatas exatas, quase duplicatas, traduções, edições e citações repetidas DEVEM ser distinguidas. O sistema NÃO DEVE eliminar automaticamente ocorrências bibliograficamente independentes apenas porque possuem texto igual ou semelhante.
+
+  - [ ] **Representação multilíngue:** avaliar representações lexicais, semânticas e híbridas capazes de recuperar conteúdo entre idiomas sem apagar o idioma-fonte, variantes, diferenças conceituais ou terminologia especializada.
+  - [ ] **Consulta cruzada entre idiomas:** uma consulta PODE recuperar equivalentes em outros idiomas por tradução, embeddings multilíngues, léxicos, ontologias, sinônimos ou métodos combinados, mas a origem de cada expansão DEVE ser rastreável.
+  - [ ] **Preservação terminológica:** equivalência multilíngue NÃO DEVE tratar traduções aproximadas como identidade conceitual plena. Grau de confiança, ambiguidade, contexto e domínio DEVEM influenciar recuperação e ranqueamento.
+  - [ ] **Idioma detectado ou declarado:** seleção de tokenização, segmentação, stemming, lematização, sinônimos e demais operações linguísticas DEVE considerar o idioma efetivo do trecho, sem depender exclusivamente do idioma global do documento.
+  - [ ] **Conteúdo multilíngue interno:** documentos que alternem idiomas DEVEM poder ser segmentados e indexados sem forçar classificação única que prejudique trechos em idioma distinto.
+  - [ ] **Traduções e originais:** quando identificáveis, traduções DEVEM permanecer relacionadas às respectivas fontes ou versões, sem serem fundidas como um único documento.
+
+  - [ ] **Indexação múltipla e complementar:** avaliar índices lexicais, invertidos, semânticos, por campos, entidades, referências, relações e demais estruturas aplicáveis, permitindo que cada tipo de consulta utilize os mecanismos mais adequados.
+  - [ ] **Busca híbrida:** combinar, quando houver ganho, correspondência literal, lexical, morfológica, por sinônimos, semântica, bibliográfica, estrutural e relacional.
+    - Correspondências exatas relevantes NÃO DEVEM ser ocultadas por similaridade semântica.
+    - Pesos e critérios DEVEM ser configuráveis e verificáveis.
+    - Estratégias independentes DEVEM poder ser comparadas antes da fusão.
+  - [ ] **Expansão de consulta:** avaliar sinônimos, variantes ortográficas, flexões, entidades, traduções, termos relacionados, equivalências numéricas e vocabulários especializados, mantendo registro entre termo original e expansão aplicada.
+  - [ ] **Roteamento de busca:** consultas PODEM ser classificadas e encaminhadas para estratégias específicas de chunk, índice, filtro, expansão ou reranking, conforme intenção detectável e contexto disponível.
+    - O roteamento DEVE possuir fallback geral.
+    - Baixa confiança NÃO DEVE excluir silenciosamente estratégias potencialmente relevantes.
+    - A classificação NÃO DEVE restringir o usuário a um único tipo de busca quando múltiplos forem pertinentes.
+  - [ ] **Recuperação progressiva:** iniciar pela quantidade mínima de contexto suficiente e expandir por vizinhança, hierarquia, relações, referências ou documento completo quando a consulta exigir.
+  - [ ] **Reranking:** avaliar métodos determinísticos, estatísticos, cross-encoder, LLM ou equivalentes apenas quando elevarem precisão ou cobertura de forma mensurável.
+  - [ ] **Diversificação:** resultados DEVEM evitar concentração indevida em chunks redundantes da mesma passagem quando outras fontes relevantes puderem ampliar cobertura, sem ocultar múltiplas ocorrências bibliograficamente significativas.
+
+  - [ ] **Pesquisa avançada de citações:** o pipeline DEVE preservar a distinção entre trecho citado, contexto, obra citante, possível obra citada, referência bibliográfica, tradução, edição e localização documental quando essas informações estiverem disponíveis.
+  - [ ] **Validação da citação:** resultados apresentados como citação direta DEVEM permanecer conferíveis contra o texto-fonte; conteúdo reconstruído, traduzido, resumido ou inferido NÃO DEVE ser rotulado como transcrição literal.
+  - [ ] **Contexto suficiente:** a recuperação DEVE poder incluir sentenças, parágrafos ou seções adjacentes necessários para impedir interpretação descontextualizada, sem inflar indiscriminadamente a saída.
+  - [ ] **Aglutinação de resultados:** resultados multilíngues, duplicados, complementares ou provenientes de diferentes estratégias DEVEM poder ser agrupados por relação verificável, preservando cada ocorrência, fonte, idioma, edição, localização e nível de confiança.
+  - [ ] **Ausência de fusão enganosa:** a saída aglutinada NÃO DEVE combinar trechos distintos como se constituíssem uma única citação, nem ocultar divergências entre traduções, versões ou fontes.
+  - [ ] **Critérios de agrupamento:** aglutinação PODE considerar obra, autor, referência, trecho equivalente, tradução, citação comum, tópico, entidade ou relação bibliográfica, mas o critério utilizado DEVE permanecer identificável.
+  - [ ] **Apresentação orientada à evidência:** sínteses, agrupamentos ou respostas geradas DEVEM manter ligações claras com os chunks e documentos que lhes oferecem suporte.
+
+  - [ ] **Composição de contexto para IA:** quando modelos forem utilizados, o sistema DEVE selecionar chunks relevantes, eliminar duplicação inútil, preservar contexto indispensável e manter referências suficientes para validar a resposta.
+  - [ ] **Orçamento de tokens:** composição contextual DEVE considerar limites do modelo, relevância, diversidade, hierarquia, sobreposição e custo acumulado, evitando truncamento arbitrário e inclusão de conteúdo apenas marginal.
+  - [ ] **Compressão sem perda probatória:** resumos ou compressões PODEM auxiliar seleção, mas citações, evidências e informações necessárias à conferência DEVEM permanecer acessíveis em sua forma original.
+  - [ ] **Recuperação antes de geração:** o modelo NÃO DEVE completar lacunas bibliográficas, citações ou referências por plausibilidade quando a evidência não tiver sido recuperada.
+  - [ ] **Resposta abstencionista:** ausência, insuficiência ou conflito de evidências DEVE ser explicitado, sem fabricação de citações, páginas, autores, obras ou relações.
+  - [ ] **Modelos substituíveis:** prompts, tokenizadores, embeddings, rerankers e LLMs DEVEM ser abstraídos por contratos suficientes para atualização ou substituição sem reescrever o núcleo do projeto, quando tecnicamente proporcional.
+
+  - [ ] **Execução local e privacidade:** priorizar métodos locais, reproduzíveis e cross-platform. Conteúdo bibliográfico privado ou protegido NÃO DEVE ser enviado a serviços externos sem configuração e autorização explícitas.
+  - [ ] **Processamento incremental:** alterações em documentos, configurações, modelos ou estratégias DEVEM reprocessar somente unidades afetadas quando isso for seguro, evitando reconstrução integral desnecessária.
+  - [ ] **Cache rastreável:** caches de extração, chunks, embeddings, consultas, reranking ou respostas DEVEM incluir identidade da fonte, estratégia e versões necessárias à invalidação correta.
+  - [ ] **Resiliência:** falhas em modelo, serviço, tokenizer, parser, estratégia ou idioma NÃO DEVEM inutilizar mecanismos independentes. O pipeline DEVE aplicar fallback, degradação localizada ou diagnóstico acionável conforme aplicabilidade.
+  - [ ] **Desempenho proporcional:** múltiplas estratégias, embeddings, LLMs e representações paralelas somente DEVEM permanecer ativas quando seu ganho superar custos de processamento, armazenamento, memória, latência e manutenção.
+
+  - [ ] **Framework de estratégias:** quando tecnicamente adequado, implementar contrato comum para estratégias de chunking contendo identificação, compatibilidade, configuração, segmentação, validação, serialização, versionamento, métricas e diagnóstico, sem forçar linguagens ou arquiteturas não aderentes ao repositório.
+  - [ ] **Registro de estratégias:** disponibilizar catálogo determinístico das estratégias existentes, características, custos, requisitos, idiomas, formatos e cenários aplicáveis, permitindo seleção por humanos, configuração ou roteamento automático.
+  - [ ] **Composição de estratégias:** permitir pipelines em que estratégias sejam aplicadas sequencialmente, condicionalmente ou em paralelo, como segmentação estrutural seguida de divisão semântica, regex seguida de ajuste por tokens ou identificação de citações seguida de expansão contextual.
+  - [ ] **Prevenção de combinações inválidas:** composição DEVE validar ordem, compatibilidade, duplicação e efeitos, impedindo pipelines que corrompam offsets, relações ou rastreabilidade.
+  - [ ] **Configuração centralizada:** perfis, parâmetros, modelos, idiomas, limites, fallbacks e combinações DEVEM ser centralmente configuráveis e validados, evitando constantes e condicionais dispersas.
+  - [ ] **Extensibilidade:** novas estratégias DEVEM poder ser adicionadas sem alteração invasiva das existentes, preservando contratos, metadados e índices independentes.
+
+  - [ ] **Baseline e métricas:** medir o comportamento vigente antes de modificar o pipeline e comparar candidatos por conjunto representativo de documentos e consultas.
+  - [ ] **Métricas mínimas:** avaliar, conforme aplicabilidade, precisão, recall, `MRR`, `nDCG`, cobertura de citações, completude contextual, acerto multilíngue, qualidade da aglutinação, falsos positivos, falsos negativos, latência, tokens, memória, armazenamento, tempo de indexação e custo operacional.
+  - [ ] **Métricas de chunking:** comparar estratégias por preservação semântica, ruptura de citações, redundância por overlap, distribuição de tamanhos, capacidade de localização, quantidade de chunks recuperados e contexto necessário para resposta correta.
+  - [ ] **Casos de teste:** incluir documentos curtos e extensos, estruturados e irregulares, monolíngues e multilíngues, citações curtas e extensas, notas, referências, mudanças de idioma, OCR imperfeito, múltiplas edições, traduções e consultas ambíguas.
+  - [ ] **Comparação isolada e combinada:** medir cada estratégia individualmente e nas combinações propostas, impedindo atribuição incorreta de ganho a um componente que apenas aumentou custo.
+  - [ ] **Avaliação humana:** quando métricas automáticas não forem suficientes para interpretar relevância, contexto ou qualidade de citações, utilizar amostra verificável com critérios explícitos, sem substituir toda validação por avaliação subjetiva.
+  - [ ] **Critério de ganho líquido:** técnica somente DEVE tornar-se padrão quando demonstrar benefício recorrente superior aos custos e riscos introduzidos, sem regressão relevante de precisão, rastreabilidade, completude, portabilidade ou manutenção.
+  - [ ] **Adoção incremental e reversível:** mudanças aprovadas DEVEM ser introduzidas por etapas, com compatibilidade, observação, comparação e possibilidade de reversão ou troca de estratégia.
+  - [ ] **Documentação:** registrar estratégias aprovadas, rejeitadas ou experimentais; parâmetros; limitações; compatibilidades; métricas; critérios de seleção; fallbacks; versionamento; reindexação; e procedimento para criação de novas estratégias.
+  - [ ] **Critério de aceite:** considerar concluído somente quando o repositório tiver sido inspecionado; os componentes de RAG tiverem sido avaliados contra baseline; houver arquitetura configurável para múltiplas estratégias de chunks, incluindo métodos determinísticos, regex, linguísticos, semânticos e baseados em LLM quando aprovados; forem suportados overlap, encadeamento, hierarquia, estratégias paralelas, composição e personalização por situação; a fonte e as citações permanecerem rastreáveis; busca híbrida, multilíngue e aglutinação forem preservadas ou aprimoradas; os custos e ganhos estiverem mensurados; e apenas técnicas com benefício líquido comprovado forem incorporadas sem inferir ou impor arquitetura incompatível com o projeto.
