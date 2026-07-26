@@ -6,11 +6,13 @@ Aplicam-se `./AGENTS.md`, `./.ia.rules/core/concepts/microconceitos.md` (`MN-211
 
 ## 1. Identidade e objetivo
 
-egwSearch DEVE ser uma ferramenta local para pesquisar conceitos, palavras, expressoes e formulacoes semanticamente equivalentes em colecoes arbitrarias de publicacoes textuais PDF e EPUB distribuidas em diretorios recursivos de profundidade ilimitada.
+egwSearch DEVE ser uma ferramenta local para pesquisar conceitos, palavras, expressoes e formulacoes semanticamente equivalentes e para conversar de forma probatoria com colecoes arbitrarias de publicacoes textuais PDF e EPUB distribuidas em diretorios recursivos de profundidade ilimitada.
 
 A ferramenta DEVE suportar livros, compilacoes, devocionais, revistas, jornais, periodicos, edicoes, traducoes e titulos disponiveis simultaneamente em PDF e EPUB.
 
-Cada pesquisa individual DEVE gerar ou atualizar exatamente um arquivo Markdown principal consolidado, com todas as ocorrencias encontradas na colecao, agrupadas, deduplicadas, referenciadas, auditaveis e traduzidas quando aplicavel.
+Cada pesquisa individual no Modo Pesquisa DEVE gerar ou atualizar exatamente um arquivo Markdown principal consolidado, com todas as ocorrencias encontradas na colecao, agrupadas, deduplicadas, referenciadas, auditaveis e traduzidas quando aplicavel.
+
+Cada interacao no Modo Conversa DEVE explicar, comparar e argumentar com base no acervo, vinculando afirmacoes materiais a citacoes literais, referencias completas e localizacoes verificadas, sem fabricar prova nem apresentar inferencia como conteudo da fonte.
 
 A busca DEVE localizar correspondencia literal, variantes ortograficas e morfologicas, flexoes, traducoes, sinonimos, locucoes, parafrases, expressoes semanticamente equivalentes e formulacoes em `pt-BR` e `en-US`.
 
@@ -124,7 +126,7 @@ O usuario DEVE poder revisar, incluir, excluir, fixar expressoes, limitar idioma
 
 ## 12. Registro da pesquisa
 
-No inicio do Markdown de resultado DEVEM constar termo original, idioma original, idiomas pesquisados, modo de busca, thresholds, inclusoes, exclusoes, traducoes, flexoes, sinonimos, expressoes equivalentes, parafrases e todas as variantes efetivamente pesquisadas.
+No inicio do Markdown de resultado do Modo Pesquisa DEVEM constar termo original, idioma original, idiomas pesquisados, modo de busca, thresholds, inclusoes, exclusoes, traducoes, flexoes, sinonimos, expressoes equivalentes, parafrases e todas as variantes efetivamente pesquisadas.
 
 Variantes efetivamente usadas NÃO DEVEM ser omitidas. Variantes geradas e rejeitadas PODEM permanecer apenas no relatorio tecnico.
 
@@ -200,7 +202,13 @@ Conteudo NÃO DEVE ser enviado a terceiros sem autorizacao explicita.
 
 Traducoes DEVEM usar cache por hash, idiomas e versao do tradutor. Falha de traducao NÃO DEVE remover a citacao original.
 
+No Modo Conversa, fonte em idioma diferente do dialogo DEVE preservar sempre o trecho original; traducao adicional DEVE permanecer imediatamente vinculada, identificada e separada, sem substituir a prova nem atribuir a fonte formulacao exclusiva da traducao.
+
+Ambiguidade ou termo tecnico, juridico, normativo ou semanticamente sensivel DEVE preservar o termo original, e divergencia relevante entre traducoes existentes DEVE ser explicitada.
+
 ## 20. Markdown unico por pesquisa
+
+Esta secao rege exclusivamente o Modo Pesquisa; registro conversacional segue o contrato de sessao dos §§51-57 e NÃO DEVE ser confundido com o Markdown consolidado de ocorrencias.
 
 Cada pesquisa individual DEVE possuir exatamente um Markdown principal.
 
@@ -282,6 +290,8 @@ Classificacoes PODEM incluir confirmado, alta confianca, provavel, revisao recom
 
 A ferramenta NÃO DEVE apresentar inferencia como certeza sem evidencia.
 
+No Modo Conversa, confianca da recuperacao, fidelidade da citacao, validade da localizacao, suficiência da prova, completude da referencia, traducao e conclusao DEVEM permanecer separadamente auditaveis.
+
 ## 24. Failsafe
 
 Failsafe significa concluir todo o trabalho processavel, isolar falhas, preservar resultados validos e informar precisamente o que nao foi concluido.
@@ -291,6 +301,8 @@ A ferramenta DEVE possuir isolamento por arquivo, checkpoints, retomada, cache, 
 A ferramenta NÃO DEVE entrar em loop infinito, tentar indefinidamente, interromper toda a colecao por falha isolada, ocultar falhas, inventar dados, descartar arquivo silenciosamente, duplicar resultados apos retomada ou corromper saida existente.
 
 Cada fallback DEVE declarar condicao, limite, resultado, motivo e proximo estado.
+
+Componente conversacional, LLM, tradutor ou reranker indisponivel NÃO DEVE fabricar resposta, citacao, referencia ou localizacao; a capacidade independente DEVE continuar quando segura e a limitacao aplicavel DEVE ser informada objetivamente.
 
 ## 25. Desempenho e configuracao operacional
 
@@ -312,6 +324,10 @@ EPUBs DEVEM ser tratados como arquivos nao confiaveis.
 
 A extracao DEVE proteger contra Zip Slip, expansao excessiva, bomba de compressao, entidades externas, conteudo malformado, loops e arquivos abusivos.
 
+Memoria de conversa, consulta, decomposicao, trecho recuperado, referencia, traducao e diagnostico DEVEM seguir configuracao explicita de privacidade e retencao, com minimizacao, isolamento por sessao e exclusao controlada.
+
+Rastreabilidade NÃO DEVE armazenar raciocinio interno privado da IA, segredo, credencial ou conteudo integral desnecessario do acervo.
+
 ## 27. CLI e saida
 
 A interface de pesquisa DEVERIA ser equivalente a:
@@ -324,6 +340,8 @@ A CLI DEVERIA permitir indexar, pesquisar, reconstruir indice, listar publicacoe
 
 A configuracao DEVE aplicar precedencia explicita: CLI, arquivo, ambiente e padroes seguros.
 
+Interface que exponha ambos os modos DEVE exigir selecao inequívoca entre `search` e `conversation`; default, alias ou comando abreviado NÃO DEVE alterar silenciosamente a semantica escolhida.
+
 A saida DEVE ser sucinta, colorida quando suportado, desativavel, legivel por humanos, processavel por IA, disponivel em formato estruturado e sem inundacao de logs.
 
 Saida destinada a IA ou automacao do repositorio DEVE seguir `MN-CMD` e `MN-OUT` quando integrada ao contrato `agent:*`.
@@ -334,21 +352,23 @@ A implementacao DEVE possuir testes para PDF simples, cabecalho/rodape, multipla
 
 Fixtures DEVEM incluir arquivos reais autorizados, arquivos emulados e arquivos gerados automaticamente. Testes externos DEVEM permanecer separados e opcionais.
 
+O Modo Conversa DEVE adicionar conjuntos determinísticos e avaliações verificaveis de fidelidade literal, localizacao, completude de referencia, contexto, relacao multifuente, traducao vinculada, abstencao, alucinacao, metadado incompleto, degradacao e desempenho proporcional.
+
 ## 29. Ordem de implementacao futura
 
-A FT tecnica DEVE executar em etapas validadas sequencialmente: analise do corpus; avaliacao de linguagens, bibliotecas e modelos; contratos; descoberta; modelo de publicacao; extracao EPUB; extracao PDF; limpeza; reconstrucao; referencias e datas; alinhamento; persistencia; tokenizacao; indexacao lexical; indexacao semantica; expansao bilingue; recuperacao hibrida; reranking; deduplicacao; consolidacao; traducao; Markdown; failsafe; testes; otimizacao; documentacao; validacao.
+A FT tecnica DEVE executar em etapas validadas sequencialmente: analise do corpus; avaliacao de linguagens, bibliotecas e modelos; contratos; descoberta; modelo de publicacao; extracao EPUB; extracao PDF; limpeza; reconstrucao; referencias e datas; alinhamento; persistencia; tokenizacao; indexacao lexical; indexacao semantica; expansao bilingue; recuperacao hibrida; reranking; deduplicacao; consolidacao; localizacao e validacao de citacoes; traducao; Markdown; composicao probatoria; sessao conversacional; interface de modos; failsafe; testes; otimizacao; documentacao; validacao.
 
 Cada etapa DEVE ser validada antes da seguinte.
 
 ## 30. Criterios de aceite tecnico
 
-A implementacao somente DEVE ser considerada concluida quando percorre diretorios arbitrarios, processa PDF e EPUB textuais, associa formatos equivalentes, distingue edicoes, reconstroi paragrafos, identifica titulo/capitulo/pagina/data, registra variantes pesquisadas, combina busca lexical e semantica, traduz citacoes inglesas, gera um unico Markdown por pesquisa, consolida citacoes repetidas, acumula referencias, preserva diferencas materiais, atualiza idempotentemente, retoma apos falhas, nao entra em loop, nao fabrica metadados, registra confianca, registra arquivos nao processados e executa testes verificaveis.
+A implementacao somente DEVE ser considerada concluida quando percorre diretorios arbitrarios, processa PDF e EPUB textuais, associa formatos equivalentes, distingue edicoes, reconstroi paragrafos, identifica titulo/capitulo/pagina/data, registra variantes pesquisadas, combina busca lexical e semantica, traduz citacoes inglesas, gera um unico Markdown por pesquisa, consolida citacoes repetidas, acumula referencias, preserva diferencas materiais, oferece selecao inequívoca entre Pesquisa e Conversa, fundamenta afirmacoes conversacionais com prova verificavel, atualiza idempotentemente, retoma apos falhas, nao entra em loop, nao fabrica metadados, citacoes ou localizacoes, registra confianca, registra arquivos nao processados e executa testes verificaveis.
 
 Nenhuma capacidade DEVE ser declarada como aceita sem evidencia de validacao executada.
 
 ## 31. Entregaveis futuros
 
-A entrega funcional DEVE conter projeto funcional, fontes, configuracao, CLI, persistencia/indices, testes, fixtures, documentacao, exemplo de Markdown consolidado e relatorio sucinto com tecnologia escolhida, alternativas avaliadas, bibliotecas reutilizadas, codigo proprio e justificativa, arquitetura, modelos, indices, comandos, testes, resultados, limitacoes, niveis de confianca, fallbacks e arquivos nao processados.
+A entrega funcional DEVE conter projeto funcional, fontes, configuracao, CLI, GUI aplicavel, persistencia/indices, testes, conjuntos de avaliacao, fixtures, documentacao, exemplo de Markdown consolidado, exemplo de sessao probatoria e relatorio sucinto com tecnologia escolhida, alternativas avaliadas, bibliotecas reutilizadas, codigo proprio e justificativa, arquitetura, modelos, indices, modos, criterios de uso de LLM, contrato de citacao/referencia/traducao, comandos, testes, metricas, resultados, limitacoes, niveis de confianca, fallbacks e arquivos nao processados.
 
 ## 32. README, badges e metadados
 
@@ -376,7 +396,7 @@ A conclusao normativa NÃO autoriza implementacao de codigo.
 
 O nucleo de dominio, descoberta, extracao, normalizacao, segmentacao, indexacao, busca, persistencia, deduplicacao, traducao e geracao de resultados NÃO DEVE depender de DOM, framework visual, protocolo HTTP ou pressuposto de servidor.
 
-CLI, GUI local e eventual adaptador web publico DEVEM compor o mesmo nucleo por interfaces estaveis e NÃO DEVEM duplicar regra de negocio.
+CLI, GUI local e eventual adaptador web publico DEVEM compor o mesmo nucleo por interfaces estaveis e NÃO DEVEM duplicar regra de negocio. Modo Pesquisa e Modo Conversa DEVEM compor recuperacao, evidencia e persistencia comuns por contratos estáveis, mantendo orquestracao e apresentacao especificas.
 
 O perfil `local` DEVE permanecer primario, completo, funcional sem navegador, servidor publico, servico remoto ou rede obrigatoria.
 
@@ -502,6 +522,8 @@ Modelo NÃO DEVE completar citacao, pagina, autor, obra ou referencia por plausi
 
 Prompt, tokenizer, embedding, reranker e LLM DEVEM ser substituiveis por contrato proporcional.
 
+LLM PODE auxiliar expansao, desambiguacao, classificacao, reranking, sintese ou conexao semantica somente quando houver ganho demonstravel; mecanismo deterministico ou especializado mais adequado DEVE prevalecer e a pesquisa independente NÃO DEVE ser inutilizada por ausencia de LLM.
+
 ## 38. Equivalencia numerica bidirecional
 
 Consulta por algarismo DEVE localizar numero por extenso semanticamente equivalente e consulta por extenso DEVE localizar algarismo equivalente, sem duplicacao manual.
@@ -526,7 +548,7 @@ Validacao DEVE cobrir ambos os sentidos, idiomas suportados, numeros simples e c
 
 Baseline DEVE ser medido antes de alterar segmentacao, indice, expansao, recuperacao, reranking ou aglutinacao.
 
-Avaliacao DEVE medir, conforme aplicabilidade, precisao, recall, MRR, nDCG, cobertura de citacoes, completude contextual, acerto multilingue, qualidade da aglutinacao, falsos positivos, falsos negativos, latencia, tokens, memoria, armazenamento, tempo de indexacao e custo operacional.
+Avaliacao DEVE medir, conforme aplicabilidade, precisao, recall, MRR, nDCG, cobertura de citacoes, fidelidade literal, validade de localizacoes, completude de referencias, associacao entre afirmacao e prova, completude contextual, acerto multilingue, qualidade da aglutinacao, contradicoes detectadas, abstencoes corretas, falsos positivos, falsos negativos, latencia, tokens, memoria, armazenamento, tempo de indexacao e custo operacional.
 
 Chunking DEVE ser comparado por preservacao semantica, ruptura de citacao, redundancia de overlap, distribuicao de tamanho, localizacao, quantidade recuperada e contexto necessario.
 
@@ -972,22 +994,177 @@ A fase 2, FT-004, DEVE implementar: pagina no GitHub Pages; RCF especifico e cor
 
 A fase 2 NÃO DEVE implementar busca independente da cadeia publica, salvo dependencia estritamente necessaria registrada antes da alteracao.
 
-A fase 3, FT-002, DEVE implementar o nucleo de busca, persistencia, segmentacao, RAG aprovado, equivalencia numerica, recuperacao hibrida, CLI, GUI, traducao, Markdown e conformidade restante.
+A fase 3, FT-002, DEVE implementar o nucleo de busca, persistencia, segmentacao, RAG aprovado, equivalencia numerica, recuperacao hibrida, Modo Pesquisa, Modo Conversa probatorio, citacoes e localizacoes verificadas, referencias, traducao vinculada, sessao auditavel, CLI, GUI, Markdown e conformidade restante.
 
 A fase 3 NÃO DEVE duplicar artefato concluido e validado na fase 2.
+
+Antes do codigo, a FT-002 DEVE decompor unidades materiais de indices/metadados, recuperacao profunda, citacoes/localizacao, traducao, composicao argumentativa, interface, sessao/rastreabilidade e avaliacao/degradacao. A decomposicao NÃO DEVE separar camada sem entrega coesa nem fundir responsabilidades com aceite materialmente distinto.
 
 Cada fase tecnica DEVE iniciar por inspecao do estado real, baseline, arquitetura, dependencias e plano atualizado; conclusao local NÃO DEVE antecipar a fase seguinte.
 
 ## 49. Aceite integrado
 
-O produto somente DEVE ser considerado integralmente conforme quando a operacao local/CLI estiver completa; GUI local estiver compartilhando o nucleo e operando offline; corpus estiver na estrutura canônica; downloader e migracao forem seguros; pagina e cadeia publica forem reproduziveis; indice, `NORMA-IF-SIL-001`, hashes e capas forem validados; e busca multilingue, numerica, hibrida, rastreavel, resiliente e medida estiver materializada.
+O produto somente DEVE ser considerado integralmente conforme quando a operacao local/CLI estiver completa; GUI local estiver compartilhando o nucleo e operando offline; corpus estiver na estrutura canônica; downloader e migracao forem seguros; pagina e cadeia publica forem reproduziveis; indice, `NORMA-IF-SIL-001`, hashes e capas forem validados; Modo Pesquisa estiver preservado, multilingue, numerico, hibrido, rastreavel, resiliente e medido; e Modo Conversa estiver materializado com prova documental, fidelidade, abstencao e degradacao verificadas.
 
 Aceite DEVE comprovar ausencia de perda ou sobrescrita, URLs estaveis, identidade editorial, correspondencia de hashes, regeneracao, seguranca de EPUB/PDF/rede, incremento, retomada, configuracao, desempenho, cross-platform e ausencia de regressao.
 
-Relatorio final de cada fase DEVE listar arquivos, decisoes, colisoes, hashes, tecnologias, dependencias, comandos, testes, resultados, limitacoes, fallbacks e pendencias sem declarar execucao nao comprovada.
+Relatorio final de cada fase DEVE listar arquivos, decisoes, colisoes, hashes, tecnologias, dependencias, comandos, testes, resultados, limitacoes, fallbacks e pendencias sem declarar execucao nao comprovada. A fase conversacional DEVE registrar ainda normas anteriores preservadas, diferencas entre modos, criterios de uso de LLM, modelo de citacao/referencia/traducao, prevencao de alucinacao, FTs, conjuntos de avaliacao e metricas disponiveis.
 
-## 50. Convergencia das fontes
+## 50. Preservacao da pesquisa vigente
 
-Os requisitos anteriormente registrados em `TODO.id.md` linhas 56, 69, 95, 214 e 886 foram absorvidos por este RCF como contratos permanentes.
+O Modo Pesquisa DEVE preservar integralmente §§5-39 e suas especializacoes posteriores como pesquisa documental avancada, hibrida e nao conversacional.
 
-O arquivo de TODO permanece somente como fonte historica e controle de demanda ate o encerramento documental da FT-003; implementacao futura DEVE derivar deste RCF e das FTs, nao do TODO transitório.
+O usuario DEVE selecionar explicitamente o Modo Pesquisa ou o Modo Conversa. A selecao DEVE controlar comportamento, apresentacao, profundidade, encadeamento, persistencia e criterios de resposta; infraestrutura compartilhada NÃO autoriza confundir sua semantica.
+
+No Modo Pesquisa, expansao, recuperacao, filtros, ranking, aglutinacao, referencias, Markdown e rastreabilidade DEVEM permanecer operacionais sem conversa e sem LLM obrigatoria.
+
+LLM e análogo SAO meios opcionais de otimizacao quando ganho liquido de qualidade ou desempenho for demonstrado. Eles NÃO DEVEM substituir mecanismo deterministico ou especializado mais adequado, reduzir cobertura, precisao, auditabilidade ou forca normativa, nem tornar a pesquisa indisponivel quando alternativa aplicavel existir.
+
+Resultado do Modo Pesquisa DEVE continuar distinguindo ocorrencia recuperada, texto original, traducao, referencia, confianca e derivado; sintese auxiliar por IA NÃO DEVE converter a experiencia em conversa nem ocultar os resultados verificaveis.
+
+## 51. Modo Conversa e contrato comum
+
+O Modo Conversa DEVE permitir dialogo fluido, contextual e iterativo com o acervo, inclusive aprofundar, comparar, interpretar, relacionar, contestar, mudar recorte e solicitar novas provas.
+
+Modo Pesquisa e Modo Conversa PODEM compartilhar descoberta, extracao, texto canônico, segmentacao, indices, recuperacao, expansao, filtros, reranking, confianca, referencias, traducao, cache e limites. Cada modo DEVE possuir orquestracao, estado, apresentacao, saida e aceite proprios sobre contratos comuns versionados.
+
+O contexto conversacional DEVE ser controlado por sessao. Pergunta subsequente PODE reutilizar consulta, filtros, entidades, fontes e evidencias ainda validas; mudanca de finalidade, recorte, versao, fonte ou afirmacao material DEVE provocar recuperacao proporcional nova.
+
+A IA DEVE interpretar e explicar o conteudo, sem apenas falar em nome das fontes nem apresentar parafrase desacompanhada de prova. Toda afirmacao material atribuida ao acervo DEVE possuir evidencia documental suficiente, exata, contextualizada e associada.
+
+Resposta DEVE distinguir de modo inequívoco: `afirmacao`, `evidencia`, `referencia`, `traducao`, `interpretacao`, `comparacao`, `inferencia`, `conclusao` e `limitacao`. Campo ou camada não aplicavel PODE ser omitido da apresentacao, mas sua natureza NÃO DEVE ser confundida.
+
+A apresentacao PODE ser natural, concisa e adaptativa; NÃO DEVE impor estrutura repetitiva ou excessivamente academica quando desnecessaria. Fluidez e simplificacao visual NÃO DEVEM ocultar origem, substituir prova por autoridade aparente ou reduzir verificabilidade.
+
+## 52. Prova documental, citacao e suficiência
+
+Evidencia probatoria DEVE ser trecho literal conferido contra o texto canônico efetivamente indexado ou acessivel, preservando bytes ou caracteres logicos, idioma, documento, edicao/versao, offsets e localizacao disponivel.
+
+Citacao direta DEVE reproduzir fielmente o original, sem reconstrucao, complementacao, fusao, correcao silenciosa ou alteracao semantica. Parafrase, traducao, resumo e inferencia NÃO DEVEM ser rotulados como citacao.
+
+Cada citacao DEVE:
+
+1. ter extensao suficiente para inteligibilidade e para preservar condicao, excecao, negacao, modalidade, agente, objeto e conclusao;
+2. permanecer associada somente a afirmacao que efetivamente sustenta;
+3. identificar publicacao, edicao ou versao, autor ou entidade, titulo, idioma e formato;
+4. apontar pagina, intervalo, secao, capitulo, artigo, item, paragrafo, posicao, ancora, offset ou identificador interno equivalente conforme disponibilidade;
+5. permitir localizacao e conferencia pelo usuario;
+6. preservar o original quando acompanhada de traducao.
+
+Quando o trecho isolado for insuficiente, a recuperacao DEVE expandir seletivamente definicao, premissa, excecao, nota, referencia interna, paragrafo adjacente, secao, pagina ou outra passagem correlata. Citacao formalmente correta, mas materialmente enganosa por descontextualizacao, DEVE ser rejeitada.
+
+Quantidade e extensao de prova DEVEM ser proporcionais ao risco, complexidade e finalidade. Pergunta simples PODE usar prova concisa; comparacao, controversia, interpretacao normativa ou argumento complexo DEVE ampliar fundamentacao. Despejo de citacoes sem funcao e fragmento incapaz de comprovar a afirmacao sao proibidos.
+
+Antes da resposta, o sistema DEVE verificar pertinencia e suficiência das fontes, cobertura dos argumentos, passagens contraditorias ou qualificadoras, dependencias nao localizadas, conclusoes que excedam o corpus e integridade contextual.
+
+Prova insuficiente DEVE produzir limitacao ou abstencao explicita. O sistema NÃO DEVE preencher lacuna com seguranca aparente, referencia fabricada ou conclusao não suportada.
+
+Validacao DEVE impedir ou detectar citacao inexistente, pagina/secao incorreta, trechos de fontes diferentes fundidos, texto alterado, atribuicao equivocada, parafrase como citacao, traducao como original, conclusao sem suporte, excecao material omitida e fragmento sem contexto suficiente.
+
+## 53. Referencia, localizacao e traducao vinculada
+
+Cada fonte utilizada DEVE possuir referencia documental ou bibliografica completa segundo os metadados efetivamente disponiveis: autor, orgao, entidade ou responsavel; titulo e subtitulo; edicao, versao ou revisao; data; editora, emissor ou repositorio; idioma; tipo e formato; identificador persistente; URL publica direta e URL de origem; data de acesso quando pertinente; hash de integridade normatizado; e localizacao exata do trecho.
+
+Metadado ausente NÃO DEVE ser inventado. Campo indisponivel DEVE ser omitido ou marcado como nao determinado conforme o contrato de saida, sem preencher por plausibilidade.
+
+Referencia e localizacao DEVEM ser validadas contra a publicacao e a representacao efetivamente consultadas. Alinhamento PDF-EPUB PODE enriquecer pagina e estrutura somente sob confianca suficiente; sem alinhamento, a localizacao real disponivel DEVE prevalecer.
+
+Fonte em idioma diferente da conversa DEVE manter a citacao original como prova. Traducao PODE ser adicionada imediatamente associada, identificada como traducao e separada da transcricao; a obrigacao mais estrita de traducao `en-US` para `pt-BR` do §19 permanece.
+
+Traducao NÃO DEVE substituir o original, esconder ambiguidade nem atribuir a fonte redacao existente apenas na interpretacao traduzida. Termo tecnico, juridico, normativo ou semanticamente sensivel DEVE preservar tambem a forma original. Divergencia material entre traducoes existentes DEVE ser informada.
+
+Interface aplicavel DEVE permitir abrir a publicacao na localizacao citada quando tecnicamente suportado, consultar referencia completa, alternar original/traducao, expandir contexto adjacente e copiar citacao ou referencia sem perda de integridade.
+
+## 54. Pesquisa profunda, relacoes e documentos de autoridade
+
+O Modo Conversa DEVE poder executar pesquisa profunda proporcional antes de responder, decompondo pergunta complexa, localizando terminologias distintas, relacionando partes distantes da mesma publicacao, cruzando publicacoes, comparando edicoes/versoes e recuperando fundamentos além dos primeiros fragmentos semelhantes.
+
+Pesquisa profunda NÃO DEVE ser simulada. A estrategia DEVE revisar suficiência e PODE iterar recuperacao, filtros, expansao, vizinhanca, referencia, hierarquia, reranking e diversidade dentro dos limites configurados.
+
+Cada fonte DEVE poder ser classificada, quando a evidencia permitir, como primaria, secundaria, normativa, interpretativa, historica ou outra categoria declarada. A classificacao DEVE influenciar precedencia e apresentacao sem ocultar fonte relevante.
+
+Relacao entre publicacoes DEVE possuir tipo explicito, incluindo confirmacao, complementacao, especializacao, divergencia, revogacao, dependencia, evolucao historica, aplicacao, interpretacao ou analogia. Relacao inferida DEVE ser marcada como inferencia, sustentada por evidencias proprias e NÃO DEVE ser apresentada como vinculo declarado.
+
+Documento tecnico, normativo, governamental ou legal DEVE receber tratamento compativel com hierarquia, vigencia, competencia, jurisdicao, versao, escopo, definicoes, remissoes, condicoes e excecoes.
+
+Nesses documentos, a recuperacao e composicao DEVEM privilegiar fonte primaria disponivel; distinguir texto normativo de explicacao, parecer, jurisprudencia, doutrina, manual ou comentario; preservar verbos normativos e condicionantes; identificar versao, vigencia e jurisdicao quando comprovadas; e sinalizar conflito, revogacao, alteracao ou incerteza.
+
+Conclusao categórica NÃO DEVE ser emitida quando a fonte, sua autoridade, vigencia ou cobertura não a sustentar.
+
+## 55. Sessao, rastreabilidade e reproducao
+
+Cada sessao conversacional DEVE possuir identidade estável e registrar, conforme privacidade e retencao configuradas: consulta original; decomposicoes relevantes; modo; filtros e recortes; publicacoes consultadas; unidades recuperadas; trechos utilizados; referencias emitidas; traducoes geradas; relacoes e inferencias relevantes; componentes/versoes; limitacoes; e falhas de recuperacao.
+
+Registro DEVE permitir auditoria e reproducao proporcional da resposta sem exigir exposicao de raciocinio interno privado da IA.
+
+Associacao entre afirmacao, evidencia, referencia, traducao, interpretacao e inferencia DEVE ser persistida por identificadores estáveis ou relacoes equivalentes, sem depender somente da apresentacao visual.
+
+Alteracao de documento, edicao, extrator, segmentacao, indice, modelo, prompt, tradutor, reranker, configuracao causal ou politica que invalide evidencia DEVE marcar resposta ou sessao afetada como obsoleta e exigir revalidacao antes de reutilizacao probatoria.
+
+Retomada DEVE restaurar apenas contexto validado, respeitar limites e impedir mistura entre sessoes. Cancelamento, expiracao, exclusao e falha DEVEM preservar estado íntegro e diagnostico proporcional.
+
+Logs e telemetria DEVEM minimizar conteudo, usar referencias/hashes quando suficientes e manter consulta ou trecho sensivel fora de saida publica.
+
+## 56. Arquitetura, interface, desempenho e degradacao
+
+Recuperacao, indexacao, busca lexical, semantica e hibrida, reranking, expansao, leitura contextual e geracao DEVEM ser selecionados conforme aplicabilidade e estado real. LLM NÃO DEVE ser imposta a todas as etapas nem degradar pesquisa simples.
+
+Cache, pre-processamento, indices especializados e execucao local ou remota DEVEM equilibrar precisao, cobertura, latencia, custo, disponibilidade e fidelidade. Profundidade da pesquisa e orcamento de recursos DEVEM ser configuraveis, limitados e visiveis no diagnostico.
+
+LLM, tradutor, reranker e componente avançado DEVEM declarar contrato, modelo/versao, entrada, saida, limite, timeout, cancelamento, custo, privacidade, variacao, fallback e validacao. A adocao como padrao exige ganho medido conforme §39.
+
+Indisponibilidade ou inadequacao de componente avançado DEVE:
+
+1. preservar no Modo Pesquisa todas as capacidades independentes;
+2. limitar sintese ou interpretacao do Modo Conversa sem fabricar resposta;
+3. emitir citacao e referencia somente quando verificadas;
+4. informar objetivamente a limitacao;
+5. usar alternativa prevista e segura quando existente.
+
+A interface DEVE oferecer controle inequívoco de modo e distinguir resultado recuperado de sintese da IA. No Modo Conversa, DEVE permitir identificar quais afirmacoes cada citacao sustenta, solicitar evidencia adicional ou aprofundamento, consultar referencia, visualizar original/traducao e expandir contexto.
+
+Controle de modo, filtros, profundidade, evidencia e sessao DEVE permanecer acessivel por teclado e tecnologias assistivas quando houver GUI. Estado visual NÃO DEVE ser a unica fonte semantica.
+
+Operacao local continua padrao. Componente remoto NÃO DEVE receber conteudo sem autorizacao e configuracao explicitas conforme §§19, 26 e 34.
+
+## 57. Validacao e aceite dos modos
+
+A validacao futura DEVE usar testes determinísticos e conjuntos de avaliacao versionados que cubram:
+
+1. preservacao integral do Modo Pesquisa e distincao funcional entre modos;
+2. precisao e cobertura de recuperacao;
+3. fidelidade literal e contexto das citacoes;
+4. validade das localizacoes e completude das referencias;
+5. associacao entre afirmacao e prova;
+6. distincao entre fonte, traducao, interpretacao e inferencia;
+7. relacoes multifuente, versoes e contradicoes;
+8. documentos técnicos, normativos, governamentais e legais;
+9. ausencia de citacao, referencia, localizacao ou atribuicao fabricada;
+10. metadados incompletos, prova insuficiente e abstencao;
+11. degradacao sem LLM, tradutor, reranker ou auxiliar;
+12. desempenho proporcional a profundidade, latencia, tokens, memoria e custo.
+
+O produto somente DEVE aceitar esta extensao quando:
+
+1. o recurso de pesquisa vigente permanecer integralmente preservado e nao conversacional;
+2. o usuario puder selecionar explicitamente Pesquisa ou Conversa;
+3. LLM for usada apenas quando agregar valor e nunca como substituicao obrigatoria;
+4. o Modo Conversa interpretar, conectar e argumentar com base no acervo;
+5. cada afirmacao material possuir citacao exata, referencia completa disponivel e localizacao verificavel;
+6. citacoes preservarem contexto, condicionantes, excecoes e integridade;
+7. fonte em outro idioma exibir original e traducao identificada quando exigida ou necessaria;
+8. conteudo da fonte, interpretacao, comparacao e inferencia permanecerem distinguiveis;
+9. relacoes entre publicacoes forem tipadas e fundamentadas;
+10. documentos de autoridade receberem tratamento compativel com sua natureza;
+11. fabricacao e atribuicao incorreta forem impedidas ou detectadas;
+12. limitacao de prova produzir declaracao ou abstencao;
+13. apresentacao mantiver rigor logico e academico proporcional sem prolixidade obrigatoria;
+14. os contratos forem incorporados ao RCF sem duplicar ou enfraquecer normas vigentes.
+
+Relatorio de aceite DEVE registrar normas preservadas/especializadas, alteracoes do RCF, arquitetura adotada, diferencas entre modos, criterios de uso de LLM, modelo de citacao/referencia/traducao, prevencao de alucinacao, FTs, testes, conjuntos de avaliacao, metricas de precisao/fidelidade/cobertura/latencia/custo, limitacoes, pendencias e riscos.
+
+## 58. Convergencia das fontes
+
+Os requisitos registrados na fonte canônica `.ia.rules/state/TODO.ia.md` linhas 56, 69, 95, 214, 886 e 1182 foram absorvidos por este RCF como contratos permanentes.
+
+O arquivo de TODO permanece somente como fonte versionada e controle de demanda ate o encerramento documental da FT-003; implementacao futura DEVE derivar deste RCF e das FTs, nao do TODO.

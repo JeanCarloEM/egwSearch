@@ -1341,7 +1341,7 @@
     - solicitar mais evidências ou aprofundamento;
     - copiar referência e citação sem perda de integridade.
 
-  - [ ] **Normatização no RCF:** incorporar integralmente esta extensão ao RCF canônico, reconciliando-a com o recurso de pesquisa vigente e centralizando regras comuns de recuperação, evidência, referência, tradução, rastreabilidade e validação. O RCF DEVE distinguir claramente:
+  - [x] **Normatização no RCF:** incorporar integralmente esta extensão ao RCF canônico, reconciliando-a com o recurso de pesquisa vigente e centralizando regras comuns de recuperação, evidência, referência, tradução, rastreabilidade e validação. O RCF DEVE distinguir claramente:
     - contratos comuns aos dois modos;
     - requisitos exclusivos do Modo Pesquisa;
     - requisitos exclusivos do Modo Conversa;
@@ -1351,7 +1351,7 @@
 
     É PROIBIDO criar uma especificação paralela que duplique, contradiga ou enfraqueça a normatização atual.
 
-  - [ ] **Planejamento por FTs:** após inspeção do estado real e normatização, decompor a implementação em FTs rastreáveis conforme unidades materiais, incluindo, quando aplicável:
+  - [x] **Planejamento por FTs:** após inspeção do estado real e normatização, decompor a implementação em FTs rastreáveis conforme unidades materiais, incluindo, quando aplicável:
     - extensão dos índices e metadados;
     - recuperação híbrida e profunda;
     - extração e validação de citações;

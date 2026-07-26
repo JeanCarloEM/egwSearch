@@ -6,9 +6,9 @@
 - fase: normatizacao integrada
 - fonte_atual: `.ia.rules/state/TODO.ia.md`
 - fonte_original: `TODO.id.md`
-- fonte_sha256: `4655483CF985A5C0A9C7E99495B404ED793006CA349BF11138A62925B50953A4`
+- fonte_sha256: `AC993E66450524BF868A7D7F753524271F2595E9D6D3256D7BD75AA428E94E05`
 - commit_de_origem_mais_recente: `11c4199c150e149c70c4e4d7abb9550b79c929d7`
-- estado: em andamento; revisao 2 por alteracao material da fonte
+- estado: concluido apos revisao 2 por alteracao material da fonte
 
 ## Objetivo global
 
@@ -63,7 +63,7 @@ Nenhuma URL, numero de issue ou repositorio externo foi identificado como fonte 
 | SRC-RAG | RCF §§36, 37, 39, 47, 48 e 49 |
 | SRC-PUB | RCF §§40, 43, 44, 45, 46, 47, 48 e 49 |
 | SRC-ACERVO | RCF §§41, 42, 43, 46, 47, 48 e 49 |
-| SRC-CONV | RCF §§11-13, 19, 23-25, 34, 36-39, 48-57 |
+| SRC-CONV | RCF §§1, 11-13, 19, 23-31, 34, 36-39 e 48-58 |
 
 ## Aceite global
 
@@ -84,6 +84,8 @@ Nenhuma URL, numero de issue ou repositorio externo foi identificado como fonte 
 ## Reabertura
 
 - motivo: adicao material de 234 linhas ao TODO pelo commit `11c4199`.
-- estado: revisao normativa em andamento.
+- estado: revisao normativa concluida.
 - preservado: RCF anterior, fases tecnicas e fronteiras entre FT-004 e FT-002.
-- pendente: incorporar integralmente SRC-CONV, validar a revisao e interromper novamente antes do codigo.
+- resultado: SRC-CONV incorporada integralmente; TODO registra somente marcos normativos concluidos; fases tecnicas permanecem pendentes.
+- validacao: `RCF_OK` com 83550 bytes; `agent:status` em `dev`; `agent:verify` limitado por `TSCONFIG_AUSENTE`, esperado no estado sem aplicacao.
+- retomada: FT-004, somente mediante nova autorizacao humana explicita.

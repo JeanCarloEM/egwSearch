@@ -10,4 +10,4 @@
 - entregaveis: contratos RCF de modos, prova documental, citacao e referencia, traducao vinculada, pesquisa profunda, relacoes multifuente, documentos de autoridade, sessao auditavel, interface, degradacao e avaliacao.
 - validacoes: preservacao integral da pesquisa; distincao entre fonte, traducao, interpretacao e inferencia; fidelidade literal; contexto suficiente; localizacao valida; abstencao por insuficiencia; degradacao sem LLM; desempenho proporcional.
 - efeitos posteriores: FT-002 decompoe e implementa as unidades materiais somente apos FT-004, conclusao desta revisao e nova autorizacao humana explicita.
-- estado: em andamento.
+- estado: concluido no RCF §§1, 11-13, 19, 23-31, 34, 36-39 e 48-58.

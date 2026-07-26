@@ -4,7 +4,7 @@
 ![Implementacao](https://img.shields.io/badge/implementacao-nao%20validada-lightgrey)
 ![Licenca](https://img.shields.io/badge/licenca-MPL--2.0-green)
 
-egwSearch e uma ferramenta planejada para pesquisar conceitos, palavras e expressoes em colecoes arbitrarias de publicacoes textuais PDF e EPUB, com resultados consolidados em Markdown.
+egwSearch e uma ferramenta planejada para pesquisar conceitos, palavras e expressoes e conversar de forma probatoria com colecoes arbitrarias de publicacoes textuais PDF e EPUB, preservando resultados e evidencias documentais verificaveis.
 
 ## Referencias
 
@@ -15,7 +15,7 @@ egwSearch e uma ferramenta planejada para pesquisar conceitos, palavras e expres
 
 ## Estado
 
-O RCF consolidado esta concluido. O repositorio contem acervo PDF/EPUB e um downloader preexistente, mas a conformidade tecnica, a cadeia publica e o buscador permanecem pendentes de implementacao ou validacao nas FTs registradas.
+O RCF consolidado cobre Modo Pesquisa, Modo Conversa probatorio e cadeia publica. O repositorio contem acervo PDF/EPUB e um downloader preexistente, mas a conformidade tecnica, a cadeia publica e ambos os modos permanecem pendentes de implementacao ou validacao nas FTs registradas.
 
 ## Autoria, repositorio e licenca
 
