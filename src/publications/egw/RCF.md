@@ -49,7 +49,7 @@ Toda leitura de arquivo para hash DEVE ser binaria, sequencial e calcular SHA-1,
 
 `plan` DEVE ser o default e não possuir efeito no acervo. O plano DEVE declarar schema, identidade causal, configuracao, inventario, grupos, acoes, problemas e resumo; ordem e identidade DEVEM independer de horario, cwd e enumeracao do filesystem. [e59c122]
 
-`apply` DEVE verificar path, tamanho e SHA-256 antes de cada acao, registrar journal atomico apos cada movimento e usar quarentena para redundancia. Falha DEVE acionar rollback reverso; journal e quarentena DEVEM preservar retomada. `finalize` DEVE recusar estado nao concluido. [e59c122]
+`apply` DEVE verificar path, tamanho e SHA-256 antes de cada acao, persistir sua intencao antes do movimento, confirmar o journal atomico depois e usar quarentena para redundancia. Falha DEVE acionar rollback reverso, inclusive de registro pendente cuja origem ou destino comprove se o movimento ocorreu; journal e quarentena DEVEM preservar retomada. Replace atomico temporariamente bloqueado DEVE admitir somente retry limitado. `finalize` DEVE recusar estado nao concluido. [08cbaeb]
 
 O migrador NÃO DEVE acessar rede, modificar bytes de PDF/EPUB ou remover diretorio de origem antes do aceite integral. Codigo `0` DEVE indicar sucesso; `1`, falha operacional; `2`, uso ou entrada invalida; `3`, conflito ou precondicao; `4`, integridade insegura. [e59c122]
 
@@ -69,8 +69,8 @@ Dependencias de Selenium, Requests e tqdm DEVEM ser carregadas apenas pela execu
 
 ## 7. Validacao e fronteira
 
-Testes sem rede DEVEM cobrir normalizacao, acronimo, path, assinatura, hashes, colisao, metadado legado/v2, plano, repeticao, apply e rollback. [e59c122]
+Testes sem rede DEVEM cobrir normalizacao, acronimo, path, assinatura, hashes, colisao, metadado legado/v2, plano, repeticao, apply, rollback e falha de persistencia entre intencao e confirmacao. [08cbaeb]
 
-O dry-run integral DEVE contabilizar todo arquivo legado esperado, rejeitar orfao ou conflito, comparar bytes/hashes e produzir plano reproduzivel antes de qualquer movimento. [e59c122]
+O dry-run integral DEVE contabilizar todo arquivo legado esperado, rejeitar orfao ou conflito, comparar bytes/hashes e produzir plano reproduzivel antes de qualquer movimento. Depois da aplicacao, DEVE auditar a arvore canônica completa, produzir zero acao residual e repetir inventario identico. [08cbaeb]
 
-Este subcontexto nao executa download, nao move o acervo, nao gera indice/capa/site e nao publica. Essas operacoes permanecem nos subcontextos posteriores da FT-004.
+O subcontexto de contratos não executa download nem move o acervo. Migração, índice/capa/site e publicação permanecem em seus subcontextos materiais próprios da FT-004.
