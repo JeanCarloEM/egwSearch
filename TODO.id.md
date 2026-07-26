@@ -216,42 +216,31 @@
 
 ```json
 {
-  "publications": [
-    {
-      "title": "Atos Dos Apóstolos",
-      "urls": [
-        "https://exemplo.org/atos-dos-apostolos.pdf",
-        "https://exemplo.org/atos-dos-apostolos.epub"
-      ],
-      "formative_data": {
-        "book": {
-          "title": "Atos Dos Apóstolos",
-          "contributors": [
-            {
-              "name": "Ellen G. White",
-              "role": "author"
-            }
-          ],
-          "edition": {},
-          "language": "pt-br",
-          "primary_category": "livros",
-          "tags": []
-        },
-        "global_hashes": [
-          {
-            "format": "pdf",
-            "sha1": "<40 caracteres hexadecimais minúsculos>",
-            "sha256": "<64 caracteres hexadecimais minúsculos>",
-            "sha512": "<128 caracteres hexadecimais minúsculos>"
-          },
-          {
-            "format": "epub",
-            "sha1": "<40 caracteres hexadecimais minúsculos>",
-            "sha256": "<64 caracteres hexadecimais minúsculos>",
-            "sha512": "<128 caracteres hexadecimais minúsculos>"
-          }
-        ]
+  "book": {
+    "title": "Atos Dos Apóstolos",
+    "contributors": [
+      {
+        "name": "Ellen G. White",
+        "role": "author"
       }
+    ],
+    "edition": {},
+    "language": "pt-br",
+    "primary_category": "livros",
+    "tags": []
+  },
+  "global_hashes": [
+    {
+      "format": "pdf",
+      "sha1": "ef605032eb4011e6f058c100dc845f414e36e4f4",
+      "sha256": "91e2d4ea3e74a3ec55ecd61fb659f57927ef90ae413ea699cd8b4e92c7d9051a",
+      "sha512": "75b0c5ffda1ae8314cae7612afc947393817581b9ac219db497d526ee90417841e16b0e5f3ab0f2421eb8201358502ba6f9628e62195b4c37437d0967748cb42"
+    },
+    {
+      "format": "epub",
+      "sha1": "6df74abc8e2d57f82ff54a3b373d855c016f9f15",
+      "sha256": "46d2ed2d02977d96d625c6c0d2ad65de4f769cece56b2e45f64f65555f5eba29",
+      "sha512": "cc055518caab4bcf2399dde632359ab808b5dfeea2259e886b9f9af161eca7fea611d7658d11d42f1a68b4d3f54e57a25ff50e2a68d010c83bb8337d1e41ff80"
     }
   ]
 }
