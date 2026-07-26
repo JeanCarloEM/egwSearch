@@ -15,6 +15,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import sys
 from typing import Iterable
@@ -102,15 +103,237 @@ def _iter_legacy_files(source_root: Path) -> Iterable[tuple[str, str, str, Path]
                         )
 
 
+def _iter_canonical_directories(
+    source_root: Path,
+) -> Iterable[tuple[str, str, str, Path]]:
+    for author_directory in sorted(source_root.iterdir(), key=lambda item: item.name.casefold()):
+        if not author_directory.is_dir():
+            continue
+        for language_directory in sorted(
+            author_directory.iterdir(), key=lambda item: item.name.casefold()
+        ):
+            if not language_directory.is_dir():
+                continue
+            for type_directory in sorted(
+                language_directory.iterdir(), key=lambda item: item.name.casefold()
+            ):
+                if not type_directory.is_dir():
+                    continue
+                for candidate in sorted(
+                    type_directory.iterdir(), key=lambda item: item.name.casefold()
+                ):
+                    if candidate.is_dir():
+                        yield (
+                            author_directory.name,
+                            language_directory.name,
+                            type_directory.name,
+                            candidate,
+                        )
+
+
+def _canonical_kind(path: Path, acronym: str) -> str | None:
+    if path.name == f"{acronym}.source.json":
+        return "metadata"
+    suffix = path.suffix.casefold()
+    if suffix not in {".pdf", ".epub"}:
+        return None
+    stem = path.name[: -len(suffix)]
+    if stem == acronym:
+        return suffix[1:]
+    variant = re.fullmatch(
+        rf"{re.escape(acronym)}\.([0-9a-f]{{8,64}})",
+        stem,
+    )
+    if variant and len(variant.group(1)) % 2 == 0:
+        return suffix[1:]
+    return None
+
+
+def _build_canonical_plan(
+    source_root: Path,
+    directories: list[tuple[str, str, str, Path]],
+) -> dict:
+    inventory: list[dict] = []
+    planned_groups: list[dict] = []
+    problems: list[dict] = []
+    for author, language, publication_type, directory in directories:
+        try:
+            identity = publication_identity(
+                author,
+                language,
+                publication_type,
+                directory.name,
+            )
+        except ContractError as error:
+            problems.append(
+                {
+                    "code": "INVALID_IDENTITY",
+                    "group": _relative(directory, source_root),
+                    "detail": str(error),
+                }
+            )
+            continue
+        by_kind: dict[str, list[Path]] = {}
+        file_hashes: dict[str, object] = {}
+        for candidate in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
+            relative = _relative(candidate, source_root)
+            if not candidate.is_file():
+                problems.append({"code": "UNSUPPORTED_CANONICAL_ENTRY", "path": relative})
+                continue
+            kind = _canonical_kind(candidate, identity.acronym)
+            if kind is None:
+                problems.append({"code": "INVALID_CANONICAL_NAME", "path": relative})
+                continue
+            hashes = hash_file(candidate)
+            file_hashes[relative] = hashes
+            by_kind.setdefault(kind, []).append(candidate)
+            inventory.append(
+                {
+                    "path": relative,
+                    "kind": kind,
+                    "size": hashes.size,
+                    "sha256": hashes.sha256,
+                }
+            )
+            if kind in {"pdf", "epub"}:
+                try:
+                    validate_file_signature(candidate, kind)
+                except ContractError as error:
+                    problems.append(
+                        {
+                            "code": "INVALID_FORMAT",
+                            "path": relative,
+                            "detail": str(error),
+                        }
+                    )
+        metadata_paths = by_kind.get("metadata", [])
+        assets = {
+            kind: paths
+            for kind, paths in by_kind.items()
+            if kind in {"pdf", "epub"}
+        }
+        if not assets:
+            problems.append(
+                {"code": "GROUP_WITHOUT_ASSET", "group": _relative(directory, source_root)}
+            )
+        if len(metadata_paths) != 1:
+            problems.append(
+                {
+                    "code": "GROUP_WITHOUT_SINGLE_METADATA",
+                    "group": _relative(directory, source_root),
+                    "count": len(metadata_paths),
+                }
+            )
+        elif assets:
+            try:
+                records = read_source_records(metadata_paths[0])
+                records_by_format: dict[str, list[dict]] = {}
+                for record in records:
+                    records_by_format.setdefault(record["format"], []).append(record)
+                for publication_format, paths in assets.items():
+                    candidates = records_by_format.get(publication_format, [])
+                    expected_hashes = {
+                        record.get("hashes", {}).get("sha256")
+                        for record in candidates
+                        if record.get("hashes", {}).get("sha256")
+                    }
+                    for asset in paths:
+                        relative = _relative(asset, source_root)
+                        actual = file_hashes[relative].sha256
+                        if not candidates:
+                            problems.append(
+                                {
+                                    "code": "ASSET_WITHOUT_METADATA_SOURCE",
+                                    "path": relative,
+                                    "format": publication_format,
+                                }
+                            )
+                        elif expected_hashes and actual not in expected_hashes:
+                            problems.append(
+                                {
+                                    "code": "METADATA_HASH_MISMATCH",
+                                    "path": relative,
+                                    "actual_sha256": actual,
+                                    "metadata_sha256": sorted(expected_hashes),
+                                }
+                            )
+                for publication_format in records_by_format:
+                    if publication_format not in assets:
+                        problems.append(
+                            {
+                                "code": "METADATA_SOURCE_WITHOUT_ASSET",
+                                "path": _relative(metadata_paths[0], source_root),
+                                "format": publication_format,
+                            }
+                        )
+            except ContractError as error:
+                problems.append(
+                    {
+                        "code": "INVALID_METADATA",
+                        "path": _relative(metadata_paths[0], source_root),
+                        "detail": str(error),
+                    }
+                )
+        planned_groups.append(
+            {
+                "identity": {
+                    "author": identity.author,
+                    "language": identity.language,
+                    "type": identity.publication_type,
+                    "title": identity.title,
+                    "acronym": identity.acronym,
+                    "directory": identity.relative_directory().as_posix(),
+                },
+                "actions": [],
+            }
+        )
+
+    inventory.sort(key=lambda item: item["path"].casefold())
+    problems.sort(
+        key=lambda item: (
+            item["code"],
+            str(item.get("path", item.get("group", ""))).casefold(),
+        )
+    )
+    plan = {
+        "schema": PLAN_SCHEMA,
+        "source_root": _relative(source_root, REPOSITORY_ROOT),
+        "inventory": {
+            "files": len(inventory),
+            "bytes": sum(item["size"] for item in inventory),
+            "sha256": _inventory_digest(inventory),
+            "entries": inventory,
+        },
+        "groups": planned_groups,
+        "actions": [],
+        "problems": problems,
+        "summary": {
+            "groups": len(planned_groups),
+            "actions": 0,
+            "moves": 0,
+            "deduplications": 0,
+            "problems": len(problems),
+        },
+    }
+    plan["plan_id"] = _plan_identity(plan)
+    return plan
+
+
 def build_plan(source_root: Path) -> dict:
     """Produz plano reprodutivel e diagnosticos sem alterar o acervo."""
 
     source_root = source_root.resolve()
     if not source_root.is_dir():
         raise ContractError(f"raiz de publicacoes ausente: {source_root}")
+    legacy_files = list(_iter_legacy_files(source_root))
+    canonical_directories = list(_iter_canonical_directories(source_root))
+    if legacy_files and canonical_directories:
+        raise ContractError("layout misto legado/canônico exige rollback ou reparo")
+    if canonical_directories:
+        return _build_canonical_plan(source_root, canonical_directories)
     groups: dict[tuple[str, str, str, str], list[tuple[Path, str]]] = {}
     problems: list[dict] = []
-    for author, language, publication_type, candidate in _iter_legacy_files(source_root):
+    for author, language, publication_type, candidate in legacy_files:
         parsed = _legacy_title(candidate)
         if parsed is None:
             problems.append(
@@ -367,15 +590,21 @@ def rollback(journal_path: Path) -> dict:
     for record in reversed(journal["records"]):
         source = _resolve_inside(source_root, record["source"])
         current = Path(record["current"]).resolve()
+        if source.exists() and not current.exists():
+            record["status"] = "rolled_back"
+            continue
         if not current.exists():
-            raise ContractError(f"rollback sem arquivo corrente: {current}")
+            raise ContractError(f"rollback sem origem nem arquivo corrente: {current}")
         source.parent.mkdir(parents=True, exist_ok=True)
         if source.exists():
             if hash_file(source).sha256 != record["sha256"]:
                 raise ContractError(f"rollback colide com origem divergente: {source}")
+            if hash_file(current).sha256 != record["sha256"]:
+                raise ContractError(f"rollback colide com corrente divergente: {current}")
             current.unlink()
         else:
             os.replace(current, source)
+        record["status"] = "rolled_back"
     journal["status"] = "rolled_back"
     write_json_atomic(journal_path, journal)
     return journal
@@ -414,29 +643,34 @@ def apply_plan(plan_path: Path, state_root: Path = DEFAULT_STATE_ROOT) -> Path:
         for action in plan["actions"]:
             source = _verify_action_source(source_root, action)
             target = _resolve_inside(source_root, action["target"])
+            current_path = (
+                target
+                if action["disposition"] == "move"
+                else quarantine / action["source"]
+            )
+            record = {
+                "source": action["source"],
+                "target": action["target"],
+                "current": str(current_path),
+                "disposition": action["disposition"],
+                "sha256": action["sha256"],
+                "status": "pending",
+            }
+            journal["records"].append(record)
+            write_json_atomic(journal_path, journal)
             if action["disposition"] == "move":
                 if target.exists():
                     raise ContractError(f"destino apareceu depois do plano: {target}")
                 target.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(source, target)
-                current_path = target
             elif action["disposition"] == "deduplicate":
                 if not target.is_file() or hash_file(target).sha256 != action["sha256"]:
                     raise ContractError(f"duplicata alvo divergente: {target}")
-                current_path = quarantine / action["source"]
                 current_path.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(source, current_path)
             else:
                 raise ContractError(f"disposition invalida: {action['disposition']}")
-            journal["records"].append(
-                {
-                    "source": action["source"],
-                    "target": action["target"],
-                    "current": str(current_path),
-                    "disposition": action["disposition"],
-                    "sha256": action["sha256"],
-                }
-            )
+            record["status"] = "moved"
             write_json_atomic(journal_path, journal)
         for record in journal["records"]:
             if record["disposition"] == "move":

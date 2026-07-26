@@ -42,7 +42,7 @@ Processamento bibliografico permanece em Python por adequacao ao ecossistema PDF
 | Ordem | Contexto | Entrega | Estado |
 | ---: | --- | --- | --- |
 | 1 | `01-contratos-e-downloader.md` | contrato comum, RCF especifico, migrador e downloader | concluido |
-| 2 | `02-migracao-acervo.md` | acervo canônico e inventario pre/post | em andamento |
+| 2 | `02-migracao-acervo.md` | acervo canônico e inventario pre/post | concluido |
 | 3 | `03-indice-capas-site.md` | dados formativos, capas, indice, pagina e artefato | pendente |
 | 4 | `04-build-workflow.md` | hook, comandos e GitHub Pages | pendente |
 | 5 | `05-validacao-encerramento.md` | testes, visual, destino, TODO e estado final | pendente |
@@ -73,5 +73,8 @@ Todos os criterios materiais de RCF §§40-49 e da fonte devem possuir evidencia
 - os 11 problemas eram lacunas de procedencia: downloads oficiais reproduziram tamanho e SHA-256 dos 11 EPUBs locais;
 - os metadados foram completados sem alterar PDF/EPUB e o plano repetido ficou estavel com zero bloqueio;
 - plano liberado: `5660215656f00e721abc0d67344508380fbc8bc62e063d77816a3e32aded50cb`, 1578 arquivos e 638102876 bytes.
-- subcontexto 02 prossegue pelo `apply` transacional e validacao pre/post.
+- subcontexto 02 concluiu a migracao em 527 grupos canônicos, com journal finalizado e conteudo pre/post integralmente igual;
+- post plan `35b8a85ca167dd65410d502e6629e58ea05bdf0426fbfac6242efd9c574c1de0`: 1578 arquivos, 638102876 bytes, zero acao e zero problema;
+- a falha transitoria inicial revelou e corrigiu a janela de persistencia do journal; teste de falha injetada comprova rollback do registro pendente.
+- proximo subcontexto: 03, indice, capas e site.
 - fase 3 permanece bloqueada.

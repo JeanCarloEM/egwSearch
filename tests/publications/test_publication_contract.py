@@ -11,6 +11,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 
 
@@ -28,7 +29,9 @@ from publication_contract import (  # noqa: E402
     safe_path_segment,
     title_acronym,
     validate_file_signature,
+    write_json_atomic,
 )
+import publication_contract  # noqa: E402
 
 
 class PublicationContractTests(unittest.TestCase):
@@ -119,6 +122,29 @@ class PublicationContractTests(unittest.TestCase):
             )
             self.assertEqual(document["schema_version"], "egw-source/v2")
             self.assertEqual(document["identity"]["tags"], [])
+
+    def test_atomic_json_retries_transient_permission_error(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            target = Path(temporary) / "state.json"
+            original_replace = publication_contract.os.replace
+            calls = 0
+
+            def transient_replace(source: Path, destination: Path) -> None:
+                nonlocal calls
+                calls += 1
+                if calls < 3:
+                    raise PermissionError("fixture: arquivo temporariamente bloqueado")
+                original_replace(source, destination)
+
+            with mock.patch.object(
+                publication_contract.os,
+                "replace",
+                side_effect=transient_replace,
+            ):
+                write_json_atomic(target, {"status": "ok"})
+
+            self.assertEqual(json.loads(target.read_text(encoding="utf-8")), {"status": "ok"})
+            self.assertEqual(calls, 3)
 
 
 if __name__ == "__main__":

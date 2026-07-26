@@ -18,6 +18,7 @@ import os
 from pathlib import Path
 import re
 import tempfile
+import time
 import unicodedata
 from urllib.parse import urlsplit
 import zipfile
@@ -423,6 +424,13 @@ def write_json_atomic(path: Path | str, data: dict) -> None:
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, target)
+        for attempt in range(8):
+            try:
+                os.replace(temporary, target)
+                break
+            except PermissionError:
+                if attempt == 7:
+                    raise
+                time.sleep(min(0.01 * (2**attempt), 0.25))
     finally:
         temporary.unlink(missing_ok=True)

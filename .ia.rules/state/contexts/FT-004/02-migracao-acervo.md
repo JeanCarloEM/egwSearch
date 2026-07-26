@@ -7,7 +7,7 @@
 - entregaveis: arvore canônica, relatorio de migracao e inventario pos-migracao.
 - restricoes: sem perda, sobrescrita, contador de ordem ou tag inferida; variantes diferentes usam hash curto.
 - validacoes: contagem, soma de bytes, SHA-256, metadados, repeticao sem mudanca e ausencia de arquivos planos.
-- estado: em andamento.
+- estado: concluido.
 - aceite: todos os 1576 arquivos correlatos preservados em grupos canônicos ou diagnostico bloqueante nominal.
 
 ## Plano
@@ -44,3 +44,28 @@
 - inventario SHA-256: `fe9d9b2f4336ee89796140fd3d7aeeafe6a234e55080acd433088e706cb16cbf`;
 - plan ID: `5660215656f00e721abc0d67344508380fbc8bc62e063d77816a3e32aded50cb`;
 - repeticao: plano, inventario, contagens e problema zero identicos.
+
+## Execucao e recuperacao
+
+- o primeiro `apply` encontrou bloqueio transitorio do Windows ao substituir atomicamente o journal;
+- o rollback automatico restaurou os 592 movimentos persistidos; o metadado movido na janela anterior ao registro foi identificado por status Git, hash validado e devolvido ao path original;
+- o inventario restaurado reproduziu exatamente o plan ID liberado;
+- a causa estrutural foi corrigida com protocolo `intencao persistida -> movimento -> confirmacao`, rollback de registro pendente e retry limitado de `PermissionError` no replace atomico;
+- teste injetado passou a comprovar falha de persistencia depois do movimento e restauracao integral;
+- 12 testes sem rede passaram antes da nova aplicacao.
+
+## Resultado
+
+- journal causal: `5660215656f00e721abc0d67344508380fbc8bc62e063d77816a3e32aded50cb`;
+- estado final do journal: `finalized`;
+- grupos canônicos: 527;
+- arquivos: 1578;
+- bytes: `638102876`;
+- PDF: 525; EPUB: 526; metadados: 527;
+- arquivos planos residuais em diretorio de tipo: zero;
+- acoes residuais: zero;
+- problemas residuais: zero;
+- inventario pos-migracao SHA-256: `9f1d10744d05125287c49666657f0cccce2bade4644f0dc340e98f22e20623a9`;
+- post plan ID: `35b8a85ca167dd65410d502e6629e58ea05bdf0426fbfac6242efd9c574c1de0`;
+- repeticao pos-migracao: identica;
+- comparacao de conteudo pre/post por `kind`, tamanho e SHA-256: 1578/1578, zero ausente e zero adicionado.

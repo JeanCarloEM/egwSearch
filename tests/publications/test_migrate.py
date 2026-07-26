@@ -11,6 +11,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -100,6 +101,12 @@ class MigrationTests(unittest.TestCase):
                 if action["kind"] == "pdf"
             )
             self.assertEqual(migrate.hash_file(canonical).sha256, expected_hash)
+            post_plan = migrate.build_plan(source_root)
+            self.assertEqual(post_plan["summary"]["groups"], 1)
+            self.assertEqual(post_plan["summary"]["actions"], 0)
+            self.assertEqual(post_plan["summary"]["problems"], 0)
+            self.assertEqual(post_plan["inventory"]["files"], 2)
+            self.assertEqual(post_plan, migrate.build_plan(source_root))
             migrate.rollback(journal_path)
             legacy = (
                 source_root
@@ -121,6 +128,51 @@ class MigrationTests(unittest.TestCase):
                 "GROUP_WITHOUT_SINGLE_METADATA",
                 {problem["code"] for problem in plan["problems"]},
             )
+
+    def test_journal_failure_after_move_rolls_back_pending_record(self) -> None:
+        state_root = REPOSITORY_ROOT / "constructor" / ".state"
+        state_root.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=state_root) as temporary:
+            root = Path(temporary)
+            source_root = self._fixture(root)
+            plan = migrate.build_plan(source_root)
+            plan_path = root / "plan.json"
+            migrate.write_json_atomic(plan_path, plan)
+            original_write = migrate.write_json_atomic
+            calls = 0
+
+            def fail_after_first_move(path: Path, data: dict) -> None:
+                nonlocal calls
+                calls += 1
+                if calls == 3:
+                    raise PermissionError("fixture: replace bloqueado")
+                original_write(path, data)
+
+            with mock.patch.object(
+                migrate,
+                "write_json_atomic",
+                side_effect=fail_after_first_move,
+            ):
+                with self.assertRaises(PermissionError):
+                    migrate.apply_plan(plan_path, root / ".state")
+
+            legacy = (
+                source_root
+                / "egw"
+                / "pt-br"
+                / "livros"
+                / "Atos Dos Apóstolos.pdf"
+            )
+            canonical = (
+                source_root
+                / "egw"
+                / "pt-br"
+                / "livros"
+                / "Atos Dos Apóstolos"
+                / "ada.pdf"
+            )
+            self.assertTrue(legacy.is_file())
+            self.assertFalse(canonical.exists())
 
 
 if __name__ == "__main__":
