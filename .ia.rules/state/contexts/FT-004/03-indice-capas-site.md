@@ -10,6 +10,29 @@
 - estado: em andamento, bloqueado somente na decisao editorial descrita abaixo.
 - aceite: build local completo, reproduzivel e validado.
 
+## Evolucao das rotas do acervo
+
+- autorizacao humana explicita recebida em `2026-07-26` para evoluir o RCF,
+  o contrato e o migrador e aplicar imediatamente a normalizacao fisica;
+- rota canônica normalizada para
+  `<autor>/<idioma>/<tipo>/<slug-titulo>/`, com slug ASCII em minusculas,
+  sem acentos, diacriticos ou caracteres especiais e separado por hifens;
+- RCF normativo: commit `2024dbd`; implementacao e renomeacoes:
+  `0507203f6b0c575ab1f0dfb3e9bc33650c5c4da6`;
+- plano aplicado:
+  `25ef198629963f60f175e1745eceb567fbe9f2069c4254853709cfc4b616b7fd`,
+  com 527 diretorios e 1578 arquivos, totalizando 638102876 bytes;
+- journal finalizado, incluindo dez renomeacoes apenas de caixa por salto
+  temporario seguro no Windows;
+- o multiconjunto pre/post de tipo, tamanho e SHA-256 permaneceu identico:
+  zero arquivo perdido, acrescentado, fundido ou alterado;
+- plano posterior:
+  `dd726ed14e2ea1f98f120348db8a4e133882f6c6fe68e038af1a0dbe5dda1a27`,
+  inventario SHA-256
+  `e1fe12163b972cad8f339c7d59bf953be4f4e00b52b6d137a1c2915cbda2ee50`,
+  zero acao, zero problema e repeticao identica;
+- a normalizacao de rota nao resolve nem altera a decisao editorial abaixo.
+
 ## Auditoria inicial
 
 - runtime observado: Python 3.14.0;

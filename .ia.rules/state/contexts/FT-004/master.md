@@ -76,6 +76,17 @@ Todos os criterios materiais de RCF §§40-49 e da fonte devem possuir evidencia
 - subcontexto 02 concluiu a migracao em 527 grupos canônicos, com journal finalizado e conteudo pre/post integralmente igual;
 - post plan `35b8a85ca167dd65410d502e6629e58ea05bdf0426fbfac6242efd9c574c1de0`: 1578 arquivos, 638102876 bytes, zero acao e zero problema;
 - a falha transitoria inicial revelou e corrigiu a janela de persistencia do journal; teste de falha injetada comprova rollback do registro pendente.
+- a evolucao autorizada de URI separou titulo editorial e slug de rota:
+  RCF `2024dbd`, material
+  `0507203f6b0c575ab1f0dfb3e9bc33650c5c4da6`;
+- o plano de slugs
+  `25ef198629963f60f175e1745eceb567fbe9f2069c4254853709cfc4b616b7fd`
+  renomeou 527 diretorios e 1578 arquivos sem alterar o multiconjunto de
+  tipo, tamanho e SHA-256; o journal foi finalizado;
+- o post plan
+  `dd726ed14e2ea1f98f120348db8a4e133882f6c6fe68e038af1a0dbe5dda1a27`
+  encontrou zero acao e zero problema, com inventario SHA-256
+  `e1fe12163b972cad8f339c7d59bf953be4f4e00b52b6d137a1c2915cbda2ee50`;
 - o subcontexto 03 auditou 527 grupos: 525 capas EPUB utilizaveis, dois
   fallbacks PDF e nenhuma alteracao dos originais;
 - seis colisoes de titulo-base abrangem 12 grupos cuja distincao depende de
