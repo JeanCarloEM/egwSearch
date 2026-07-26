@@ -1,310 +1,553 @@
-import os
-import sys
-import time
-import json
+# Repository: https://github.com/JeanCarloEM/egwSearch
+# License: MPL-2.0 - https://www.mozilla.org/MPL/2.0/
+# This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+
+"""Baixa colecoes EGW diretamente na estrutura canônica.
+
+Dependencias de rede e navegador sao carregadas somente pela CLI. Importar este
+modulo e seguro para testes, indexadores e ferramentas de migracao.
+"""
+
+from __future__ import annotations
+
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
 import hashlib
-import requests
-from urllib.parse import urlsplit
-from tqdm import tqdm
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from concurrent.futures import ThreadPoolExecutor
-import threading  # Para obter o nome da thread
-import traceback  # Importando o módulo traceback para capturar exceções e tracebacks
+import ipaddress
+import json
+import os
+from pathlib import Path
+import socket
+import sys
+import tempfile
+import threading
+import time
+from urllib.parse import urljoin, urlsplit
 
-# Códigos ANSI para colorir o terminal
-RED = "\033[91m"
-YELLOW = "\033[93m"
-GREEN = "\033[92m"
-BLUE = "\033[94m"
-CYAN = "\033[96m"
-RESET = "\033[0m"
-BOLD = "\033[1m"
+from publication_contract import (
+    ContractError,
+    DEFAULT_CONFIG_PATH,
+    REPOSITORY_ROOT,
+    build_source_document,
+    choose_variant_path,
+    format_from_url,
+    hash_file,
+    load_config,
+    publication_identity,
+    read_source_records,
+    resolve_repository_path,
+    validate_file_signature,
+    validate_source_url,
+    write_json_atomic,
+)
 
-#livros_baixados = 0
-falhas = {}
 
-# Atribuição dos IDs das threads
-thread_ids = {}
+class DownloadError(RuntimeError):
+    """Representa falha conclusiva e sanitizada de aquisicao."""
 
-# Função para remover artigos no final do título e corrigir vírgulas
-def remove_article_from_title(title):
-    artigos = ["A", "O", "As", "Os", "Uma", "Um", "Umas", "Uns"]
-    title_parts = title.strip().split()
-    
-    # Remover o artigo no final, se existir
-    if title_parts and title_parts[-1] in artigos:
-        title_parts.pop()
-    
-    # Remover a vírgula no final do título, se houver
-    if title_parts and title_parts[-1].endswith(','):
-        title_parts[-1] = title_parts[-1][:-1]
-    
-    return " ".join(title_parts)
 
-def ensure_dir_exists(path):
-    if not os.path.isabs(path):
-        path = os.path.join(os.getcwd(), path)
-    os.makedirs(path, exist_ok=True)
-    return path
+_metadata_locks: dict[str, threading.Lock] = {}
+_metadata_locks_guard = threading.Lock()
 
-# Função para calcular o hash SHA-256 de um arquivo
-def get_sha256_hash(file_path):
-    sha256_hash = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        # Ler o arquivo em pedaços e atualizar o hash
-        for byte_block in iter(lambda: f.read(4096), b""):
-            sha256_hash.update(byte_block)
-    return sha256_hash.hexdigest()
 
-def download_file(url, dest_path, filename=None, thread_id=None, progress=''):    
+def _metadata_lock(path: Path) -> threading.Lock:
+    key = str(path.resolve()).casefold()
+    with _metadata_locks_guard:
+        return _metadata_locks.setdefault(key, threading.Lock())
+
+
+def _runtime_dependencies() -> dict:
+    """Carrega integracoes opcionais sem contaminar importacao do contrato."""
+
     try:
-        response = requests.get(url, stream=True, timeout=10)
-        if not filename:
-            filename = os.path.basename(urlsplit(url).path)
+        import requests
+        from tqdm import tqdm
+        from selenium import webdriver
+        from selenium.webdriver.common.action_chains import ActionChains
+        from selenium.webdriver.common.by import By
+        from selenium.webdriver.firefox.options import Options as FirefoxOptions
+        from selenium.webdriver.support import expected_conditions as EC
+        from selenium.webdriver.support.ui import WebDriverWait
+    except ImportError as error:
+        raise ContractError(
+            "dependencias ausentes; instalar Requests, tqdm e Selenium no ambiente da CLI"
+        ) from error
+    return {
+        "requests": requests,
+        "tqdm": tqdm,
+        "webdriver": webdriver,
+        "ActionChains": ActionChains,
+        "By": By,
+        "FirefoxOptions": FirefoxOptions,
+        "EC": EC,
+        "WebDriverWait": WebDriverWait,
+    }
 
-        filename = limpar_nome_arquivo(filename)
-        full_path = os.path.join(dest_path, filename)
-        total = int(response.headers.get('content-length', 0))
 
-        if os.path.exists(full_path) and os.path.getsize(full_path) > 0:            
-            print(f"{GREEN}[{thread_id}] [{progress}] [✓] Já no destino.: '{filename}'.{RESET}")
-            return full_path
+def _validate_public_dns(host: str) -> None:
+    """Rejeita resolucao local, privada, reservada ou nao global."""
 
-        with open(full_path, 'wb') as file, tqdm(
-            desc=filename,
-            total=total,
-            unit='B',
+    try:
+        addresses = {
+            item[4][0]
+            for item in socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+        }
+    except OSError as error:
+        raise DownloadError(f"DNS indisponivel para {host}") from error
+    if not addresses:
+        raise DownloadError(f"DNS sem endereco para {host}")
+    for address in addresses:
+        parsed = ipaddress.ip_address(address)
+        if not parsed.is_global:
+            raise DownloadError(f"DNS nao publico bloqueado para {host}: {address}")
+
+
+def _validate_network_url(url: str, allowed_hosts: set[str], require_format: bool) -> str:
+    if require_format:
+        validate_source_url(url, allowed_hosts=allowed_hosts, https_only=True)
+    else:
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != "https"
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.fragment
+            or parsed.hostname.casefold() not in allowed_hosts
+        ):
+            raise ContractError(f"URL de catalogo nao permitida: {url}")
+    _validate_public_dns(urlsplit(url).hostname or "")
+    return url
+
+
+def _request_asset(session, initial_url: str, download_config: dict):
+    """Executa GET com redirecionamento manual e revalidacao integral."""
+
+    allowed_hosts = {item.casefold() for item in download_config["allowed_asset_hosts"]}
+    current = initial_url
+    expected_format = format_from_url(initial_url)
+    for redirect_count in range(download_config["max_redirects"] + 1):
+        _validate_network_url(current, allowed_hosts, require_format=True)
+        response = session.get(
+            current,
+            stream=True,
+            allow_redirects=False,
+            timeout=(
+                download_config["connect_timeout_seconds"],
+                download_config["read_timeout_seconds"],
+            ),
+        )
+        if response.status_code in {301, 302, 303, 307, 308}:
+            location = response.headers.get("location")
+            response.close()
+            if not location or redirect_count == download_config["max_redirects"]:
+                raise DownloadError("redirecionamento ausente ou acima do limite")
+            current = urljoin(current, location)
+            if format_from_url(current) != expected_format:
+                raise DownloadError("redirecionamento alterou o formato esperado")
+            continue
+        if response.status_code < 200 or response.status_code >= 300:
+            response.close()
+            raise DownloadError(f"HTTP {response.status_code} em aquisicao")
+        return response, current, expected_format
+    raise DownloadError("limite de redirecionamentos excedido")
+
+
+def _stream_to_temporary(
+    session,
+    url: str,
+    destination_directory: Path,
+    download_config: dict,
+    tqdm_factory,
+) -> tuple[Path, dict, str, str]:
+    """Transfere resposta limitada, calcula hashes e preserva parcial isolado."""
+
+    response, final_url, publication_format = _request_asset(
+        session, url, download_config
+    )
+    declared_size = response.headers.get("content-length")
+    if declared_size:
+        try:
+            if int(declared_size) > download_config["max_bytes"]:
+                response.close()
+                raise DownloadError("Content-Length acima do limite")
+        except ValueError as error:
+            response.close()
+            raise DownloadError("Content-Length invalido") from error
+    destination_directory.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=".download-",
+        suffix=f".{publication_format}.partial",
+        dir=destination_directory,
+    )
+    algorithms = {
+        "sha1": hashlib.sha1(usedforsecurity=False),
+        "sha256": hashlib.sha256(),
+        "sha512": hashlib.sha512(),
+    }
+    size = 0
+    temporary = Path(temporary_name)
+    try:
+        progress = tqdm_factory(
+            desc=destination_directory.name,
+            total=int(declared_size or 0),
+            unit="B",
             unit_scale=True,
             unit_divisor=1024,
-        ) as bar:
-            for data in response.iter_content(chunk_size=1024):
-                size = file.write(data)
-                bar.update(size)
-
-        if os.path.exists(full_path) and os.path.getsize(full_path) > 0:                                             
-            print(f"{GREEN}[{thread_id}] [{progress}] [✓] baixado.......: '{filename or url}'.{RESET}")
-            return full_path
-        else:
-            print(f"{YELLOW}[{thread_id}] [{progress}] [W] Falha/Vazio...: '{filename or url}'{RESET}")
-
-    except Exception as e:                                          
-        print(f"{RED}[{thread_id}] [{progress}] [ERRO] Falha baixa...: '{filename or url}': {e}{RESET}")
-        return None
-    
-    return False
-
-
-def create_source_json(title, download_dir, refs, thread_id, progress=''):
-    if refs:  # Só cria o arquivo se houver pelo menos uma URL        
-        source_file = os.path.join(download_dir, f"{limpar_nome_arquivo(title)}.source.json")
-        with open(source_file, 'w') as json_file:
-            json.dump(refs, json_file, indent=4)                                         
-        print(f"{GREEN}[{thread_id}] [{progress}] [✓] Criado........: '{limpar_nome_arquivo(title)}.source.json'.{RESET}")
-
-def registrar_falha(titulo, erro, url, exception=None, traceback_info=None, thread_id=None):
-    global falhas
-    
-    error_message = erro
-    if exception:
-        error_message = str(exception)
-    
-    falhas[titulo] = {
-        "erro": error_message,
-        "url_principal": url,
-        "exception": str(exception) if exception else None,
-        "traceback": traceback_info,
-    }
-
-    # Apenas o processo pai escreve no arquivo JSON
-    if os.getpid() == os.getppid():
-        with open('falhas.json', 'w') as f:
-            json.dump(falhas, f, indent=4)
-
-def limpar_nome_arquivo(nome):
-    # Lista de caracteres proibidos no sistema de arquivos (Windows)
-    caracteres_invalidos = [':']
-    for char in caracteres_invalidos:
-        nome = nome.replace(char, ' -')  # Substitui os caracteres inválidos por "_"    
-    
-    # Lista de caracteres proibidos no sistema de arquivos (Windows)
-    caracteres_invalidos = ['<', '>', '"', '/', '\\', '|', '?', '*']
-    for char in caracteres_invalidos:
-        nome = nome.replace(char, '')  # Substitui os caracteres inválidos por "_"
-
-    return nome
-
-def padd_progress(feito=0, total=0):
-    return f"{f"{feito}".zfill(3)}/{f"{total}".zfill(3)}"
-
-def main(url, download_dir, thread_id):
-    livros_baixados = 0
-    arquivos_baixados = 0
-
-    download_dir = ensure_dir_exists(download_dir)
-
-    options = FirefoxOptions()
-    options.add_argument('--headless')
-    driver = webdriver.Firefox(options=options)
-    driver.set_window_size(1920, 1080)
-
-    wait = WebDriverWait(driver, 15)
-    actions = ActionChains(driver)
-
-    driver.get(url)
-
-    # Acitar Cookies - Aguardar o botão que começa com a classe "Ripple_root__lmfsr Ripple_dark__"
+            leave=False,
+        )
+    except Exception:
+        os.close(descriptor)
+        temporary.unlink(missing_ok=True)
+        response.close()
+        raise
     try:
-        ripple_button = wait.until(EC.presence_of_element_located((
-            By.CSS_SELECTOR, "div[class^='Ripple_root__lmfsr Ripple_dark__']"
-        )))
+        with os.fdopen(descriptor, "wb") as stream:
+            for chunk in response.iter_content(chunk_size=download_config["chunk_bytes"]):
+                if not chunk:
+                    continue
+                size += len(chunk)
+                if size > download_config["max_bytes"]:
+                    raise DownloadError("resposta excedeu limite de bytes")
+                stream.write(chunk)
+                for algorithm in algorithms.values():
+                    algorithm.update(chunk)
+                progress.update(len(chunk))
+            stream.flush()
+            os.fsync(stream.fileno())
+        if size == 0:
+            raise DownloadError("resposta vazia")
+        if declared_size and size != int(declared_size):
+            raise DownloadError("corpo parcial diverge de Content-Length")
+        validate_file_signature(temporary, publication_format)
+        return (
+            temporary,
+            {
+                "sha1": algorithms["sha1"].hexdigest(),
+                "sha256": algorithms["sha256"].hexdigest(),
+                "sha512": algorithms["sha512"].hexdigest(),
+                "size": size,
+            },
+            final_url,
+            publication_format,
+        )
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+    finally:
+        response.close()
+        progress.close()
 
-        # Mover o mouse até o botão e clicar
-        actions.move_to_element(ripple_button).click().perform()
-        print(f"{GREEN}[{thread_id}] [I] Clicado.......: Botão Ripple.{RESET}")
-        time.sleep(1)  # Esperar um pouco para a ação surtir efeito
 
-    except Exception as e:
-        print(f"{YELLOW}[{thread_id}] [w] Não encontrado: Botão Ripple não encontrado ou falha ao clicar: {e}{RESET}")
+def download_asset(
+    session,
+    url: str,
+    identity,
+    source_root: Path,
+    download_config: dict,
+    tqdm_factory,
+) -> tuple[Path, dict, bool]:
+    """Incorpora asset e retorna path, evidencia v2 e flag de instalacao."""
 
-    # Scroll para carregar todos os livros dinamicamente
-    last_height = driver.execute_script("return document.body.scrollHeight")
-    scroll_attempts = 0
-
-    print(f"{CYAN}[{thread_id}] [I] Iniciando a busca pelos livros...{RESET}")
-
-    while True:
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(2)
-        new_height = driver.execute_script("return document.body.scrollHeight")
-        
-        if new_height == last_height:
-            scroll_attempts += 1
-            if scroll_attempts >= 3:
-                print(f"{CYAN}[{thread_id}] [I] Scroll completo. Carregando livros finalizados.{RESET}")
-                break
+    destination_directory = source_root / identity.relative_directory()
+    temporary, evidence, _final_url, publication_format = _stream_to_temporary(
+        session,
+        url,
+        destination_directory,
+        download_config,
+        tqdm_factory,
+    )
+    base_path = destination_directory / identity.asset_name(publication_format)
+    try:
+        target, duplicate = choose_variant_path(base_path, evidence["sha256"])
+        installed = not duplicate
+        if duplicate:
+            temporary.unlink()
         else:
-            scroll_attempts = 0
-            last_height = new_height
+            os.replace(temporary, target)
+        record = {
+            "format": publication_format,
+            "url": url,
+            "accessed_at": datetime.now(timezone.utc).isoformat(),
+            "size": evidence["size"],
+            "hashes": {
+                "sha1": evidence["sha1"],
+                "sha256": evidence["sha256"],
+                "sha512": evidence["sha512"],
+            },
+        }
+        return target, record, installed
+    finally:
+        temporary.unlink(missing_ok=True)
 
-    wait.until(EC.presence_of_element_located((By.CLASS_NAME, "ReactVirtualized__Grid__innerScrollContainer")))
 
-    books = driver.find_elements(By.CLASS_NAME, "book-list-item")
+def _complete_legacy_records(
+    records: list[dict],
+    identity,
+    destination_directory: Path,
+) -> list[dict]:
+    """Completa hashes legados somente a partir do asset local correlato."""
 
-    print(f"{GREEN}[{thread_id}] [{padd_progress(arquivos_baixados,len(books)*2)}] [✓] Encontrados {len(books)} livros para download.{RESET}")
-
-    for book in books:
-        try:            
-            # Movendo o mouse sobre o livro para ativar o hover
-            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", book)
-            time.sleep(0.5)
-            actions.move_to_element(book).perform()
-            time.sleep(1.5)
-
-            # Tentando obter o título
-            title_elem = book.find_elements(By.CLASS_NAME, "title")
-            title = title_elem[0].text.strip().replace("/", "_") if title_elem else "Desconhecido"
-
-            # Remover artigo do título, se houver, e corrigir vírgulas
-            title = remove_article_from_title(title)
-
-            download_panels = book.find_elements(By.CLASS_NAME, "book-download-links")
-            if not download_panels:
-                print(f"{YELLOW}[{thread_id}] [{padd_progress(arquivos_baixados,len(books)*2)}] [w] ({title}): Painel de download não encontrado.{RESET}")
+    completed = []
+    for record in records:
+        hashes = record.get("hashes") or {}
+        if (
+            hashes.get("sha1")
+            and hashes.get("sha256")
+            and hashes.get("sha512")
+            and record.get("size")
+        ):
+            completed.append(record)
+            continue
+        base = destination_directory / identity.asset_name(record["format"])
+        candidates = ([base] if base.is_file() else []) + sorted(
+            destination_directory.glob(
+                f"{identity.acronym}.*.{record['format']}"
+            )
+        )
+        expected_sha256 = hashes.get("sha256")
+        selected = None
+        for candidate in candidates:
+            candidate_hashes = hash_file(candidate)
+            if expected_sha256 and candidate_hashes.sha256 != expected_sha256:
                 continue
+            if selected is not None:
+                raise ContractError(
+                    f"metadado legado ambiguo para {record['format']}"
+                )
+            selected = candidate_hashes
+        if selected is None:
+            raise ContractError(f"asset ausente para metadado {record['format']}")
+        completed.append(
+            {
+                **record,
+                "size": selected.size,
+                "hashes": selected.as_dict(),
+            }
+        )
+    return completed
 
-            download_panel = download_panels[0]            
 
-            links = download_panel.find_elements(By.TAG_NAME, "a")
-            has_download = False
+def update_metadata(source_root: Path, identity, new_records: list[dict]) -> Path:
+    """Mescla fontes sob lock local e grava documento fechado atomicamente."""
 
-            refs = {}
+    destination_directory = source_root / identity.relative_directory()
+    metadata_path = destination_directory / identity.metadata_name()
+    with _metadata_lock(metadata_path):
+        existing = []
+        if metadata_path.exists():
+            existing = _complete_legacy_records(
+                read_source_records(metadata_path),
+                identity,
+                destination_directory,
+            )
+        document = build_source_document(identity, existing + new_records)
+        write_json_atomic(metadata_path, document)
+    return metadata_path
 
-            for link in links:
-                href = link.get_attribute("href")
-                if href.endswith(".pdf"):                                                    
-                    print(f"{BLUE}[{thread_id}] [{padd_progress(arquivos_baixados,len(books)*2)}] [I] Baixando......: '{title}' (PDF)...{RESET}")
-                    downloaded_file = download_file(href, download_dir, f"{title}.pdf", thread_id, padd_progress(arquivos_baixados,len(books)*2))
 
-                    if downloaded_file and os.path.exists(downloaded_file) and os.path.getsize(downloaded_file) > 0:
-                        timestamp = int(time.time())
-                        sha256_hash = get_sha256_hash(downloaded_file)
-                        refs[href] = {"acesso": timestamp, "sha256": sha256_hash}
-                        has_download = True
+def _process_collection(collection: dict, config: dict, source_root: Path, runtime: dict) -> dict:
+    """Descobre candidatos de uma colecao e baixa seus formatos conhecidos."""
 
-                        arquivos_baixados += 1
-
-                elif href.endswith(".epub"):
-                    print(f"{BLUE}[{thread_id}] [{padd_progress(arquivos_baixados,len(books)*2)}] [I] Baixando......: '{title}' (EPUB)...{RESET}")
-                    downloaded_file = download_file(href, download_dir, f"{title}.epub", thread_id, padd_progress(arquivos_baixados,len(books)*2))
-                    if downloaded_file and os.path.exists(os.path.join(download_dir, f"{title}.pdf")) and os.path.getsize(os.path.join(download_dir, f"{title}.pdf")) > 0:
-                        timestamp = int(time.time())
-                        sha256_hash = get_sha256_hash(downloaded_file)
-                        refs[href] = {"acesso": timestamp, "sha256": sha256_hash}
-                        has_download = True
-                        
-                        arquivos_baixados += 1
-
-            if has_download:
-                livros_baixados += 1
-                # Criar o arquivo .source.json com as URLs dos arquivos baixados
-                create_source_json(title, download_dir, refs, thread_id, padd_progress(arquivos_baixados,len(books)*2))
-
-            # Injetando JavaScript para esconder o painel de sobreposição exibido atualmente e evitar erros
-            driver.execute_script(""" 
-                const hoverPanel = document.querySelector('.book-description-cover');
-                if (hoverPanel) {
-                    hoverPanel.style.display = 'none';
-                }
-            """)
-            time.sleep(1)  # Pausa para garantir que o painel foi ocultado
-
-        except Exception as e:                                              
-            print(f"{RED}[{thread_id}] [{padd_progress(arquivos_baixados,len(books)*2)}] [ERRO] Falha.........: '{title}': {e}{RESET}")
-            
-            # Capturando o traceback completo
-            tb = traceback.format_exc()
-            registrar_falha(title, str(e), url, e, tb, thread_id)
-
-    driver.quit()
-    return {
-        "thread_id": thread_id,
-        "url": url,
-        "livros_baixados": livros_baixados,
-        "total_livros": len(books),
-        "arquivos_baixados": arquivos_baixados    
+    download_config = config["download"]
+    allowed_catalog_hosts = {
+        item.casefold() for item in download_config["allowed_catalog_hosts"]
     }
+    _validate_network_url(
+        collection["catalog_url"],
+        allowed_catalog_hosts,
+        require_format=False,
+    )
+    options = runtime["FirefoxOptions"]()
+    options.add_argument("--headless")
+    driver = runtime["webdriver"].Firefox(options=options)
+    session = runtime["requests"].Session()
+    session.headers["User-Agent"] = "egwSearch/FT-004 (+https://github.com/JeanCarloEM/egwSearch)"
+    books_seen = assets_downloaded = failures = 0
+    try:
+        driver.set_window_size(1920, 1080)
+        wait = runtime["WebDriverWait"](driver, 15)
+        actions = runtime["ActionChains"](driver)
+        driver.get(collection["catalog_url"])
+        try:
+            cookie = wait.until(
+                runtime["EC"].presence_of_element_located(
+                    (
+                        runtime["By"].CSS_SELECTOR,
+                        "div[class^='Ripple_root__lmfsr Ripple_dark__']",
+                    )
+                )
+            )
+            actions.move_to_element(cookie).click().perform()
+        except Exception:
+            pass
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        stable = 0
+        while stable < 3:
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(2)
+            current_height = driver.execute_script("return document.body.scrollHeight")
+            stable = stable + 1 if current_height == last_height else 0
+            last_height = current_height
+        wait.until(
+            runtime["EC"].presence_of_element_located(
+                (
+                    runtime["By"].CLASS_NAME,
+                    "ReactVirtualized__Grid__innerScrollContainer",
+                )
+            )
+        )
+        books = driver.find_elements(runtime["By"].CLASS_NAME, "book-list-item")
+        for book in books:
+            books_seen += 1
+            try:
+                driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center'});", book
+                )
+                actions.move_to_element(book).perform()
+                title_elements = book.find_elements(runtime["By"].CLASS_NAME, "title")
+                if not title_elements:
+                    raise ContractError("livro sem titulo candidato")
+                title = title_elements[0].text
+                identity = publication_identity(
+                    "egw",
+                    collection["language"],
+                    collection["type"],
+                    title,
+                )
+                panels = book.find_elements(
+                    runtime["By"].CLASS_NAME, "book-download-links"
+                )
+                if not panels:
+                    raise ContractError("painel de download ausente")
+                records = []
+                installed_assets = []
+                try:
+                    for link in panels[0].find_elements(runtime["By"].TAG_NAME, "a"):
+                        href = link.get_attribute("href")
+                        if not href:
+                            continue
+                        try:
+                            format_from_url(href)
+                        except ContractError:
+                            continue
+                        target, record, installed = download_asset(
+                            session,
+                            href,
+                            identity,
+                            source_root,
+                            download_config,
+                            runtime["tqdm"],
+                        )
+                        records.append(record)
+                        if installed:
+                            installed_assets.append(target)
+                        assets_downloaded += 1
+                        print(
+                            f"DOWNLOAD_OK collection={collection['id']} "
+                            f"title={json.dumps(identity.title, ensure_ascii=False)} "
+                            f"path={target.relative_to(REPOSITORY_ROOT).as_posix()}"
+                        )
+                    if records:
+                        update_metadata(source_root, identity, records)
+                except Exception:
+                    for installed_asset in reversed(installed_assets):
+                        installed_asset.unlink(missing_ok=True)
+                    raise
+            except Exception as error:
+                failures += 1
+                print(
+                    f"DOWNLOAD_FAIL collection={collection['id']} "
+                    f"item={books_seen} error={type(error).__name__}:{error}",
+                    file=sys.stderr,
+                )
+        return {
+            "collection": collection["id"],
+            "books": books_seen,
+            "assets": assets_downloaded,
+            "failures": failures,
+        }
+    finally:
+        session.close()
+        driver.quit()
 
-# URLs das coleções para processar em paralelo
-urls = [
-    ("https://egwwritings.org/allCollection/pt/245", 'pt-br/livros'),
-    ("https://egwwritings.org/allCollection/pt/246", 'pt-br/devocionais'),
-    ("https://egwwritings.org/allCollection/en/4", 'en-us/books'),
-    ("https://egwwritings.org/allCollection/en/1227", 'en-us/devotionals'),
-    ("https://egwwritings.org/allCollection/en/9", 'en-us/manuscript'),
-    ("https://egwwritings.org/allCollection/en/8", 'en-us/pamphlets'),
-    ("https://egwwritings.org/allCollection/en/5", 'en-us/periodicals'),
-    ("https://egwwritings.org/allCollection/en/10", 'en-us/misc')
-]
 
-# Iniciar o ThreadPoolExecutor para processar as URLs em paralelo
-with ThreadPoolExecutor(max_workers=len(urls)) as executor:
-    futures = [executor.submit(main, url, download_dir, i+1) for i, (url, download_dir) in enumerate(urls)]
-    
-    # Coletar resultados
-    resultados = [future.result() for future in futures]
+def _selected_collections(config: dict, selected: set[str] | None) -> list[dict]:
+    collections = [
+        collection
+        for author in config["authors"].values()
+        for collection in author["collections"]
+    ]
+    if not selected:
+        return collections
+    available = {collection["id"] for collection in collections}
+    unknown = selected - available
+    if unknown:
+        raise ContractError(f"colecao desconhecida: {', '.join(sorted(unknown))}")
+    return [collection for collection in collections if collection["id"] in selected]
 
-    # Exibir o resumo final após todos os threads
-    print(f"\n{BOLD}{CYAN}=== RESUMO FINAL ==={RESET}")
-    total_livros = total_arquivos = 0
 
-    for r in resultados:
-        print(f"{GREEN}[{r['thread_id']}] | {r['url']} | Livros: {r['livros_baixados']}/{r['total_livros']} | Arquivos baixados: {r['arquivos_baixados']}{RESET}")
-        total_livros += r['livros_baixados']
-        total_arquivos += r['arquivos_baixados']
+def run(config_path: Path, selected: set[str] | None, workers: int | None) -> int:
+    config = load_config(config_path)
+    source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
+    runtime = _runtime_dependencies()
+    collections = _selected_collections(config, selected)
+    worker_count = workers or config["download"]["workers"]
+    if worker_count < 1 or worker_count > len(collections):
+        raise ContractError("workers fora do intervalo de colecoes")
+    results = []
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        futures = {
+            executor.submit(
+                _process_collection,
+                collection,
+                config,
+                source_root,
+                runtime,
+            ): collection["id"]
+            for collection in collections
+        }
+        for future in as_completed(futures):
+            results.append(future.result())
+    results.sort(key=lambda item: item["collection"])
+    print(json.dumps({"collections": results}, ensure_ascii=False, sort_keys=True))
+    return 1 if any(item["failures"] for item in results) else 0
 
-    print(f"\n{BOLD}{CYAN}Total Geral:{RESET} Livros com download: {total_livros} | Arquivos baixados: {total_arquivos}")
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Baixa publicacoes EGW na estrutura canônica.",
+    )
+    parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
+    parser.add_argument(
+        "--collection",
+        action="append",
+        dest="collections",
+        help="ID de colecao; repetivel. Omitido processa todas.",
+    )
+    parser.add_argument("--workers", type=int)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    arguments = build_parser().parse_args(argv)
+    try:
+        return run(
+            Path(arguments.config).resolve(),
+            set(arguments.collections) if arguments.collections else None,
+            arguments.workers,
+        )
+    except ContractError as error:
+        print(f"ERRO_CONTRATO: {error}", file=sys.stderr)
+        return 3
+    except KeyboardInterrupt:
+        print("CANCELADO", file=sys.stderr)
+        return 130
+    except Exception as error:
+        print(f"ERRO_OPERACIONAL: {type(error).__name__}: {error}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

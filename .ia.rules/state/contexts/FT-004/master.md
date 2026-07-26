@@ -41,7 +41,7 @@ Processamento bibliografico permanece em Python por adequacao ao ecossistema PDF
 
 | Ordem | Contexto | Entrega | Estado |
 | ---: | --- | --- | --- |
-| 1 | `01-contratos-e-downloader.md` | contrato comum, RCF especifico, migrador e downloader | pendente |
+| 1 | `01-contratos-e-downloader.md` | contrato comum, RCF especifico, migrador e downloader | concluido |
 | 2 | `02-migracao-acervo.md` | acervo canônico e inventario pre/post | pendente |
 | 3 | `03-indice-capas-site.md` | dados formativos, capas, indice, pagina e artefato | pendente |
 | 4 | `04-build-workflow.md` | hook, comandos e GitHub Pages | pendente |
@@ -62,3 +62,11 @@ Processamento bibliografico permanece em Python por adequacao ao ecossistema PDF
 ## Aceite global
 
 Todos os criterios materiais de RCF §§40-49 e da fonte devem possuir evidencia executada. Validacao de Pages no destino real e obrigatoria; indisponibilidade externa deve permanecer pendencia explicita e nao pode ser convertida em sucesso inferido.
+
+## Estado de integracao
+
+- subcontexto 01 concluiu contrato e ferramentas sem rede nem movimento do acervo.
+- dry-run causal: `5ebf1ffcf3a378f52085e5cdb49a241dab0a2de12bac35a3edc4a08108794ee2`.
+- inventario: 1576 arquivos, 638098352 bytes, SHA-256 `9900a18f91bac8480c38e1aee91ee28d01f485cad9fe19e2b3995d83599f0e28`.
+- 11 problemas bloqueiam `apply` e foram transferidos nominalmente ao subcontexto 02.
+- fase 3 permanece bloqueada.
