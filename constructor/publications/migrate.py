@@ -35,6 +35,7 @@ from publication_contract import (  # noqa: E402
     publication_identity,
     read_source_records,
     resolve_repository_path,
+    uri_slug,
     validate_file_signature,
     write_json_atomic,
 )
@@ -61,6 +62,11 @@ def _legacy_title(path: Path) -> tuple[str, str] | None:
 
 
 def _inventory_digest(entries: list[dict]) -> str:
+    canonical = json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _directory_digest(entries: list[dict]) -> str:
     canonical = json.dumps(entries, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
@@ -155,24 +161,83 @@ def _build_canonical_plan(
 ) -> dict:
     inventory: list[dict] = []
     planned_groups: list[dict] = []
+    actions: list[dict] = []
     problems: list[dict] = []
+    descriptors: list[dict] = []
+    destinations: dict[str, list[str]] = {}
+
     for author, language, publication_type, directory in directories:
+        source_directory = _relative(directory, source_root)
         try:
-            identity = publication_identity(
-                author,
-                language,
-                publication_type,
-                directory.name,
-            )
+            slug = uri_slug(directory.name)
         except ContractError as error:
             problems.append(
                 {
                     "code": "INVALID_IDENTITY",
-                    "group": _relative(directory, source_root),
+                    "group": source_directory,
                     "detail": str(error),
                 }
             )
             continue
+        title = None
+        if directory.name == slug:
+            metadata_names = sorted(
+                candidate.name[: -len(".source.json")]
+                for candidate in directory.iterdir()
+                if candidate.is_file() and candidate.name.endswith(".source.json")
+            )
+            acronym = metadata_names[0] if len(metadata_names) == 1 else ""
+        else:
+            try:
+                identity = publication_identity(
+                    author,
+                    language,
+                    publication_type,
+                    directory.name,
+                )
+            except ContractError as error:
+                problems.append(
+                    {
+                        "code": "INVALID_IDENTITY",
+                        "group": source_directory,
+                        "detail": str(error),
+                    }
+                )
+                continue
+            title = identity.title
+            slug = identity.route_slug
+            acronym = identity.acronym
+        target_directory = Path(author, language, publication_type, slug).as_posix()
+        descriptor = {
+            "author": author,
+            "language": language,
+            "type": publication_type,
+            "directory": directory,
+            "source_directory": source_directory,
+            "target_directory": target_directory,
+            "title": title,
+            "slug": slug,
+            "acronym": acronym,
+        }
+        descriptors.append(descriptor)
+        destinations.setdefault(target_directory.casefold(), []).append(source_directory)
+
+    colliding_directories: set[str] = set()
+    for target, sources in sorted(destinations.items()):
+        if len(sources) > 1:
+            colliding_directories.update(sources)
+            problems.append(
+                {
+                    "code": "SLUG_COLLISION",
+                    "target": target,
+                    "groups": sorted(sources, key=str.casefold),
+                }
+            )
+
+    for descriptor in descriptors:
+        directory = descriptor["directory"]
+        source_directory = descriptor["source_directory"]
+        acronym = descriptor["acronym"]
         by_kind: dict[str, list[Path]] = {}
         file_hashes: dict[str, object] = {}
         for candidate in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
@@ -180,7 +245,7 @@ def _build_canonical_plan(
             if not candidate.is_file():
                 problems.append({"code": "UNSUPPORTED_CANONICAL_ENTRY", "path": relative})
                 continue
-            kind = _canonical_kind(candidate, identity.acronym)
+            kind = _canonical_kind(candidate, acronym)
             if kind is None:
                 problems.append({"code": "INVALID_CANONICAL_NAME", "path": relative})
                 continue
@@ -214,13 +279,13 @@ def _build_canonical_plan(
         }
         if not assets:
             problems.append(
-                {"code": "GROUP_WITHOUT_ASSET", "group": _relative(directory, source_root)}
+                {"code": "GROUP_WITHOUT_ASSET", "group": source_directory}
             )
         if len(metadata_paths) != 1:
             problems.append(
                 {
                     "code": "GROUP_WITHOUT_SINGLE_METADATA",
-                    "group": _relative(directory, source_root),
+                    "group": source_directory,
                     "count": len(metadata_paths),
                 }
             )
@@ -274,21 +339,67 @@ def _build_canonical_plan(
                         "detail": str(error),
                     }
                 )
+        group_actions: list[dict] = []
+        if (
+            source_directory != descriptor["target_directory"]
+            and source_directory not in colliding_directories
+        ):
+            target_root = source_root / descriptor["target_directory"]
+            target_is_source = target_root.exists() and os.path.samefile(
+                target_root,
+                directory,
+            )
+            if target_root.exists() and not target_is_source:
+                problems.append(
+                    {
+                        "code": "SLUG_TARGET_EXISTS",
+                        "group": source_directory,
+                        "target": descriptor["target_directory"],
+                    }
+                )
+            else:
+                entries = []
+                for candidate in sorted(directory.iterdir(), key=lambda item: item.name.casefold()):
+                    relative = _relative(candidate, source_root)
+                    hashes = file_hashes.get(relative)
+                    if hashes is not None:
+                        entries.append(
+                            {
+                                "name": candidate.name,
+                                "kind": _canonical_kind(candidate, acronym),
+                                "size": hashes.size,
+                                "sha256": hashes.sha256,
+                            }
+                        )
+                action = {
+                    "source": source_directory,
+                    "target": descriptor["target_directory"],
+                    "kind": "directory",
+                    "size": sum(entry["size"] for entry in entries),
+                    "sha256": _directory_digest(entries),
+                    "entries": entries,
+                    "disposition": "rename-directory",
+                }
+                actions.append(action)
+                group_actions.append(action)
         planned_groups.append(
             {
                 "identity": {
-                    "author": identity.author,
-                    "language": identity.language,
-                    "type": identity.publication_type,
-                    "title": identity.title,
-                    "acronym": identity.acronym,
-                    "directory": identity.relative_directory().as_posix(),
+                    "author": descriptor["author"],
+                    "language": descriptor["language"],
+                    "type": descriptor["type"],
+                    "title": descriptor["title"],
+                    "slug": descriptor["slug"],
+                    "acronym": acronym,
+                    "directory": descriptor["target_directory"],
                 },
-                "actions": [],
+                "source_directory": source_directory,
+                "actions": group_actions,
             }
         )
 
     inventory.sort(key=lambda item: item["path"].casefold())
+    actions.sort(key=lambda item: item["source"].casefold())
     problems.sort(
         key=lambda item: (
             item["code"],
@@ -305,12 +416,15 @@ def _build_canonical_plan(
             "entries": inventory,
         },
         "groups": planned_groups,
-        "actions": [],
+        "actions": actions,
         "problems": problems,
         "summary": {
             "groups": len(planned_groups),
-            "actions": 0,
-            "moves": 0,
+            "actions": len(actions),
+            "moves": sum(
+                len(action.get("entries", [None]))
+                for action in actions
+            ),
             "deduplications": 0,
             "problems": len(problems),
         },
@@ -556,6 +670,17 @@ def _resolve_inside(root: Path, relative: str) -> Path:
     return candidate
 
 
+def _resolve_inside_preserving_name(root: Path, relative: str) -> Path:
+    if Path(relative).is_absolute():
+        raise ContractError(f"path absoluto no plano: {relative}")
+    canonical_root = root.resolve()
+    candidate = canonical_root / Path(relative)
+    resolved = candidate.resolve()
+    if resolved != canonical_root and canonical_root not in resolved.parents:
+        raise ContractError(f"path escapa da raiz: {relative}")
+    return candidate
+
+
 def _verify_action_source(source_root: Path, action: dict) -> Path:
     source = _resolve_inside(source_root, action["source"])
     if not source.is_file():
@@ -564,6 +689,53 @@ def _verify_action_source(source_root: Path, action: dict) -> Path:
     if hashes.size != action["size"] or hashes.sha256 != action["sha256"]:
         raise ContractError(f"origem divergente do plano: {action['source']}")
     return source
+
+
+def _verify_directory_at(directory: Path, action: dict) -> None:
+    if not directory.is_dir():
+        raise ContractError(f"diretorio ausente: {directory}")
+    actual_names = sorted(
+        candidate.name
+        for candidate in directory.iterdir()
+        if candidate.is_file()
+    )
+    expected_names = sorted(entry["name"] for entry in action["entries"])
+    if actual_names != expected_names or any(
+        not candidate.is_file()
+        for candidate in directory.iterdir()
+    ):
+        raise ContractError(f"conteudo de diretorio divergente: {directory}")
+    verified_entries = []
+    for entry in sorted(action["entries"], key=lambda item: item["name"].casefold()):
+        candidate = directory / entry["name"]
+        hashes = hash_file(candidate)
+        if hashes.size != entry["size"] or hashes.sha256 != entry["sha256"]:
+            raise ContractError(f"arquivo de diretorio divergente: {candidate}")
+        verified_entries.append(
+            {
+                "name": entry["name"],
+                "kind": entry["kind"],
+                "size": hashes.size,
+                "sha256": hashes.sha256,
+            }
+        )
+    if (
+        sum(entry["size"] for entry in verified_entries) != action["size"]
+        or _directory_digest(verified_entries) != action["sha256"]
+    ):
+        raise ContractError(f"identidade de diretorio divergente: {directory}")
+
+
+def _temporary_directory(source: Path, source_relative: str) -> Path:
+    digest = hashlib.sha256(source_relative.encode("utf-8")).hexdigest()[:16]
+    return source.with_name(f".slug-migration-{digest}")
+
+
+def _exists_with_exact_name(path: Path) -> bool:
+    return path.parent.is_dir() and any(
+        candidate.name == path.name
+        for candidate in path.parent.iterdir()
+    )
 
 
 def _journal_path(state_root: Path, plan_id: str) -> Path:
@@ -587,9 +759,35 @@ def rollback(journal_path: Path) -> dict:
     if journal["status"] == "finalized":
         raise ContractError("journal finalizado nao possui quarentena para rollback")
     source_root = resolve_repository_path(journal["source_root"], REPOSITORY_ROOT)
+    cleanup_directories: set[Path] = set()
     for record in reversed(journal["records"]):
+        if record["disposition"] == "rename-directory":
+            source = _resolve_inside_preserving_name(source_root, record["source"])
+            target = _resolve_inside_preserving_name(source_root, record["target"])
+            temporary = Path(record["temporary"]).resolve()
+            if _exists_with_exact_name(source):
+                _verify_directory_at(source, record)
+            elif _exists_with_exact_name(temporary):
+                _verify_directory_at(temporary, record)
+                os.replace(temporary, source)
+            elif _exists_with_exact_name(target):
+                _verify_directory_at(target, record)
+                if temporary.exists():
+                    raise ContractError(f"temporario de rollback ja existe: {temporary}")
+                os.replace(target, temporary)
+                os.replace(temporary, source)
+            else:
+                raise ContractError(
+                    f"rollback sem diretorio fonte, temporario ou alvo: {record['source']}"
+                )
+            _verify_directory_at(source, record)
+            record["current"] = str(source)
+            record["status"] = "rolled_back"
+            continue
         source = _resolve_inside(source_root, record["source"])
         current = Path(record["current"]).resolve()
+        if record["disposition"] == "move":
+            cleanup_directories.add(current.parent)
         if source.exists() and not current.exists():
             record["status"] = "rolled_back"
             continue
@@ -605,6 +803,13 @@ def rollback(journal_path: Path) -> dict:
         else:
             os.replace(current, source)
         record["status"] = "rolled_back"
+    for directory in sorted(
+        cleanup_directories,
+        key=lambda item: (len(item.parts), str(item).casefold()),
+        reverse=True,
+    ):
+        if source_root in directory.parents and directory.is_dir() and not any(directory.iterdir()):
+            directory.rmdir()
     journal["status"] = "rolled_back"
     write_json_atomic(journal_path, journal)
     return journal
@@ -641,6 +846,39 @@ def apply_plan(plan_path: Path, state_root: Path = DEFAULT_STATE_ROOT) -> Path:
     quarantine = journal_path.parent / "quarantine"
     try:
         for action in plan["actions"]:
+            if action["disposition"] == "rename-directory":
+                source = _resolve_inside_preserving_name(source_root, action["source"])
+                target = _resolve_inside_preserving_name(source_root, action["target"])
+                _verify_directory_at(source, action)
+                if target.exists() and not os.path.samefile(target, source):
+                    raise ContractError(f"destino apareceu depois do plano: {target}")
+                temporary = _temporary_directory(source, action["source"])
+                if temporary.exists():
+                    raise ContractError(f"temporario de migracao ja existe: {temporary}")
+                record = {
+                    "source": action["source"],
+                    "target": action["target"],
+                    "temporary": str(temporary),
+                    "current": str(source),
+                    "disposition": action["disposition"],
+                    "entries": action["entries"],
+                    "size": action["size"],
+                    "sha256": action["sha256"],
+                    "status": "pending",
+                }
+                journal["records"].append(record)
+                write_json_atomic(journal_path, journal)
+                os.replace(source, temporary)
+                record["current"] = str(temporary)
+                record["status"] = "temporary"
+                write_json_atomic(journal_path, journal)
+                if target.exists():
+                    raise ContractError(f"destino apareceu durante migracao: {target}")
+                os.replace(temporary, target)
+                record["current"] = str(target)
+                record["status"] = "moved"
+                write_json_atomic(journal_path, journal)
+                continue
             source = _verify_action_source(source_root, action)
             target = _resolve_inside(source_root, action["target"])
             current_path = (
@@ -673,10 +911,34 @@ def apply_plan(plan_path: Path, state_root: Path = DEFAULT_STATE_ROOT) -> Path:
             record["status"] = "moved"
             write_json_atomic(journal_path, journal)
         for record in journal["records"]:
-            if record["disposition"] == "move":
+            if record["disposition"] == "rename-directory":
+                target = _resolve_inside_preserving_name(source_root, record["target"])
+                _verify_directory_at(target, record)
+            elif record["disposition"] == "move":
                 target = _resolve_inside(source_root, record["target"])
                 if hash_file(target).sha256 != record["sha256"]:
                     raise ContractError(f"hash pos-movimento divergente: {target}")
+        source_directories = sorted(
+            {
+                _resolve_inside(source_root, action["source"]).parent
+                for action in plan["actions"]
+                if (
+                    action["disposition"] == "move"
+                    and Path(action["source"]).parent
+                    != Path(action["target"]).parent
+                    and Path(action["source"]).parent
+                    not in Path(action["target"]).parent.parents
+                )
+            },
+            key=lambda item: (len(item.parts), str(item).casefold()),
+            reverse=True,
+        )
+        for directory in source_directories:
+            if not directory.is_dir():
+                continue
+            if any(directory.iterdir()):
+                raise ContractError(f"diretorio de origem nao ficou vazio: {directory}")
+            directory.rmdir()
         journal["status"] = "complete"
         write_json_atomic(journal_path, journal)
         return journal_path
@@ -693,7 +955,10 @@ def finalize(journal_path: Path) -> dict:
         raise ContractError("finalize exige journal complete")
     source_root = resolve_repository_path(journal["source_root"], REPOSITORY_ROOT)
     for record in journal["records"]:
-        if record["disposition"] == "move":
+        if record["disposition"] == "rename-directory":
+            target = _resolve_inside_preserving_name(source_root, record["target"])
+            _verify_directory_at(target, record)
+        elif record["disposition"] == "move":
             target = _resolve_inside(source_root, record["target"])
             if not target.is_file() or hash_file(target).sha256 != record["sha256"]:
                 raise ContractError(f"destino final divergente: {target}")

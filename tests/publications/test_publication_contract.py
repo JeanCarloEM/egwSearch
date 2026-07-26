@@ -26,8 +26,8 @@ from publication_contract import (  # noqa: E402
     hash_file,
     publication_identity,
     read_source_records,
-    safe_path_segment,
     title_acronym,
+    uri_slug,
     validate_file_signature,
     write_json_atomic,
 )
@@ -45,10 +45,21 @@ class PublicationContractTests(unittest.TestCase):
         self.assertEqual(identity.title, "Atos Dos Apóstolos (nova edição)")
         self.assertEqual(identity.acronym, "adane")
         self.assertEqual(
-            identity.directory_title,
-            "Atos Dos Apóstolos (nova edição)",
+            identity.route_slug,
+            "atos-dos-apostolos-nova-edicao",
         )
-        self.assertEqual(safe_path_segment('A: B/C?'), "A - B - C -")
+        self.assertEqual(uri_slug('A: B/C?'), "a-bc")
+
+    def test_uri_slug_is_ascii_rfc3986_and_portable(self) -> None:
+        self.assertEqual(
+            uri_slug("A Maravilhosa Graça de Deus"),
+            "a-maravilhosa-graca-de-deus",
+        )
+        self.assertEqual(uri_slug("Christ’s Object Lessons"), "christs-object-lessons")
+        self.assertEqual(uri_slug("Æsop, Œuvre & Straße"), "aesop-oeuvre-strasse")
+        self.assertEqual(uri_slug("CON"), "u-con")
+        self.assertRegex(uri_slug("東京"), r"^u-[0-9a-f]{12}$")
+        self.assertLessEqual(len(uri_slug("Título " * 100).encode("ascii")), 180)
 
     def test_single_word_and_unicode_fallback_acronyms(self) -> None:
         self.assertEqual(title_acronym("Maranatha"), "maranatha")

@@ -38,6 +38,19 @@ WINDOWS_RESERVED = {
 }
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 LANGUAGE_RE = re.compile(r"^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$")
+URI_SLUG_MAX_BYTES = 180
+URI_TRANSLITERATION = str.maketrans(
+    {
+        "æ": "ae",
+        "ð": "d",
+        "đ": "d",
+        "ı": "i",
+        "ł": "l",
+        "ø": "o",
+        "œ": "oe",
+        "þ": "th",
+    }
+)
 
 
 class ContractError(ValueError):
@@ -70,14 +83,14 @@ class PublicationIdentity:
     publication_type: str
     title: str
     acronym: str
-    directory_title: str
+    route_slug: str
 
     def relative_directory(self) -> Path:
         return Path(
             self.author,
             self.language,
             self.publication_type,
-            self.directory_title,
+            self.route_slug,
         )
 
     def asset_name(self, publication_format: str, qualifier: str | None = None) -> str:
@@ -131,22 +144,41 @@ def normalize_editorial_title(title: str) -> str:
     return normalized
 
 
-def safe_path_segment(value: str) -> str:
-    """Converte texto editorial em segmento portatil sem traversal."""
+def uri_slug(value: str) -> str:
+    """Projeta titulo editorial em segmento URI ASCII estavel.
+
+    A projecao e usada somente por diretorios e rotas: o titulo original
+    continua sendo a autoridade editorial. A normalizacao remove marcas e
+    pontuacao, preserva fronteiras de espaco como hifen e limita o segmento
+    para manter portabilidade entre Windows, Git e hospedagem estatica.
+    """
 
     normalized = normalize_editorial_title(value)
-    translated = re.sub(r'[<>:"/\\|?*]', " - ", normalized)
-    translated = " ".join(translated.split()).strip(" .")
-    if not translated or translated in {".", ".."}:
-        raise ContractError("segmento de path vazio ou relativo")
-    if translated.casefold() in WINDOWS_RESERVED:
-        translated = f"_{translated}"
-    if len(translated.encode("utf-8")) > 180:
+    folded = unicodedata.normalize("NFKC", normalized).casefold()
+    folded = folded.translate(URI_TRANSLITERATION)
+    decomposed = unicodedata.normalize("NFKD", folded)
+    without_marks = "".join(
+        character
+        for character in decomposed
+        if not unicodedata.category(character).startswith("M")
+    )
+    spaced = re.sub(r"\s+", "-", without_marks)
+    ascii_only = spaced.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9-]", "", ascii_only)
+    slug = re.sub(r"-+", "-", slug).strip("-")
+    if not slug:
         digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
-        while len(translated.encode("utf-8")) > 160:
-            translated = translated[:-1]
-        translated = f"{translated.rstrip()}-{digest}"
-    return translated
+        slug = f"u-{digest}"
+    if slug in WINDOWS_RESERVED:
+        slug = f"u-{slug}"
+    if len(slug.encode("ascii")) > URI_SLUG_MAX_BYTES:
+        digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
+        prefix_length = URI_SLUG_MAX_BYTES - len(digest) - 1
+        prefix = slug[:prefix_length].rstrip("-")
+        slug = f"{prefix}-{digest}"
+    if not SLUG_RE.fullmatch(slug):
+        raise ContractError(f"slug URI invalido: {slug!r}")
+    return slug
 
 
 def _ascii_token(value: str) -> str:
@@ -200,7 +232,7 @@ def publication_identity(
         publication_type=validate_slug(publication_type, "tipo"),
         title=normalized_title,
         acronym=title_acronym(normalized_title),
-        directory_title=safe_path_segment(normalized_title),
+        route_slug=uri_slug(normalized_title),
     )
 
 
