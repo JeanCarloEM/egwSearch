@@ -1,0 +1,121 @@
+# Estado operacional - egwSearch
+
+Formato: `continue.ia/v1`.
+Atualizado_em: `2026-07-26T13:21:36.8987982-03:00`.
+Branch_operacional: `dev`.
+Escopo_atual: fase 1 de `TODO.id.md` item `[1A]`; somente normatizacao integrada.
+Fonte_local: `TODO.id.md`.
+Fonte_sha256: `8A21E6FEF4840E32B6381975231094D46C2CD814A8226752E6F8D3380F1AE31B`.
+Contexto_mestre: `.ia.rules/state/contexts/FT-003/master.md`.
+Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
+
+## FT-001 - Inicializacao normativa do projeto
+
+- tipo: `implementacao_normativa`
+- criado_em: `2026-07-22T02:57:34.4271891-03:00`
+- origem: solicitacao humana de inicializacao normativa
+- escopo: Tecnico
+- prioridade: alta
+- status: concluido
+- objetivo: estabelecer o primeiro RCF, README e estado operacional sem implementar codigo.
+- aceite: commit `b906baf98b90aa4d352a36d404cb58132e27c750`.
+- pendencias: nenhuma.
+
+## FT-002 - Conformidade integral do repositorio com o RCF
+
+- tipo: `implementacao_codigo`
+- criado_em: `2026-07-22T02:57:35.4271891-03:00`
+- origem: `TODO.id.md:56`, `TODO.id.md:69` e `TODO.id.md:95`
+- escopo: Tecnico
+- prioridade: alta
+- status: pendente de autorizacao humana explicita
+- fase_global: 3 de 3
+- objetivo: implementar o nucleo de busca, indexacao, RAG proporcional, equivalencia numerica, CLI, GUI local e demais capacidades ainda nao materializadas depois da fase publica.
+- dependencias: FT-003 concluida; FT-004 concluida; nova autorizacao humana explicita.
+- nao_escopo: duplicar componentes concluidos e validados na FT-004.
+- aceite: conformidade integral e verificavel com o RCF, sem regressao da operacao local/CLI.
+- proximo_ponto: aguardar conclusao da FT-004 e autorizacao especifica.
+
+## FT-003 - Normatizacao integrada das frentes do TODO
+
+- tipo: `implementacao_normativa`
+- criado_em: `2026-07-26T13:21:36.8987982-03:00`
+- origem: `TODO.id.md:56`, `TODO.id.md:69`, `TODO.id.md:95`, `TODO.id.md:214` e `TODO.id.md:886`
+- escopo: Tecnico
+- prioridade: alta
+- status: em andamento
+- fase_global: 1 de 3
+- objetivo: correlacionar integralmente as frentes, absorver seus contratos no RCF e deixar as fases tecnicas futuras ordenadas, nao sobrepostas e rastreaveis.
+- dependencias: FT-001 concluida; fontes locais versionadas; norma operacional ativa.
+- nao_escopo: alterar `src/`, migrar publicacoes, modificar build/publicacao, criar ou adaptar codigo, script ou workflow.
+- aceite: RCF deterministico, suficiente, verificavel e sem perda material das fontes; TODO `[1A]` concluido; validacao normativa registrada; commit exclusivo.
+- decisoes:
+  - nenhuma issue externa identificavel foi referenciada por URL, numero ou repositorio; as fontes canonicas sao os itens locais versionados.
+  - a frente publica forma FT propria por possuir fase, risco, entregaveis e cadeia operacional autonomos.
+  - a FT-002 foi conciliada como fase 3 para evitar sobreposicao com a cadeia publica.
+- verificacoes:
+  - `TODO.id.md` lido integralmente: concluido.
+  - `RCF.md`, AGENTS e modulos aplicaveis lidos: concluido.
+  - triagem de recusas: concluida; indice ausente equivale a acervo vazio.
+- falhas:
+  - `.ia.rules/continue.ia` e o indice local de recusas estavam ausentes apos a atualizacao; o estado canônico e criado nesta FT e o acervo vazio nao exige indice.
+- pendencias:
+  - consolidar o RCF.
+  - validar cobertura e referencias.
+  - marcar `[1A]` como concluido.
+  - commitar e publicar a fase normativa.
+- proximo_ponto: etapa 2.
+
+### Etapa 1/4 - Fontes, triagem e arquitetura do plano
+
+- status: concluido
+- tarefas:
+  - preservar e ler fontes: concluido.
+  - consultar recusas: concluido.
+  - correlacionar frentes e conflitos: concluido.
+  - criar FTs e contextos: concluido.
+
+### Etapa 2/4 - Consolidacao no RCF
+
+- status: pendente
+- tarefas:
+  - absorver busca numerica, RAG e segmentacao: pendente.
+  - absorver CLI, GUI e perfis operacionais: pendente.
+  - absorver publicacao, acervo, indice, capas e `NORMA-IF-SIL-001`: pendente.
+
+### Etapa 3/4 - Validacao normativa
+
+- status: pendente
+- tarefas:
+  - auditar origem para RCF: pendente.
+  - validar referencias e ausencia de duplicacao: pendente.
+  - comprovar ausencia de alteracao tecnica: pendente.
+
+### Etapa 4/4 - Encerramento da fase
+
+- status: pendente
+- tarefas:
+  - atualizar estado e TODO: pendente.
+  - criar commit normativo exclusivo: pendente.
+  - publicar `dev`: pendente.
+  - interromper antes das fases 2 e 3: pendente.
+
+## FT-004 - Publicacao publica e cadeia operacional
+
+- tipo: `implementacao_codigo`
+- criado_em: `2026-07-26T13:21:37.8987982-03:00`
+- origem: `TODO.id.md:214` e `TODO.id.md:886`
+- escopo: Tecnico
+- prioridade: alta
+- status: pendente de autorizacao humana explicita
+- fase_global: 2 de 3
+- objetivo: materializar a publicacao institucional, a estrutura canonica do acervo, a cadeia de download, a migracao, o indexador, as capas, os assets, o build e o deploy.
+- dependencias: FT-003 concluida; nova autorizacao humana explicita.
+- nao_escopo: implementar capacidades de busca independentes da cadeia publica, salvo dependencia estritamente necessaria e previamente registrada.
+- etapas_planejadas:
+  - A: publicacao do site no GitHub Pages.
+  - B: RCF especifico e adequacao de `src/publications/egw/baixar.py`.
+  - C: migrador temporario, idempotente, verificavel e removivel para o acervo.
+  - D: gerador global de indice, metadados, hashes, capas e assets com workflow associado.
+- aceite: cadeia local/CI equivalente, publicacao reproduzivel, acervo preservado e criterios publicos do RCF comprovados.
+- proximo_ponto: aguardar conclusao da FT-003 e autorizacao especifica.
