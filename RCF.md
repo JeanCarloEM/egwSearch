@@ -588,7 +588,11 @@ Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio p
 
 A origem local DEVE ser `./src/publications/` e a raiz publica DEVE ser `/publications/`.
 
-Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/<tipo>/<titulo>/`, onde `<tipo>` e classificacao logica e nao formato fisico.
+Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/<tipo>/<slug-titulo>/`, onde `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial.
+
+O slug de rota DEVE usar somente `[a-z0-9]+(?:-[a-z0-9]+)*`: converter o titulo para minusculas, decompor Unicode, remover acentos, diacriticos e caracteres especiais, substituir espacos por hifens, colapsar hifens repetidos e remover hifens nas extremidades. Caractere sem transliteracao ASCII e titulo cujo resultado fique vazio DEVEM receber fallback causal deterministico; limite de portabilidade DEVE truncar com sufixo de hash, sem colisao silenciosa.
+
+Titulo editorial e slug de rota possuem autoridades distintas: `book.title`, metadados e evidencias DEVEM preservar a forma editorial, enquanto diretorio, rota publica e URL DEVEM usar exclusivamente o slug. Titulo editorial NÃO DEVE ser reconstruido do slug.
 
 PDF, EPUB, metadados, capa e demais assets do mesmo titulo DEVEM permanecer no mesmo diretorio logico.
 
@@ -612,7 +616,7 @@ Arquivo com hash diferente NÃO DEVE ser sobrescrito ou descartado; contador dep
 
 Metadado local DEVE ser associado por conteudo e relacao, nao somente por filename; quando normalizado, DEVE usar nome aderente ao acronimo sem perda.
 
-Compatibilidade com path antigo somente PODE existir para URL publica comprovadamente consumida e DEVE usar redirecionamento, alias ou mapa finito, sem duplicacao indefinida.
+Compatibilidade com path antigo somente PODE existir para URL publica comprovadamente consumida e DEVE usar redirecionamento, alias ou mapa finito, sem duplicacao indefinida; na ausencia de consumo publicado comprovado, o path Unicode anterior DEVE ser removido depois da migracao validada.
 
 ## 42. Migracao e downloader
 
@@ -620,13 +624,13 @@ A migracao futura DEVE ser executada por script temporario, idempotente, verific
 
 Antes de mover, o migrador DEVE inventariar bytes, paths, metadados, URLs, hashes, idiomas, autores, tipos, titulos, tags, variantes e colisoes.
 
-O migrador DEVE agrupar identidade editorial, normalizar titulo, calcular acronimo, criar destino, mover correlatos, renomear, atualizar referencias e validar contagem, bytes e hashes.
+O migrador DEVE agrupar identidade editorial, preservar titulo, calcular acronimo e slug, criar destino, mover correlatos, renomear diretorios e rotas, atualizar referencias e validar contagem, bytes e hashes.
 
 Falha NÃO DEVE deixar estado parcial silencioso; checkpoint, temporario, backup e rollback DEVEM preservar recuperacao.
 
 `src/publications/egw/baixar.py` DEVE possuir RCF especifico futuro em `src/publications/egw/RCF.md`, subordinado a este RCF e criado somente na FT-004.
 
-O downloader DEVE baixar diretamente na estrutura canonica, reutilizar diretorio da mesma identidade, agrupar formatos/assets, normalizar titulo/tags/acronimo e impedir sobrescrita destrutiva.
+O downloader DEVE baixar diretamente na estrutura canonica, reutilizar diretorio da mesma identidade, agrupar formatos/assets, normalizar titulo/tags/acronimo, derivar o mesmo slug RFC 3986 usado pelo migrador e impedir sobrescrita destrutiva.
 
 O downloader DEVE preservar variante material, produzir destino deterministico, gerar ou atualizar metadados/indices e NÃO DEVE recriar a estrutura legada.
 
@@ -640,7 +644,7 @@ Copias do indice em `dist/` quando aplicavel, no artefato do Pages e na raiz pub
 
 O envelope global DEVE declarar `schema_version`, identidade da geracao, versao do gerador, configuracao causal e lista `publications`.
 
-Cada item global DEVE declarar identidade estavel, titulo normalizado, autor ou chave autoral, idioma, tipo, acronimo, tags, URLs publicas diretas, proveniencia local, capa e `formative_data`.
+Cada item global DEVE declarar identidade estavel, titulo normalizado, slug de rota, autor ou chave autoral, idioma, tipo, acronimo, tags, URLs publicas diretas, proveniencia local, capa e `formative_data`.
 
 `formative_data` DEVE ser exatamente um documento conforme a `NORMA-IF-SIL-001`, com raiz fechada `book`, `urls` e `global_hashes`.
 
