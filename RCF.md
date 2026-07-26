@@ -16,11 +16,15 @@ A busca DEVE localizar correspondencia literal, variantes ortograficas e morfolo
 
 Precisao, rastreabilidade, reutilizacao de tecnologia existente, resiliencia, processamento incremental e revisao controlada de ambiguidades DEVEM prevalecer sobre conveniencia de implementacao.
 
-## 2. Estado de inicializacao
+## 2. Estado material e limites de aceite
 
-Este repositorio esta inicializado somente no quesito normativo. A existencia deste RCF, do README e das FTs NAO DEVE ser interpretada como implementacao funcional, selecao definitiva de tecnologia, instalacao de dependencia, teste executavel, build, pacote, workflow ou publicacao.
+O repositorio contem acervo PDF/EPUB, metadados locais e `src/publications/egw/baixar.py`; essa existencia NÃO DEVE ser interpretada como conformidade do acervo, do downloader, do buscador, da GUI, do indice global, das capas, do build ou da publicacao com este RCF.
 
-A implementacao tecnica somente PODE iniciar apos solicitacao nova, explicita e inequivoca do desenvolvedor, registrada em FT propria conforme `MN-STATE`.
+Nenhuma capacidade DEVE ser declarada implementada ou aceita sem validacao material proporcional e registrada.
+
+A fase normativa atual NÃO DEVE alterar `src/`, migrar publicacoes, modificar build/publicacao nem criar ou adaptar codigo, script ou workflow.
+
+Cada fase tecnica somente PODE iniciar apos conclusao normativa, FT propria e autorizacao humana nova, explicita e inequivoca conforme `MN-STATE`.
 
 ## 3. Direcao tecnologica
 
@@ -28,15 +32,17 @@ Nenhuma linguagem, biblioteca, motor, indice, modelo, banco, runtime ou arquitet
 
 A selecao tecnologica DEVE resultar de comparacao objetiva de qualidade, manutencao, licenca, compatibilidade, portabilidade, precisao, desempenho, memoria, instalacao, seguranca, funcionamento local, integracao, maturidade, testes, custo operacional e substituibilidade.
 
-Node.js, Python, Ruby, Rust, Java, C#, shell ou arquitetura hibrida PODEM ser utilizados quando a avaliacao tecnica justificar. Implementacao propria em Node.js DEVE usar TypeScript; essa obrigacao NAO se aplica a dependencias de terceiros.
+Node.js com TypeScript DEVE ser o eixo principal de integracao, orquestracao, configuracao e interfaces quando adequado; script proprio executado em Node.js DEVE possuir TypeScript como fonte canônica.
 
-TypeScript, Python, Rust, SQLite, indice invertido, indice vetorial, embeddings, modelos multilingues, reranking e ferramentas nativas PODEM ser avaliados, mas NAO DEVEM ser tratados como decisao antes da FT tecnica.
+Python, Ruby, Rust, Java, C#, shell ou outro runtime PODEM ser utilizados em segmentos especializados quando apresentarem ganho tecnico demonstravel de desempenho, integracao, maturidade, seguranca ou adequacao ao ecossistema.
+
+TypeScript, Python, Rust, SQLite, indice invertido, indice vetorial, embeddings, modelos multilingues, reranking e ferramentas nativas PODEM integrar a avaliacao; nenhuma biblioteca, framework, banco, modelo ou servico especifico fica preselecionado sem comparacao material.
 
 Arquitetura hibrida somente DEVE ser adotada quando o ganho verificavel superar complexidade, distribuicao, instalacao, manutencao e risco operacional adicionais.
 
 ## 4. Reutilizacao obrigatoria
 
-A implementacao NAO DEVE recriar algoritmos, extratores, parsers, tokenizadores, modelos, indices, tradutores ou funcoes ja oferecidas por solucao adequada.
+A implementacao NÃO DEVE recriar algoritmos, extratores, parsers, tokenizadores, modelos, indices, tradutores ou funcoes ja oferecidas por solucao adequada.
 
 Antes de implementar qualquer capacidade, a FT tecnica DEVE avaliar solucoes existentes quanto a funcionalidade, manutencao, testes, licenca, seguranca, precisao, desempenho, tamanho, compatibilidade, adequacao ao corpus e substituibilidade.
 
@@ -48,17 +54,17 @@ Tecnologias como PyMuPDF, parsers EPUB estruturais, Hugging Face Tokenizers, spa
 
 A ferramenta DEVE receber `target` configuravel, percorrer recursivamente toda a arvore, suportar profundidade arbitraria, processar qualquer quantidade de arquivos dentro dos limites configurados, funcionar fora da raiz do repositorio, tolerar nomes nao padronizados e detectar arquivos novos, alterados, removidos ou duplicados.
 
-A ferramenta NAO DEVE depender de estrutura fixa, profundidade conhecida, nome especifico de diretorio, quantidade predeterminada, execucao no diretorio dos livros ou importacao previa em software externo.
+A ferramenta NÃO DEVE depender de estrutura fixa, profundidade conhecida, nome especifico de diretorio, quantidade predeterminada, execucao no diretorio dos livros ou importacao previa em software externo.
 
-OCR NAO DEVE ser executado por padrao em arquivos textuais. Falha de extracao DEVE acionar rotas alternativas limitadas, registrar o problema, continuar os demais arquivos e NAO inventar conteudo.
+OCR NÃO DEVE ser executado por padrao em arquivos textuais. Falha de extracao DEVE acionar rotas alternativas limitadas, registrar o problema, continuar os demais arquivos e NÃO inventar conteudo.
 
 ## 6. Publicacao logica
 
-PDF e EPUB equivalentes DEVEM representar uma unica publicacao logica e NAO DEVEM gerar citacoes duplicadas.
+PDF e EPUB equivalentes DEVEM representar uma unica publicacao logica e NÃO DEVEM gerar citacoes duplicadas.
 
 A associacao DEVE considerar, quando disponiveis, titulo, autor, idioma, editora, edicao, ISBN, ISSN, volume, numero, data, metadados, nome normalizado, hash, fingerprint, similaridade textual, estrutura e ordem dos capitulos.
 
-Arquivos de mesmo titulo NAO DEVEM ser fundidos quando houver diferenca material de edicao, traducao, data, conteudo, paginacao ou revisao.
+Arquivos de mesmo titulo NÃO DEVEM ser fundidos quando houver diferenca material de edicao, traducao, data, conteudo, paginacao ou revisao.
 
 Quando PDF e EPUB forem equivalentes, RECOMENDA-SE usar EPUB para estrutura, capitulos, secoes e paragrafos; PDF para paginacao e representacao editorial; alinhamento textual entre ambos; e fallback reciproco.
 
@@ -68,7 +74,7 @@ Associacoes incertas DEVEM permanecer separadas ou marcadas para revisao.
 
 A extracao de PDF DEVE preservar, quando disponiveis, paginas fisicas, numeros impressos, palavras, linhas, blocos, coordenadas, fontes, estilos, colunas, titulos, subtitulos, notas, cabecalhos, rodapes, datas, volume, numero e edicao.
 
-A reconstrucao NAO DEVE concatenar indiscriminadamente o texto da pagina.
+A reconstrucao NÃO DEVE concatenar indiscriminadamente o texto da pagina.
 
 Cabecalhos, rodapes e numeros de pagina DEVEM ser identificados por combinacao de repeticao, posicao, frequencia, tipografia, baixa variacao, padroes e distancia do corpo. Um elemento somente DEVE ser removido quando a confianca for suficiente.
 
@@ -78,7 +84,7 @@ A extracao de EPUB DEVE respeitar container, manifesto, spine, XHTML, `nav`, NCX
 
 A ordem DEVE seguir o spine e a estrutura semantica DEVE ser preservada.
 
-Sem paginacao estavel, a ferramenta NAO DEVE inventar paginas; DEVE usar pagina do PDF equivalente quando houver alinhamento confiavel; caso contrario, DEVE usar localizacao EPUB deterministica e indicar ausencia de pagina.
+Sem paginacao estavel, a ferramenta NÃO DEVE inventar paginas; DEVE usar pagina do PDF equivalente quando houver alinhamento confiavel; caso contrario, DEVE usar localizacao EPUB deterministica e indicar ausencia de pagina.
 
 ## 9. Reconstrucao editorial
 
@@ -90,7 +96,7 @@ A ferramenta DEVE distinguir quebra visual de linha, quebra real de paragrafo, m
 
 A decisao DEVERIA combinar geometria, pontuacao, capitalizacao, recuo, espacamento, tipografia, continuidade sintatica, segmentacao linguistica, estrutura EPUB e contexto anterior/posterior.
 
-Paragrafos distintos NAO DEVEM ser unidos por heuristica isolada. Paragrafo entre paginas DEVE referenciar todas elas, preferencialmente como intervalo.
+Paragrafos distintos NÃO DEVEM ser unidos por heuristica isolada. Paragrafo entre paginas DEVE referenciar todas elas, preferencialmente como intervalo.
 
 ## 10. Referencias e publicacoes datadas
 
@@ -98,11 +104,11 @@ Cada citacao DEVE preservar, quando aplicavel, titulo, autor, capitulo, secao, p
 
 A identificacao DEVE usar evidencia em ordem de confianca: estrutura explicita; metadados confiaveis; conteudo editorial; pagina de rosto, sumario ou expediente; filename; diretorio; fallback marcado.
 
-Metadados NAO DEVEM ser inventados.
+Metadados NÃO DEVEM ser inventados.
 
 Devocionais, revistas, jornais e periodicos DEVEM incluir data editorial ou de destinacao na referencia. A data DEVE ser associada a unidade textual vigente, nao apenas ao arquivo.
 
-A ferramenta NAO DEVE confundir data editorial com criacao do arquivo, modificacao, extracao, execucao ou indexacao. Datas de filesystem somente PODEM ser usadas com configuracao explicita ou confirmacao adicional.
+A ferramenta NÃO DEVE confundir data editorial com criacao do arquivo, modificacao, extracao, execucao ou indexacao. Datas de filesystem somente PODEM ser usadas com configuracao explicita ou confirmacao adicional.
 
 ## 11. Consulta, expansao e variantes
 
@@ -110,7 +116,7 @@ A consulta PODE ser palavra, expressao, frase, conceito em linguagem natural, te
 
 A expansao DEVE considerar de forma controlada traducao, flexao, lematizacao, singular/plural, genero, conjugacao, variantes ortograficas, sinonimos, locucoes, parafrases, expressoes equivalentes, formas correlatas e termos configurados manualmente.
 
-A expansao NAO DEVE tornar a consulta excessivamente ampla.
+A expansao NÃO DEVE tornar a consulta excessivamente ampla.
 
 Cada variante DEVE registrar texto, idioma, origem, metodo, peso, confianca e relacao com a consulta original.
 
@@ -120,13 +126,13 @@ O usuario DEVE poder revisar, incluir, excluir, fixar expressoes, limitar idioma
 
 No inicio do Markdown de resultado DEVEM constar termo original, idioma original, idiomas pesquisados, modo de busca, thresholds, inclusoes, exclusoes, traducoes, flexoes, sinonimos, expressoes equivalentes, parafrases e todas as variantes efetivamente pesquisadas.
 
-Variantes efetivamente usadas NAO DEVEM ser omitidas. Variantes geradas e rejeitadas PODEM permanecer apenas no relatorio tecnico.
+Variantes efetivamente usadas NÃO DEVEM ser omitidas. Variantes geradas e rejeitadas PODEM permanecer apenas no relatorio tecnico.
 
 ## 13. Busca hibrida
 
 A recuperacao DEVE combinar, quando proporcional, correspondencia literal, normalizacao, busca por frase, analise morfologica, sinonimos, fuzzy matching, busca semantica multilingue, reranking contextual, filtros linguisticos e classificacao por confianca.
 
-A busca lexical NAO DEVE ser substituida pela semantica. A busca semantica NAO DEVE decidir isoladamente.
+A busca lexical NÃO DEVE ser substituida pela semantica. A busca semantica NÃO DEVE decidir isoladamente.
 
 RECOMENDA-SE pipeline com expansao da consulta, geracao lexical de candidatos, geracao vetorial de candidatos, uniao, fusao de rankings, reranking, analise de negacao/modalidade/numeros/datas/termos criticos, threshold, classificacao e evidencia.
 
@@ -138,7 +144,7 @@ A ferramenta DEVE preservar separadamente texto original, texto estrutural, text
 
 A normalizacao DEVE permitir localizar a correspondencia e recuperar exatamente o texto original.
 
-Tokenizacao, normalizacao e segmentacao NAO DEVEM destruir acentuacao original, pontuacao relevante, grafia editorial, localizacao, referencia ou offsets.
+Tokenizacao, normalizacao e segmentacao NÃO DEVEM destruir acentuacao original, pontuacao relevante, grafia editorial, localizacao, referencia ou offsets.
 
 ## 15. Persistencia e indexacao
 
@@ -148,7 +154,7 @@ O indice DEVE permitir processamento incremental, consultas repetidas, retomada,
 
 O modelo persistente DEVE armazenar publicacoes, formatos, edicoes, capitulos, secoes, paragrafos, paginas, datas, referencias, texto original, texto normalizado, tokens, fingerprints, embeddings, hashes, confianca, versao do extrator, checkpoints e pesquisas.
 
-O Markdown NAO DEVE ser a fonte primaria de persistencia.
+O Markdown NÃO DEVE ser a fonte primaria de persistencia.
 
 ## 16. Deduplicacao
 
@@ -158,11 +164,11 @@ Variacoes minimas PODEM ser consolidadas mediante n-gramas, Jaccard, MinHash, Si
 
 A ferramenta DEVE verificar diferencas criticas, incluindo negacao, modalidade, condicao, agente, objeto, datas, numeros, nomes, intensidade, conclusao e significado.
 
-Diferenca pequena em caracteres NAO DEVE implicar equivalencia semantica.
+Diferenca pequena em caracteres NÃO DEVE implicar equivalencia semantica.
 
 Resultados DEVEM poder ser classificados como consolidar automaticamente, manter separados ou revisao recomendada.
 
-Antes de adicionar uma citacao, a ferramenta DEVE verificar se ela ja existe no resultado ou no Markdown da mesma pesquisa. Se ja existir, NAO DEVE criar novo bloco, DEVE adicionar somente referencia ausente e NAO DEVE repetir referencia.
+Antes de adicionar uma citacao, a ferramenta DEVE verificar se ela ja existe no resultado ou no Markdown da mesma pesquisa. Se ja existir, NÃO DEVE criar novo bloco, DEVE adicionar somente referencia ausente e NÃO DEVE repetir referencia.
 
 Compilacoes, antologias e republicacoes DEVEM gerar multiplas referencias sob uma unica citacao quando o texto for equivalente.
 
@@ -178,21 +184,21 @@ A ordem textual DEVERIA ser explorada para reduzir ambiguidades. Cada associacao
 
 O idioma DEVE ser inferido por combinacao de metadados, deteccao documental, deteccao por paragrafo, vocabulario, modelo de identificacao e contexto.
 
-A ferramenta DEVE suportar conteudo misto e NAO DEVE depender exclusivamente de filename para identificar idioma.
+A ferramenta DEVE suportar conteudo misto e NÃO DEVE depender exclusivamente de filename para identificar idioma.
 
 ## 19. Traducao
 
 Toda citacao original em `en-US` DEVE ser imediatamente seguida por traducao `pt-BR`.
 
-A traducao DEVE abranger somente o texto, NAO DEVE traduzir referencia, DEVE usar bloco de citacao, DEVE ser identificada como **Traducao livre**, DEVE preservar sentido e tom e DEVE permanecer separada do original.
+A traducao DEVE abranger somente o texto, NÃO DEVE traduzir referencia, DEVE usar bloco de citacao, DEVE ser identificada como **Traducao livre**, DEVE preservar sentido e tom e DEVE permanecer separada do original.
 
 Traducao local open source DEVERIA ser preferida quando possuir qualidade suficiente.
 
 API publica ou gratuita PODE ser usada somente quando autorizada, estavel, adequada ao volume, compativel com privacidade, configuravel e resiliente.
 
-Conteudo NAO DEVE ser enviado a terceiros sem autorizacao explicita.
+Conteudo NÃO DEVE ser enviado a terceiros sem autorizacao explicita.
 
-Traducoes DEVEM usar cache por hash, idiomas e versao do tradutor. Falha de traducao NAO DEVE remover a citacao original.
+Traducoes DEVEM usar cache por hash, idiomas e versao do tradutor. Falha de traducao NÃO DEVE remover a citacao original.
 
 ## 20. Markdown unico por pesquisa
 
@@ -202,7 +208,7 @@ O Markdown DEVE consolidar consulta, variantes, metadados, resultados em `pt-BR`
 
 A identidade da pesquisa DEVE considerar consulta original, idiomas, inclusoes, exclusoes, modo, modelos, configuracoes e thresholds.
 
-O arquivo NAO DEVE misturar pesquisas materialmente distintas.
+O arquivo NÃO DEVE misturar pesquisas materialmente distintas.
 
 Atualizacoes DEVEM ser idempotentes, atomicas, recuperaveis e deterministicas. RECOMENDA-SE escrever em arquivo temporario validado antes da substituicao.
 
@@ -264,9 +270,9 @@ A referencia DEVE aparecer somente junto ao original. Citacoes DEVEM possuir sep
 
 Quando o arquivo da mesma pesquisa existir, a ferramenta DEVE validar identidade, analisar estruturalmente o Markdown, recuperar citacoes e referencias, reconstruir fingerprints, comparar novos resultados, adicionar apenas conteudo ausente, preservar conteudo valido, atualizar contagens e ordenar deterministicamente.
 
-A analise NAO DEVE depender apenas de busca textual bruta.
+A analise NÃO DEVE depender apenas de busca textual bruta.
 
-Identificadores PODEM ser preservados por front matter, comentarios HTML, sidecar, indice ou mecanismo equivalente. Metadados tecnicos NAO DEVEM prejudicar a leitura.
+Identificadores PODEM ser preservados por front matter, comentarios HTML, sidecar, indice ou mecanismo equivalente. Metadados tecnicos NÃO DEVEM prejudicar a leitura.
 
 ## 23. Confianca e auditabilidade
 
@@ -274,7 +280,7 @@ Cada inferencia relevante DEVE possuir evidencia e confianca separadas, incluind
 
 Classificacoes PODEM incluir confirmado, alta confianca, provavel, revisao recomendada, indeterminado e rejeitado.
 
-A ferramenta NAO DEVE apresentar inferencia como certeza sem evidencia.
+A ferramenta NÃO DEVE apresentar inferencia como certeza sem evidencia.
 
 ## 24. Failsafe
 
@@ -282,7 +288,7 @@ Failsafe significa concluir todo o trabalho processavel, isolar falhas, preserva
 
 A ferramenta DEVE possuir isolamento por arquivo, checkpoints, retomada, cache, timeouts, tentativas limitadas, backoff limitado, fallbacks, fila de problemas, logs estruturados, escrita atomica, recuperacao e resumo final.
 
-A ferramenta NAO DEVE entrar em loop infinito, tentar indefinidamente, interromper toda a colecao por falha isolada, ocultar falhas, inventar dados, descartar arquivo silenciosamente, duplicar resultados apos retomada ou corromper saida existente.
+A ferramenta NÃO DEVE entrar em loop infinito, tentar indefinidamente, interromper toda a colecao por falha isolada, ocultar falhas, inventar dados, descartar arquivo silenciosamente, duplicar resultados apos retomada ou corromper saida existente.
 
 Cada fallback DEVE declarar condicao, limite, resultado, motivo e proximo estado.
 
@@ -300,7 +306,7 @@ Configuracoes DEVEM incluir workers, lotes, cache, memoria, timeout, tentativas,
 
 A operacao DEVE ser local por padrao.
 
-A ferramenta NAO DEVE enviar publicacoes completas externamente, executar JavaScript de EPUB, confiar em filenames, permitir path traversal, extrair fora de area controlada, sobrescrever sem validacao, registrar conteudo integral desnecessariamente ou expor paths/dados sensiveis.
+A ferramenta NÃO DEVE enviar publicacoes completas externamente, executar JavaScript de EPUB, confiar em filenames, permitir path traversal, extrair fora de area controlada, sobrescrever sem validacao, registrar conteudo integral desnecessariamente ou expor paths/dados sensiveis.
 
 EPUBs DEVEM ser tratados como arquivos nao confiaveis.
 
@@ -352,16 +358,636 @@ O README DEVE identificar o projeto sem anunciar como implementado o que estiver
 
 Badges e indicadores DEVEM acompanhar a evolucao real do escopo, licenca, validacoes, linguagens, runtimes, builds, cobertura, pacote, release, manutencao e compatibilidade. Indicador dinamico somente DEVE existir quando a fonte verificavel correspondente existir. Indicador estatico PODE informar estado documental, planejamento ou licenca quando verdadeiro.
 
-Badges NAO DEVEM apresentar aprovacao, cobertura, compatibilidade, build, release ou disponibilidade nao verificada; DEVEM ser atualizados ou removidos quando obsoletos.
+Badges NÃO DEVEM apresentar aprovacao, cobertura, compatibilidade, build, release ou disponibilidade nao verificada; DEVEM ser atualizados ou removidos quando obsoletos.
 
-Autoria, repositorio e licenca DEVEM vir de artefatos reais do repositorio. Dado ausente NAO DEVE ser inventado e DEVE permanecer como pendencia.
+Autoria, repositorio e licenca DEVEM vir de artefatos reais do repositorio. Dado ausente NÃO DEVE ser inventado e DEVE permanecer como pendencia.
 
 ## 33. FTs e continuidade
 
-FT normativa e FT tecnica DEVEM permanecer segregadas em `.ia.rules/state/continue.ia`.
+FT normativa e FT tecnica DEVEM permanecer segregadas em `.ia.rules/continue.ia`.
 
 FT normativa DEVE cobrir RCF, README, validacao documental, remocao de artefato transitorio aplicavel, commit e push.
 
 FT tecnica DEVE permanecer pendente ate autorizacao humana explicita e DEVE cobrir avaliacao tecnologica, arquitetura, codigo, bibliotecas, dependencias, testes, builds, integracoes, automacoes, CI/CD e publicacao quando aplicaveis.
 
-A conclusao normativa NAO autoriza implementacao de codigo.
+A conclusao normativa NÃO autoriza implementacao de codigo.
+
+## 34. Arquitetura compartilhada e perfis operacionais
+
+O nucleo de dominio, descoberta, extracao, normalizacao, segmentacao, indexacao, busca, persistencia, deduplicacao, traducao e geracao de resultados NÃO DEVE depender de DOM, framework visual, protocolo HTTP ou pressuposto de servidor.
+
+CLI, GUI local e eventual adaptador web publico DEVEM compor o mesmo nucleo por interfaces estaveis e NÃO DEVEM duplicar regra de negocio.
+
+O perfil `local` DEVE permanecer primario, completo, funcional sem navegador, servidor publico, servico remoto ou rede obrigatoria.
+
+A GUI local DEVE ser leve, profissional, direta, responsiva, acessivel, offline e funcionalmente completa para as capacidades que expuser.
+
+O perfil `public-future` DEVE existir apenas como contrato de extensao; autenticacao publica, multiusuario massivo, quotas, rate limiting, escalabilidade horizontal, filas distribuidas, isolamento entre tenants, balanceamento e infraestrutura de producao NÃO DEVEM ser implementados sem autorizacao especifica.
+
+Perfis operacionais DEVEM especializar configuracao, limites e adaptadores centralizados, sem condicionais dispersas ou reescrita do nucleo.
+
+Cada servico relevante DEVE declarar capacidades, requisitos, limites, cancelabilidade, concorrencia, consumo esperado, plataformas, runtimes e compatibilidade de perfil.
+
+CPU, memoria, workers, filas, tamanho de consulta, duracao, cache, rede e demais recursos DEVEM possuir limites centrais, tipados, validados, documentados e com defaults seguros.
+
+CLI, GUI, scripts, paths, processos, filesystem, encoding, sinais, shells e integracao entre runtimes DEVEM operar de forma consistente nas plataformas suportadas; diferenca inevitavel DEVE usar adaptador explicito.
+
+Componente auxiliar em outro runtime DEVE declarar entrada, saida, erro, serializacao, versao, timeout, cancelamento, codigo de retorno, descoberta e diagnostico.
+
+Ausencia ou incompatibilidade de runtime auxiliar NÃO DEVE inutilizar capacidade independente; fallback, desabilitacao localizada ou falha acionavel DEVE preservar o restante do sistema.
+
+## 35. GUI local, dependencias visuais e offline
+
+HTML DEVE prover estrutura e conteudo essencial; CSS ou Sass DEVE prover apresentacao; TypeScript somente DEVE aprimorar estado ou interacao nao atendidos adequadamente por recursos nativos.
+
+Quando houver estilização processada, Sass DEVE ser compilado e fonte `.scss` desnecessaria NÃO DEVE integrar o artefato final.
+
+WebAwesome, Font Awesome, templates, frameworks leves e componentes consolidados PODEM ser adotados somente quando reduzirem custo liquido sem degradar desempenho, portabilidade, acessibilidade, seguranca ou controle.
+
+Biblioteca visual NÃO DEVE ser incorporada integralmente quando apenas subconjunto for utilizado; icones, estilos, fontes, componentes e scripts DEVEM ser selecionados sob demanda.
+
+CDN PODE ser usada quando o ganho de cache, latencia, peso, disponibilidade e manutencao superar os riscos de privacidade, integridade e dependencia externa.
+
+Recurso remoto critico DEVE possuir fallback local, vendorizacao, cache ou degradacao funcional que preserve a operacao offline.
+
+GUI DEVE minimizar JavaScript, CSS, requests, parsing, hidratacao, memoria e processamento por carregamento condicional, lazy loading, tree shaking ou code splitting somente quando houver ganho verificavel.
+
+Validacao da GUI DEVE cobrir nucleo isolado, CLI, GUI, offline, teclado, foco, contraste, toque, overflow, responsividade, carregamento seletivo, limites de recursos e ausencia de duplicacao de negocio.
+
+## 36. Estrategias de segmentacao e RAG proporcional
+
+RAG DEVE ser tratado como conjunto modular de tecnicas opcionais e NÃO DEVE impor embeddings, banco vetorial, LLM, servico remoto ou modelo especifico quando mecanismo deterministico produzir resultado equivalente ou superior.
+
+Antes de adotar tecnica de RAG, a FT tecnica DEVE inspecionar o repositorio e medir baseline de ingestao, extracao, normalizacao, segmentacao, enriquecimento, representacao, indexacao, recuperacao, expansao, busca hibrida, filtros, reranking, composicao, validacao, cache, incremento e observabilidade.
+
+Cada estrategia DEVE declarar identidade, versao, configuracao, aplicabilidade, entradas, saidas, metadados, limites, custo, metricas, validacao, serializacao e diagnostico.
+
+O pipeline DEVE suportar selecao explicita ou deterministica por colecao, documento, genero, idioma, campo, consulta, citacao, tarefa ou perfil, sempre com decisao rastreavel e override manual.
+
+Parametros de tamanho minimo, ideal e maximo, unidade, overlap, limite estrutural, tolerancia e expansao contextual DEVEM ser configuraveis por estrategia ou perfil.
+
+Estrategias classicas DEVEM permanecer de primeira classe quando aplicaveis: tamanho fixo, sentenca, paragrafo, pagina, bloco, secao, titulo, capitulo, artigo, inciso, nota, delimitador, tipografia, markup, metadado, regex, janela deslizante e divisao recursiva.
+
+Regex NÃO DEVE ser tratada como mecanismo inferior; quando adequada, DEVE permanecer configuravel, testavel, composivel e preferivel a metodo probabilistico mais caro ou menos deterministico.
+
+Estrategias linguisticas PODEM usar sentenca, oracao, paragrafo semantico, topico, entidade, mudanca discursiva e estrutura gramatical, respeitando idioma, abreviacao, citacao, nota e referencia.
+
+Estrategias semanticas PODEM usar similaridade, mudanca de topico, embedding, agrupamento e coerencia discursiva quando seus limites forem rastreaveis e reproduziveis.
+
+LLM PODE delimitar estrutura, topico, unidade argumentativa ou citacao somente quando demonstrar ganho liquido; NÃO DEVE alterar, resumir ou reescrever silenciosamente a fonte.
+
+Limite produzido por LLM DEVE apontar ao texto original, ser validavel, armazenavel, reutilizavel e versionado; custo, latencia, privacidade, disponibilidade e variacao DEVEM integrar a decisao.
+
+Segmentacao bibliografica DEVE preservar titulo, autoria, resumo, capitulo, secao, pagina, nota, citacao, referencia, bibliografia, edicao e volume quando presentes.
+
+Citacao NÃO DEVE ser dividida de modo a perder atribuicao, fonte, inicio, fim, pagina, nota, referencia, qualificador ou contexto necessario.
+
+Citacao extensa PODE formar chunk proprio ligado aos vizinhos; citacao curta DEVE preservar o paragrafo e a referencia associada.
+
+Overlap PODE usar caracteres, palavras, tokens, sentencas, paragrafos ou unidades estruturais; DEVE preservar continuidade sem duplicacao massiva ou crescimento desproporcional.
+
+Chunk DEVE poder relacionar predecessor, sucessor, pai, filho, vizinho, secao, documento, citacao e referencia por tipos explicitos, sem depender apenas de proximidade vetorial.
+
+Representacao hierarquica PODE seguir colecao, documento, edicao, capitulo, secao, paragrafo e sentenca; recuperacao PODE localizar unidade pequena e expandir seletivamente ao pai ou vizinho.
+
+O mesmo documento PODE manter segmentacoes paralelas quando tarefas exigirem granularidades incompatíveis; cada representacao DEVE registrar estrategia, versao e configuracao.
+
+Resultados de segmentacoes paralelas DEVEM ser deduplicados ou aglutinados conscientemente, e o custo adicional DEVE ser comparado ao ganho.
+
+Chunks virtuais PODEM ser compostos durante a consulta a partir de unidades, hierarquia e vizinhanca, sem materializar combinacoes irrestritas.
+
+Chunking adaptativo PODE variar por densidade, idioma, estrutura, consulta, relevancia ou confianca somente por criterios verificaveis e reproduziveis.
+
+Cada chunk DEVE preservar documento, edicao ou versao, idioma efetivo, estrategia, hierarquia, offsets e, quando disponiveis, pagina, bloco, linha ou coordenada que permitam conferir o trecho.
+
+Texto canonico citado DEVE permanecer imutavel e separado de limpeza, normalizacao, tokens, embeddings, resumos e outros derivados.
+
+Mudanca de extrator, regex, tokenizer, modelo, estrategia ou configuracao que altere chunks DEVE invalidar deterministicamente somente indices afetados.
+
+Duplicata, quase duplicata, traducao, edicao e citacao repetida DEVEM permanecer classes distintas; igualdade textual NÃO DEVE apagar ocorrencias bibliograficamente independentes.
+
+## 37. Busca multilingue, roteamento e aglutinacao
+
+Representacao lexical, semantica e hibrida DEVE preservar idioma-fonte, variante, terminologia e diferenca conceitual.
+
+Consulta cruzada entre idiomas PODE usar traducao, embedding multilingue, lexico, ontologia, sinonimo ou combinacao, mas cada expansao DEVE registrar origem, relacao e confianca.
+
+Traducao aproximada NÃO DEVE ser tratada como identidade conceitual plena.
+
+Tokenizacao, segmentacao, stemming, lematizacao e sinonimos DEVEM considerar o idioma efetivo do trecho; documento misto NÃO DEVE ser forçado a idioma unico.
+
+Traducoes e originais DEVEM permanecer relacionados sem fusao como documento unico.
+
+Indices lexicais, invertidos, semanticos, por campo, entidade, referencia e relacao PODEM coexistir como capacidades independentes.
+
+Busca hibrida DEVE preservar correspondencia exata relevante, permitir pesos configuraveis e comparar estrategias antes da fusao.
+
+Roteamento PODE selecionar chunk, indice, filtro, expansao ou reranker por intencao e contexto, mas DEVE possuir fallback geral e NÃO DEVE excluir silenciosamente estrategia relevante sob baixa confianca.
+
+Recuperacao DEVE iniciar pelo contexto minimo suficiente e PODE expandir por vizinhanca, hierarquia, relacao, referencia ou documento.
+
+Reranking deterministico, estatistico, cross-encoder ou por LLM somente PODE tornar-se padrao quando elevar precisao ou cobertura de forma mensuravel.
+
+Diversificacao DEVE evitar concentracao em chunks redundantes sem ocultar ocorrencias bibliograficamente significativas.
+
+Resultado de citacao direta DEVE ser conferivel contra a fonte; traducao, resumo, reconstrucao ou inferencia NÃO DEVE ser rotulada como transcricao literal.
+
+Aglutinacao PODE agrupar por obra, autor, referencia, trecho equivalente, traducao, citacao comum, topico, entidade ou relacao, mas DEVE preservar ocorrencia, fonte, idioma, edicao, localizacao, divergencia e criterio de agrupamento.
+
+Trechos distintos NÃO DEVEM ser combinados como uma unica citacao nem divergencias entre versoes ou traducoes podem ser ocultadas.
+
+Quando IA for usada, a composicao DEVE selecionar evidencia relevante, controlar duplicacao, respeitar orcamento de tokens e manter acesso ao original.
+
+Modelo NÃO DEVE completar citacao, pagina, autor, obra ou referencia por plausibilidade; evidencia ausente, insuficiente ou conflitante DEVE produzir abstencao explicita.
+
+Prompt, tokenizer, embedding, reranker e LLM DEVEM ser substituiveis por contrato proporcional.
+
+## 38. Equivalencia numerica bidirecional
+
+Consulta por algarismo DEVE localizar numero por extenso semanticamente equivalente e consulta por extenso DEVE localizar algarismo equivalente, sem duplicacao manual.
+
+Numero por extenso DEVE ser interpretado conforme idioma e variante do trecho ou consulta.
+
+Algarismo e expressao por extenso DEVEM convergir para valor canonico derivado, preservando texto original, offsets, idioma, evidencia e forma de destaque.
+
+Normalizacao numerica DEVE considerar, quando linguisticamente aplicavel, cardinais, sinais, separadores de milhar e decimal, conectivos, hifenizacao, flexoes e variantes ortograficas legitimas.
+
+ISBN, DOI, ano, edicao, volume, capitulo, pagina, codigo e identificador NÃO DEVEM ser expandidos indiscriminadamente; campo, formato, idioma e contexto DEVEM controlar a decisao.
+
+Correspondencia literal exata PODE receber peso superior a equivalencia numerica quando isso preservar precisao.
+
+Expansao numerica DEVE integrar indexacao e consulta por mecanismo controlado, cacheavel e sem crescimento combinatorio.
+
+Valor desconhecido, ambiguo, invalido ou em idioma nao suportado NÃO DEVE interromper a busca; o termo original DEVE seguir pelos mecanismos restantes.
+
+Validacao DEVE cobrir ambos os sentidos, idiomas suportados, numeros simples e compostos, sinais, decimais, separadores locais, grafias validas, ambiguidades e contextos bibliograficos que nao admitem expansao.
+
+## 39. Avaliacao, metricas e adocao reversivel
+
+Baseline DEVE ser medido antes de alterar segmentacao, indice, expansao, recuperacao, reranking ou aglutinacao.
+
+Avaliacao DEVE medir, conforme aplicabilidade, precisao, recall, MRR, nDCG, cobertura de citacoes, completude contextual, acerto multilingue, qualidade da aglutinacao, falsos positivos, falsos negativos, latencia, tokens, memoria, armazenamento, tempo de indexacao e custo operacional.
+
+Chunking DEVE ser comparado por preservacao semantica, ruptura de citacao, redundancia de overlap, distribuicao de tamanho, localizacao, quantidade recuperada e contexto necessario.
+
+Casos DEVEM incluir documentos curtos, longos, estruturados, irregulares, monolingues, multilingues, OCR imperfeito, notas, referencias, edicoes, traducoes e consultas ambiguas.
+
+Cada estrategia DEVE ser medida isoladamente e nas combinacoes propostas.
+
+Avaliacao humana PODE complementar metrica automatica mediante amostra verificavel e criterios explicitos.
+
+Tecnica somente DEVE tornar-se padrao quando beneficio recorrente superar processamento, armazenamento, memoria, latencia, manutencao, privacidade e risco, sem regressao relevante.
+
+Adocao DEVE ser incremental, observavel, versionada, comparavel e reversivel.
+
+Catalogo de estrategias DEVE registrar aprovadas, rejeitadas e experimentais, parametros, custos, idiomas, formatos, limitacoes, fallbacks, metricas, versionamento e reindexacao.
+
+## 40. Publicacao institucional estatica
+
+O produto DEVE possuir pagina institucional ultrassucinta publicada no GitHub Pages por workflow proprio, sem depender implicitamente de tema, build automatico ou convencao padrao da plataforma.
+
+A pagina DEVE explicar finalidade, natureza das publicacoes, formatos e forma geral de acesso, sem promocao excessiva, documentacao longa ou secao redundante.
+
+A pagina DEVE ser profissional, elegante, responsiva, acessivel e coerente, sem poluicao visual, animacao excessiva ou dependencia desproporcional.
+
+Logica cliente nova DEVE usar TypeScript; estilização processada DEVE usar Sass.
+
+Font Awesome e WebAwesome PODEM ser priorizados quando agregarem valor e somente o subconjunto usado DEVE integrar build ou runtime.
+
+HTML, CSS, JavaScript, fontes, icones e imagens DEVEM ser reduzidos ao necessario, cacheados, comprimidos, minificados e invalidados de forma coerente.
+
+A pagina NÃO DEVE listar, expor ou vincular o indice global, arquivos de publicacao, URLs diretas ou diretorios de distribuicao, inclusive por botao, ancora oculta, metadado visual ou lista gerada.
+
+A ausencia de links na pagina NÃO DEVE impedir que indice, publicacoes e assets integrem o artefato e permaneçam acessiveis diretamente por URL publica conhecida.
+
+Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio proprio e em subdiretorio de projeto do GitHub Pages.
+
+## 41. Estrutura canonica do acervo
+
+A origem local DEVE ser `./src/publications/` e a raiz publica DEVE ser `/publications/`.
+
+Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/<tipo>/<titulo>/`, onde `<tipo>` e classificacao logica e nao formato fisico.
+
+PDF, EPUB, metadados, capa e demais assets do mesmo titulo DEVEM permanecer no mesmo diretorio logico.
+
+Formato ou extensao diferente NÃO DEVE criar diretorio separado para a mesma identidade editorial.
+
+CONTRADICAO DETECTADA: subdiretorio intermediario `assets/<basename-publicacao>/` vs agrupamento final de todos os arquivos no diretorio canônico do titulo - Aplicando o agrupamento final, posterior e mais completo.
+
+Cada arquivo diretamente associado DEVE usar `<acronimo-titulo>.<extensao>`; qualificador adicional PODE ser usado somente quando deterministico, semanticamente necessario e nao redundante.
+
+O acronimo DEVE derivar exclusivamente do titulo normalizado, ignorar tags confirmadas, ser estavel e usar a mesma regra em migracao, download, indexacao e publicacao.
+
+Trecho entre parenteses DEVE ser classificado por evidencia como titulo legitimo, tag, edicao ou qualificador; regra cega NÃO DEVE remove-lo.
+
+Tag confirmada DEVE sair do titulo e do acronimo e ser preservada no indice; duvida DEVE preservar o titulo e registrar revisao.
+
+Colisao de destino DEVE comparar SHA-256 integral: hash igual elimina copia redundante; hash diferente preserva variante como `<acronimo-titulo>.<hash-curto>.<extensao>`.
+
+Hash curto DEVE derivar do SHA-256, ter comprimento minimo desambiguador e expandir somente diante de colisao do prefixo.
+
+Arquivo com hash diferente NÃO DEVE ser sobrescrito ou descartado; contador dependente de ordem NÃO DEVE substituir identificador deterministico.
+
+Metadado local DEVE ser associado por conteudo e relacao, nao somente por filename; quando normalizado, DEVE usar nome aderente ao acronimo sem perda.
+
+Compatibilidade com path antigo somente PODE existir para URL publica comprovadamente consumida e DEVE usar redirecionamento, alias ou mapa finito, sem duplicacao indefinida.
+
+## 42. Migracao e downloader
+
+A migracao futura DEVE ser executada por script temporario, idempotente, verificavel, retomavel e removivel apos aceite.
+
+Antes de mover, o migrador DEVE inventariar bytes, paths, metadados, URLs, hashes, idiomas, autores, tipos, titulos, tags, variantes e colisoes.
+
+O migrador DEVE agrupar identidade editorial, normalizar titulo, calcular acronimo, criar destino, mover correlatos, renomear, atualizar referencias e validar contagem, bytes e hashes.
+
+Falha NÃO DEVE deixar estado parcial silencioso; checkpoint, temporario, backup e rollback DEVEM preservar recuperacao.
+
+`src/publications/egw/baixar.py` DEVE possuir RCF especifico futuro em `src/publications/egw/RCF.md`, subordinado a este RCF e criado somente na FT-004.
+
+O downloader DEVE baixar diretamente na estrutura canonica, reutilizar diretorio da mesma identidade, agrupar formatos/assets, normalizar titulo/tags/acronimo e impedir sobrescrita destrutiva.
+
+O downloader DEVE preservar variante material, produzir destino deterministico, gerar ou atualizar metadados/indices e NÃO DEVE recriar a estrutura legada.
+
+Alteracao do downloader DEVE preservar cabecalho autoral/licenca e receber testes de path, colisao, repeticao, falha, retomada e metadado.
+
+## 43. Indice global
+
+Um indice JSON global DEVE representar todas as publicacoes e ser gerado deterministicamente por uma unica fonte ou etapa canônica.
+
+Copias do indice em `dist/` quando aplicavel, no artefato do Pages e na raiz publica das publicacoes DEVEM ser projeções identicas, nunca editadas manualmente.
+
+O envelope global DEVE declarar `schema_version`, identidade da geracao, versao do gerador, configuracao causal e lista `publications`.
+
+Cada item global DEVE declarar identidade estavel, titulo normalizado, autor ou chave autoral, idioma, tipo, acronimo, tags, URLs publicas diretas, proveniencia local, capa e `formative_data`.
+
+`formative_data` DEVE ser exatamente um documento conforme a `NORMA-IF-SIL-001`, com raiz fechada `book`, `urls` e `global_hashes`.
+
+Metadados locais de cada publicacao DEVEM ser a entrada prioritaria do indice, sem impedir confrontacao com o conteudo editorial e outras evidencias.
+
+CONTRADICAO DETECTADA: restricao intermediaria a `book` + `global_hashes` vs anexo final `NORMA-IF-SIL-001` com `book` + `urls` + `global_hashes` - Aplicando o anexo final, expresso e mais especifico.
+
+URL publica direta e URL original DEVEM permanecer semanticamente distintas no envelope; URL original candidata integra `formative_data.urls`, enquanto URL publica do artefato integra o campo externo de publicacao.
+
+`urls` do documento formativo NÃO DEVE ser copiado para a raiz de `metadata.json` schema 5 nem interpretado como endereco local de asset.
+
+Indice DEVE ser ordenado deterministicamente por titulo normalizado e desempates declarados; URLs DEVEM seguir prioridade de formato e fonte.
+
+Gerador DEVE rejeitar URL repetida, formato duplicado, path equivalente por caixa/codificacao/barra e fusao de titulos sem identidade editorial comprovada.
+
+Alteracao de publicacao DEVE regenerar item, hashes, capa, indice e artefato dependente sem reprocessar grupo independente quando isso for seguro.
+
+## 44. NORMA-IF-SIL-001 - autoridade e estrutura
+
+`NORMA-IF-SIL-001` DEVE reger exclusivamente o documento formativo de sugestao bibliografica e NÃO DEVE ser interpretada como metadado canônico integral, envelope global, contrato de capa, asset, rota, publicacao ou autorizacao de aquisicao.
+
+O documento DEVE ser semanticamente identico em JSON e YAML e possuir exatamente uma raiz com `book`, `urls` e `global_hashes`.
+
+`book` DEVE conter exatamente `title`, `contributors`, `edition`, `language`, `primary_category` e `tags`.
+
+Cada `book.contributors[]` DEVE conter exatamente `name` e `role`.
+
+`book.edition` DEVE existir e ser exatamente `{}`; detalhe necessario para distinguir edicao DEVE bloquear conformidade ate decisao especifica, sem descarte ou projecao em outro campo.
+
+`book.tags` DEVE existir e PODE ser `[]`; nenhum outro objeto ou lista vazia e admitido.
+
+Cada `urls[]` DEVE conter exatamente `format` e `url`.
+
+Cada `global_hashes[]` DEVE conter exatamente `format`, `sha1`, `sha256` e `sha512`.
+
+Propriedade nao enumerada NÃO DEVE integrar o documento formativo.
+
+`schema_version`, `book.id`, `short_token`, `artifact_id`, `assets`, `sources`, QR, pacote e contêiner NÃO DEVEM ser propriedades do documento formativo; quando necessarios ao envelope global, permanecem externos a `formative_data`.
+
+Toda informacao extraida DEVE permanecer candidata ate validacao por evidencia reproduzivel; incerteza, conflito ou plausibilidade NÃO DEVE preencher propriedade.
+
+### 44.1 Serializacao segura
+
+JSON DEVE ser UTF-8 sem BOM, comentario, virgula final, chave duplicada ou numero nao finito.
+
+YAML DEVE usar subconjunto seguro 1.2 com mapping, sequence e string; ancora, alias, merge key, tag, construtor, diretiva e multiplos documentos DEVEM ser rejeitados.
+
+String YAML DEVERIA usar aspas para evitar resolucao implicita e preservar caixa, pontuacao e zeros.
+
+Conversao JSON para YAML e retorno DEVE preservar chaves, hierarquia, tipos, Unicode, valores e ordem das listas com igualdade profunda.
+
+`null`, chave omitida, string vazia e vazio fora de `book.edition` e `book.tags` DEVEM ser rejeitados.
+
+### 44.2 Dominios fechados
+
+`book.title` DEVE ser string Unicode editorial nao vazia.
+
+`book.contributors` DEVE possuir um ou mais itens e ao menos um `role: "author"`.
+
+`book.language` DEVE ser BCP 47 valida em minusculas.
+
+`book.primary_category` DEVE seguir `[a-z0-9]+(?:-[a-z0-9]+)*`.
+
+Cada tag DEVE seguir o mesmo padrao, ser unica, relevante, ordenada lexicalmente e nao repetir a categoria.
+
+`contributors[].name` DEVE ser Unicode editorial nao vazio; `role` DEVE seguir `[a-z][a-z0-9-]*`.
+
+`urls` DEVE ter um ou mais itens; `format` DEVE ser `pdf` ou `epub` e `url` DEVE ser URI HTTP(S) absoluta normalizada.
+
+`global_hashes` DEVE ter um item por formato aceito, no minimo um e no maximo dois, sem formato repetido e em ordem `pdf`, depois `epub`.
+
+SHA-1, SHA-256 e SHA-512 DEVEM ser hexadecimais minusculos de 40, 64 e 128 caracteres.
+
+### 44.3 Evidencia de `book`
+
+O original DEVE ser preservado, identificado por assinatura/estrutura e analisado antes de conversao, reparo, reempacotamento, OCR ou normalizacao.
+
+Metadado estruturado, pagina de rosto, verso, colofao e primeiras unidades editoriais DEVEM ser extraidos na ordem do formato.
+
+Titulo, autoria e idioma DEVEM ser comparados com ao menos duas evidencias independentes quando disponiveis.
+
+Conflito material, autoria ausente, baixa confianca ou arquivo ilegivel DEVE bloquear o documento e produzir diagnostico.
+
+OCR somente DEVE ser usado quando a camada textual for ausente ou insuficiente e NÃO DEVE substituir o original nem servir como evidencia primaria autossuficiente.
+
+Titulo DEVE preservar capitalizacao, diacritico, pontuacao e grafia editorial; espaco externo, controle Unicode e repeticao acidental PODEM ser normalizados em copia.
+
+Pagina de rosto ou colofao visivel DEVE preceder titulo estruturado EPUB coerente, metadado PDF coerente e cabecalho editorial recorrente.
+
+Filename, diretorio, URL, capa isolada, primeira linha ou OCR isolado NÃO DEVEM comprovar titulo.
+
+Contribuidores DEVEM preservar forma creditada, funcao e ordem editorial; o primeiro autor DEVE representar autoria principal.
+
+Duplicata exata `name + role` DEVE ser removida, mas homonimos NÃO DEVEM ser fundidos sem evidencia.
+
+Papeis recomendados PODEM incluir `author`, `editor`, `translator`, `compiler` e `illustrator`; outro papel exige significado editorial comprovado.
+
+Pessoa citada, prefaciador, personagem, mantenedor ou proprietario NÃO DEVE ser autor sem credito editorial.
+
+Idioma DEVE representar a edicao e seguir precedencia de metadado EPUB coerente, declaracao editorial, amostra textual distribuida e revisao.
+
+Detector de idioma DEVE ser auxiliar e NÃO DEVE usar somente titulo, primeira pagina, filename, dominio ou pais do fornecedor.
+
+Edicao multilingue sem predominancia inequívoca DEVE ir a revisao.
+
+Categoria DEVE vir de vocabulario controlado e evidencia; empate exige decisao editorial unica.
+
+Tag NÃO DEVE ser inferida somente de filename, fornecedor, formato, idioma ou detalhe tecnico.
+
+### 44.4 Hashes globais
+
+Hash DEVE incidir nos bytes integrais e originais do contêiner EPUB ou arquivo PDF, antes de qualquer extracao, conversao, reparo, OCR, renderizacao ou compactacao.
+
+Leitura DEVE ser binaria, sequencial, completa e alimentar SHA-1, SHA-256 e SHA-512 na mesma passagem e nos mesmos chunks.
+
+Arquivo reparado ou regravado NÃO DEVE herdar hash do original.
+
+SHA-1 DEVE existir somente para interoperabilidade e NÃO DEVE provar integridade isoladamente.
+
+Divergencia em qualquer algoritmo DEVE rejeitar igualdade byte a byte.
+
+Hash parcial, ausente, truncado, maiusculo ou calculado sobre texto DEVE ser rejeitado.
+
+Implementacao Node.js DEVERIA usar fluxo binario e `node:crypto`; implementacao Python DEVERIA usar modo `rb` e `hashlib`, sem converter chunks em string.
+
+Biblioteca alternativa PODE ser usada somente se produzir os mesmos valores sobre os mesmos bytes e preservar seguranca/evidencia.
+
+### 44.5 URLs formativas e aquisicao
+
+Cada URL DEVE vincular explicitamente formato esperado, usar HTTP(S), host explicito, sem credencial ou fragmento, preservando path e query necessarios.
+
+Para cada formato em `global_hashes` DEVE existir ao menos uma URL do mesmo formato; todo formato de URL DEVE possuir exatamente um hash correspondente.
+
+Multiplas URLs do mesmo formato PODEM representar fontes alternativas dos mesmos bytes e DEVEM manter preferencia editorial ou ordem de submissao.
+
+URL duplicada apos normalizacao segura DEVE ser rejeitada; grupos DEVEM ordenar `pdf` antes de `epub`.
+
+URL somente DEVE gerar asset quando os bytes diretos ou extraidos corresponderem integralmente aos tres hashes.
+
+Fonte DEVERIA ser link oficial direto de editor, autor, biblioteca, repositorio institucional ou provedor confiavel; pagina, manifesto, catalogo, feed ou API PODEM ajudar a localizar o arquivo.
+
+Endereco incorporado no arquivo, busca, cache, espelho ou terceiro DEVE permanecer candidato ate confirmacao.
+
+URL relativa somente DEVE ser resolvida contra a pagina ou manifesto que a declarou.
+
+Redirecionamento observado NÃO DEVE substituir silenciosamente a URL submetida.
+
+Endereco NÃO DEVE ser inventado por padrao de nome, troca de extensao, codigo de idioma ou filename.
+
+URL temporaria, assinada, secreta, autenticada ou de validade curta NÃO DEVE integrar o documento.
+
+Parametro indispensavel DEVE ser preservado; parametro comprovadamente analitico DEVERIA ser removido sem alterar o recurso.
+
+Ausencia de URL publica direta e estavel DEVE bloquear conformidade, sem usar path local inventado.
+
+### 44.6 Rede e validacao de aquisicao
+
+Antes de request, URL DEVE ser analisada, esquema/host validados e politica de rede aplicada.
+
+`HEAD` PODE sondar, mas somente `GET` limitado DEVE confirmar disponibilidade, tipo e integridade.
+
+Redirecionamentos DEVEM ser limitados e revalidar esquema, host, DNS e IP em cada salto.
+
+Host local, IP privado, link-local, multicast, reservado, protocolo nao HTTP(S), loop e DNS rebinding DEVEM ser bloqueados.
+
+Conexao DEVE usar timeout, limite de bytes, rate limit, cancelamento e streaming; corpo parcial DEVE falhar.
+
+Formato DEVE ser confirmado por assinatura e estrutura; extensao, `Content-Type`, codigo HTTP ou nome NÃO DEVEM bastar.
+
+Hashes DEVEM ser calculados durante a leitura e comparados antes da incorporacao.
+
+Invólucro permitido DEVE ser extraido em ambiente isolado e limitado, produzindo exatamente um artefato correspondente.
+
+Diagnostico DEVE registrar URL submetida, redirecionamentos, tamanho, tipo e hashes fora do documento formativo.
+
+Falha de rede, bloqueio, resposta autenticada, HTML, desafio ou indisponibilidade DEVE impedir incorporacao automatica.
+
+Conteudo obtido NÃO DEVE executar script, macro, midia ativa ou incorporado.
+
+Cliente Node.js DEVERIA usar `URL`, redirecionamento manual, DNS validado, `AbortSignal` e streaming; cliente Python DEVERIA usar `urllib.parse` e cliente com as mesmas guardas.
+
+Buffer integral sem limite previo NÃO DEVE ser usado em resposta potencialmente grande.
+
+### 44.7 EPUB, PDF e associacao editorial
+
+EPUB DEVE ser tratado como ZIP OCF nao confiavel com limites de entradas, tamanho comprimido/expandido, razao, profundidade e path.
+
+Path absoluto, traversal, symlink, colisao normalizada e entidade XML externa DEVEM ser rejeitados.
+
+Package Document DEVE ser localizado pelo container, namespaces respeitados e spine usado como ordem editorial.
+
+Titulo, idioma e contribuidores estruturados DEVEM ser confrontados com pagina de rosto e colofao.
+
+Impressao textual EPUB DEVE seguir spine, excluir script/estilo/navegacao repetitiva e normalizar somente copia derivada.
+
+PDF DEVE ser analisado por biblioteca que compreenda objetos, xref, streams, fontes, paginas e metadados; regex sobre bytes crus NÃO DEVE extrair `book`.
+
+Pagina de rosto e colofao visiveis DEVEM prevalecer sobre metadado tecnico conflitante.
+
+Extracao PDF DEVE preservar numero/ordem das paginas e diagnosticar pagina vazia ou baixa densidade.
+
+PDF cifrado sem autorizacao, corrompido ou acima de limite DEVE falhar com diagnostico.
+
+PDF e EPUB somente DEVEM compartilhar documento quando titulo, autoria, idioma e identidade editorial forem compativeis.
+
+Equivalencia textual aproximada isolada ou igualdade de hashes entre formatos NÃO DEVEM comprovar identidade.
+
+Diferenca de paginacao, layout ou codificacao NÃO DEVE separar por si so; diferenca material de conteudo, idioma, autoria ou edicao DEVE impedir associacao automatica.
+
+Confianca insuficiente DEVE encaminhar para revisao humana.
+
+### 44.8 Validacao integral do documento formativo
+
+Validador DEVE confirmar parser seguro, raiz exata, seis chaves de `book`, `edition: {}`, `tags`, contribuidor/autor, chaves de contribuidor, dominios, URLs, correspondencia de formatos, cardinalidade dos hashes, recálculo dos tres hashes, associacao editorial e igualdade profunda JSON/YAML.
+
+Falha DEVE indicar propriedade, regra e evidencia necessaria sem inventar substituto.
+
+Item invalido NÃO DEVE ser removido silenciosamente para simular conformidade.
+
+Documento somente DEVE ser aceito quando toda propriedade obrigatoria existir e nenhuma adicional existir.
+
+Referencias tecnicas aplicaveis DEVEM considerar RFC 8259, YAML 1.2.2, RFC 3986, BCP 47/RFC 5646 e EPUB 3.3.
+
+### 44.9 Exemplo delimitador
+
+O exemplo abaixo e formativo e NÃO DEVE fornecer hashes a payload produtivo; toda matriz produtiva DEVE ser recalculada sobre os bytes originais.
+
+```json
+{
+  "book": {
+    "title": "Atos Dos Apóstolos",
+    "contributors": [
+      {
+        "name": "Ellen G. White",
+        "role": "author"
+      }
+    ],
+    "edition": {},
+    "language": "pt-br",
+    "primary_category": "livros",
+    "tags": []
+  },
+  "urls": [
+    {
+      "format": "pdf",
+      "url": "https://media2.egwwritings.org/pdf/pt_AA(AA).pdf"
+    },
+    {
+      "format": "epub",
+      "url": "https://media2.egwwritings.org/epub/pt_AA(AA).epub"
+    }
+  ],
+  "global_hashes": [
+    {
+      "format": "pdf",
+      "sha1": "ef605032eb4011e6f058c100dc845f414e36e4f4",
+      "sha256": "91e2d4ea3e74a3ec55ecd61fb659f57927ef90ae413ea699cd8b4e92c7d9051a",
+      "sha512": "75b0c5ffda1ae8314cae7612afc947393817581b9ac219db497d526ee90417841e16b0e5f3ab0f2421eb8201358502ba6f9628e62195b4c37437d0967748cb42"
+    },
+    {
+      "format": "epub",
+      "sha1": "6df74abc8e2d57f82ff54a3b373d855c016f9f15",
+      "sha256": "46d2ed2d02977d96d625c6c0d2ad65de4f769cece56b2e45f64f65555f5eba29",
+      "sha512": "cc055518caab4bcf2399dde632359ab808b5dfeea2259e886b9f9af161eca7fea611d7658d11d42f1a68b4d3f54e57a25ff50e2a68d010c83bb8337d1e41ff80"
+    }
+  ]
+}
+```
+
+Representacao YAML conforme DEVE analisar para estrutura profundamente igual ao exemplo JSON, sem propriedade, valor ou ordem de lista divergente.
+
+O projeto NÃO DEVE declarar vinculo com editoras nem responder pelo conteudo de terceiros; atribuicao, restricao de uso, proveniencia e integridade permanecem obrigatorias.
+
+## 45. Capas
+
+Cada diretorio publico de publicacao DEVE conter arquivo decodificavel chamado exatamente `cover.png`.
+
+Grupo PDF/EPUB no mesmo diretorio DEVE compartilhar uma capa canônica; grupo em diretorios distintos DEVE possuir copia gerada correspondente.
+
+Capa DEVE vir primeiro da capa EPUB editorialmente identificada, incluindo `cover-image`; fallback legado exige referencia valida.
+
+Maior imagem arbitraria NÃO DEVE ser presumida capa.
+
+Sem capa EPUB utilizavel, gerador DEVE renderizar a primeira pagina PDF editorialmente adequada sem modificar o original.
+
+Pagina vazia, tecnica, corrompida, de erro, ilegivel ou nao representativa NÃO DEVE ser aceita.
+
+Ausencia de ambas as fontes DEVE bloquear o grupo.
+
+`cover.png` DEVE possuir no maximo 800 px em cada eixo, preservar proporcao/nitidez/legibilidade, nao ampliar sem justificativa e remover EXIF, comentario, miniatura e metadado inutil.
+
+Capa DEVE ser otimizada para navegador e regeneravel a partir das fontes e configuracao versionada.
+
+Remocao da capa DEVE causar regeneracao na execucao seguinte; mudanca de EPUB, PDF, parser, extrator, configuracao ou gerador DEVE invalidar derivado afetado.
+
+Imagem externa NÃO DEVE ser escolhida por similaridade de nome, titulo ou arquivo.
+
+Intermediarios de renderizacao, conversao ou extracao NÃO DEVEM integrar `dist/` ou site.
+
+Validacao DEVE comprovar existencia, path, origem, precedencia, formato, dimensoes, proporcao, legibilidade, metadados removidos e regeneracao deterministica.
+
+## 46. Scripts, workflow, build e publicacao
+
+Indexador, capas, dados formativos, ativos web e demais derivados DEVEM ser produzidos por script reexecutavel, deterministico, incremental e equivalente em local/CI.
+
+Script Node.js novo DEVE usar TypeScript como fonte e artefato conforme o contrato operacional; Python PODE permanecer quando adequado ao ecossistema real.
+
+Biblioteca de EPUB, PDF, OCR, imagem, YAML, JSON ou compactacao DEVE ser mantida, licenciada, segura e proporcional.
+
+Cache DEVE incluir identidade das fontes, configuracao, parser, extrator e gerador para invalidacao correta.
+
+Workflow dedicado DEVE obter fonte, instalar dependencias necessarias, descobrir/agrupar publicacoes, validar formatos, preservar originais, calcular hashes, extrair `book`, comprovar identidade, gerar capas, montar dados formativos, gerar indice/pagina, preparar artefato, validar e publicar.
+
+Workflow DEVE reagir a mudanca de pagina, publicacao, capa, indice, dado, script, estilo, asset, parser, RCF ou configuracao e DEVE permitir disparo manual.
+
+Permissoes DEVEM ser minimas; concorrencia DEVE serializar ou cancelar com seguranca para impedir execucao antiga sobre resultado novo.
+
+Processo longo DEVE emitir progresso ultrassucinto por etapa e publicacao sem inundar logs ou aparentar congelamento.
+
+Build DEVE copiar integralmente `./src/publications/` para `/publications/`, independentemente de importacao ou link na interface.
+
+Tree shaking, limpeza e otimizacao NÃO DEVEM remover publicacao ou asset pertencente ao acervo canônico.
+
+Build DEVE falhar por arquivo ausente, path invalido, colisao, perda, sobrescrita, indice invalido, URL sem artefato, hash divergente, capa invalida ou grupo incompleto.
+
+Release publico NÃO DEVE conter fonte de desenvolvimento, cache, teste, log, source map, configuracao de desenvolvimento, dependencia inutil, intermediario, temporario, evidencia interna ou OCR transitório.
+
+Derivado DEVE ser identificavel como gerado e NÃO DEVE receber edicao manual quando houver fonte canônica.
+
+## 47. Validacao da cadeia publica
+
+Validador do indice DEVE rejeitar JSON invalido, envelope divergente, publicacao sem campos obrigatorios, URL invalida, `formative_data` divergente, chave extra/ausente, hash incorreto, formato duplicado ou item sem autor.
+
+Validador publico DEVE confirmar que cada URL direta corresponde a arquivo publicado, cada diretorio possui capa, cada hash corresponde ao original e cada `book` corresponde ao grupo.
+
+Pagina DEVE ser validada por HTML real, assets carregados, base path real, responsividade, acessibilidade, ausencia de dependencia ociosa e ausencia de links ao indice/acervo.
+
+Teste de capa DEVE remover `cover.png`, regenerar e comparar origem, validade, dimensoes e determinismo.
+
+Teste de migracao DEVE comparar inventario pre/post, bytes, hashes, contagens, metadados, paths, colisoes e retomada.
+
+Execucao local DEVE reproduzir as mesmas etapas, schemas e resultados do CI tanto quanto tecnicamente possivel.
+
+Nenhuma publicacao DEVE ocorrer com artefato obsoleto, divergente ou parcial.
+
+## 48. Ordem global e fronteiras de implementacao
+
+A fase 1 DEVE concluir somente esta normatizacao, validacao documental, estado, TODO e commits.
+
+A fase 2, FT-004, DEVE implementar: pagina no GitHub Pages; RCF especifico e correcao de `baixar.py`; migrador temporario; estrutura canônica; indice, hashes, metadados, capas, assets, build, validacao e workflow.
+
+A fase 2 NÃO DEVE implementar busca independente da cadeia publica, salvo dependencia estritamente necessaria registrada antes da alteracao.
+
+A fase 3, FT-002, DEVE implementar o nucleo de busca, persistencia, segmentacao, RAG aprovado, equivalencia numerica, recuperacao hibrida, CLI, GUI, traducao, Markdown e conformidade restante.
+
+A fase 3 NÃO DEVE duplicar artefato concluido e validado na fase 2.
+
+Cada fase tecnica DEVE iniciar por inspecao do estado real, baseline, arquitetura, dependencias e plano atualizado; conclusao local NÃO DEVE antecipar a fase seguinte.
+
+## 49. Aceite integrado
+
+O produto somente DEVE ser considerado integralmente conforme quando a operacao local/CLI estiver completa; GUI local estiver compartilhando o nucleo e operando offline; corpus estiver na estrutura canônica; downloader e migracao forem seguros; pagina e cadeia publica forem reproduziveis; indice, `NORMA-IF-SIL-001`, hashes e capas forem validados; e busca multilingue, numerica, hibrida, rastreavel, resiliente e medida estiver materializada.
+
+Aceite DEVE comprovar ausencia de perda ou sobrescrita, URLs estaveis, identidade editorial, correspondencia de hashes, regeneracao, seguranca de EPUB/PDF/rede, incremento, retomada, configuracao, desempenho, cross-platform e ausencia de regressao.
+
+Relatorio final de cada fase DEVE listar arquivos, decisoes, colisoes, hashes, tecnologias, dependencias, comandos, testes, resultados, limitacoes, fallbacks e pendencias sem declarar execucao nao comprovada.
+
+## 50. Convergencia das fontes
+
+Os requisitos anteriormente registrados em `TODO.id.md` linhas 56, 69, 95, 214 e 886 foram absorvidos por este RCF como contratos permanentes.
+
+O arquivo de TODO permanece somente como fonte historica e controle de demanda ate o encerramento documental da FT-003; implementacao futura DEVE derivar deste RCF e das FTs, nao do TODO transitório.

@@ -1,15 +1,15 @@
-- [ ] **[1A] Orquestrar integralmente:** este item constitui o comando central das solicitações correlatas. Assim como múltiplas frentes integram uma única guerra, TODOs deste arquivo, issues, requisitos, FTs, etapas, tarefas, anexos e normas materialmente relacionados DEVEM ser lidos, analisados, correlacionados e planejados como partes de um único objetivo, ainda que permaneçam separados por rastreabilidade, escopo, fase ou execução. Sua função é coordenar, consolidar, ordenar e preparar todas as frentes, NÃO executá-las indiscriminadamente nesta atuação. O planejamento DEVE prevenir retrabalho, incompatibilidades e futuras reedições ou revisões decorrentes de análise fragmentada ou incompleta.
-  - [ ] **Preservar as fontes:** obter integralmente o texto, os comentários relevantes e os anexos aplicáveis de cada issue ou fonte externa; armazená-los temporariamente em estrutura local versionada, rastreável e devidamente aninhada; e lê-los integralmente antes de qualquer normatização ou implementação. Esses registros DEVEM permanecer até a incorporação normativa integral de seu conteúdo e ser removidos exclusivamente no marco de encerramento definido neste item.
+- [x] **[1A] Orquestrar integralmente:** este item constitui o comando central das solicitações correlatas. Assim como múltiplas frentes integram uma única guerra, TODOs deste arquivo, issues, requisitos, FTs, etapas, tarefas, anexos e normas materialmente relacionados DEVEM ser lidos, analisados, correlacionados e planejados como partes de um único objetivo, ainda que permaneçam separados por rastreabilidade, escopo, fase ou execução. Sua função é coordenar, consolidar, ordenar e preparar todas as frentes, NÃO executá-las indiscriminadamente nesta atuação. O planejamento DEVE prevenir retrabalho, incompatibilidades e futuras reedições ou revisões decorrentes de análise fragmentada ou incompleta.
+  - [x] **Preservar as fontes:** obter integralmente o texto, os comentários relevantes e os anexos aplicáveis de cada issue ou fonte externa; armazená-los temporariamente em estrutura local versionada, rastreável e devidamente aninhada; e lê-los integralmente antes de qualquer normatização ou implementação. Esses registros DEVEM permanecer até a incorporação normativa integral de seu conteúdo e ser removidos exclusivamente no marco de encerramento definido neste item.
 
-  - [ ] **Analisar o conjunto:** ler os demais TODOs, issues, normas, FTs e trabalhos relacionados; identificar objetivos comuns, sobreposições, dependências, conflitos, precedências, lacunas, duplicações e impactos cruzados; e consolidar uma interpretação única, coerente e rastreável. A IA DEVE planejar a “guerra”, não tratar cada “frente” isoladamente.
+  - [x] **Analisar o conjunto:** ler os demais TODOs, issues, normas, FTs e trabalhos relacionados; identificar objetivos comuns, sobreposições, dependências, conflitos, precedências, lacunas, duplicações e impactos cruzados; e consolidar uma interpretação única, coerente e rastreável. A IA DEVE planejar a “guerra”, não tratar cada “frente” isoladamente.
 
-  - [ ] **Preservar integralmente o conteúdo:** TODOs, issues e demais fontes PODEM ser reorganizados, fundidos, consolidados, desmembrados ou eliminados como unidades autônomas quando deixarem de possuir função própria. Contudo, nenhuma solicitação, regra, restrição, proibição, exceção, nuance, motivação, anexo, detalhe, dependência, precedência ou critério PODE ser perdido, enfraquecido, ignorado ou simplificado. A consolidação DEVE aumentar coerência, convergência e executabilidade, jamais reduzir substância ou rastreabilidade.
+  - [x] **Preservar integralmente o conteúdo:** TODOs, issues e demais fontes PODEM ser reorganizados, fundidos, consolidados, desmembrados ou eliminados como unidades autônomas quando deixarem de possuir função própria. Contudo, nenhuma solicitação, regra, restrição, proibição, exceção, nuance, motivação, anexo, detalhe, dependência, precedência ou critério PODE ser perdido, enfraquecido, ignorado ou simplificado. A consolidação DEVE aumentar coerência, convergência e executabilidade, jamais reduzir substância ou rastreabilidade.
 
-  - [ ] **Consolidação documental:** a IA PODE criar artefato temporário único de consolidação quando isso melhorar compreensão, coordenação, rastreabilidade ou eliminação de redundâncias. Esse artefato NÃO é obrigatório nem substitui as fontes antes da preservação integral de seu conteúdo. Cada requisito consolidado DEVE permanecer vinculável à respectiva origem.
+  - [x] **Consolidação documental:** a IA PODE criar artefato temporário único de consolidação quando isso melhorar compreensão, coordenação, rastreabilidade ou eliminação de redundâncias. Esse artefato NÃO é obrigatório nem substitui as fontes antes da preservação integral de seu conteúdo. Cada requisito consolidado DEVE permanecer vinculável à respectiva origem.
 
-  - [ ] **Planejamento global por FTs:** criar uma ou mais FTs vinculadas diretamente às issues ou demais fontes rastreáveis — JAMAIS a este item de `TODO.ia.md` —, planejadas de forma integrada e segregadas apenas quando houver unidade material, dependência, responsabilidade, risco, entregável ou fase distinta. DEVEM ser evitadas, tanto quanto técnica e operacionalmente possível, FTs, etapas ou tarefas duplicadas, sobrepostas, vazias, prematuras, artificiais, órfãs ou sem função no fluxo global.
+  - [x] **Planejamento global por FTs:** criar uma ou mais FTs vinculadas diretamente às issues ou demais fontes rastreáveis — JAMAIS a este item de `TODO.ia.md` —, planejadas de forma integrada e segregadas apenas quando houver unidade material, dependência, responsabilidade, risco, entregável ou fase distinta. DEVEM ser evitadas, tanto quanto técnica e operacionalmente possível, FTs, etapas ou tarefas duplicadas, sobrepostas, vazias, prematuras, artificiais, órfãs ou sem função no fluxo global.
 
-  - [ ] **Fases obrigatórias e sequenciais:** estruturar as FTs aplicáveis nas fases abaixo, preservando dependências e impedindo execução antecipada:
+  - [x] **Fases obrigatórias e sequenciais:** estruturar as FTs aplicáveis nas fases abaixo, preservando dependências e impedindo execução antecipada:
     1. **Normatização:** incorporar integralmente ao RCF canônico todas as regras, contratos, exceções, relações e critérios consolidados.
 
     2. **Implementação da publicação pública e de sua cadeia operacional:** implementar integralmente, não necessariamente nesta ordem:
@@ -22,11 +22,11 @@
 
     As fases DEVEM ser planejadas globalmente antes de qualquer execução. A fase 2 NÃO DEVE ser interpretada como autorização para alterar componentes externos à cadeia de publicação pública, salvo dependência estritamente necessária e previamente registrada. A fase 3 NÃO DEVE duplicar trabalho concluído na fase 2.
 
-  - [ ] **Motivação e retomada:** decisões cuja razão não seja evidente, convergências entre solicitações, adiamentos, dependências, exclusões aparentes, conflitos resolvidos ou divisões de escopo DEVEM possuir motivação clara e suficiente. Quando o registro na própria FT for inadequado ou excessivo, a motivação DEVE ser preservada em arquivo temporário rastreável, vinculado às FTs, etapas ou tarefas correspondentes, mantido somente enquanto necessário à retomada e removido integralmente após a conclusão da unidade pertinente.
+  - [x] **Motivação e retomada:** decisões cuja razão não seja evidente, convergências entre solicitações, adiamentos, dependências, exclusões aparentes, conflitos resolvidos ou divisões de escopo DEVEM possuir motivação clara e suficiente. Quando o registro na própria FT for inadequado ou excessivo, a motivação DEVE ser preservada em arquivo temporário rastreável, vinculado às FTs, etapas ou tarefas correspondentes, mantido somente enquanto necessário à retomada e removido integralmente após a conclusão da unidade pertinente.
 
-  - [ ] **Commit das FTs:** após criar, consolidar, revisar e vincular todas as FTs necessárias, realizar commit exclusivo contendo somente as FTs, seus vínculos rastreáveis e, quando indispensáveis à compreensão delas, os artefatos temporários de planejamento. Esse commit DEVE anteceder qualquer alteração normativa ou técnica.
+  - [x] **Commit das FTs:** após criar, consolidar, revisar e vincular todas as FTs necessárias, realizar commit exclusivo contendo somente as FTs, seus vínculos rastreáveis e, quando indispensáveis à compreensão delas, os artefatos temporários de planejamento. Esse commit DEVE anteceder qualquer alteração normativa ou técnica.
 
-  - [ ] **Executar somente a fase 1:** iniciar imediatamente e concluir integralmente apenas as FTs, etapas e tarefas da fase **1 — Normatização**, incorporando ao RCF canônico a issue e todas as frentes convergentes aplicáveis. Nesta atuação, É PROIBIDO:
+  - [x] **Executar somente a fase 1:** iniciar imediatamente e concluir integralmente apenas as FTs, etapas e tarefas da fase **1 — Normatização**, incorporando ao RCF canônico a issue e todas as frentes convergentes aplicáveis. Nesta atuação, É PROIBIDO:
     - alterar diretamente `src/`;
     - executar migração de arquivos;
     - modificar a cadeia de build ou publicação;
@@ -34,7 +34,7 @@
     - criar, adaptar ou alterar códigos, scripts ou workflows;
     - iniciar qualquer atividade pertencente às fases 2 ou 3.
 
-  - [ ] **Validar a normatização:** confirmar, mediante revisão rastreável, que:
+  - [x] **Validar a normatização:** confirmar, mediante revisão rastreável, que:
     - todo requisito, detalhe, restrição, exceção, motivação, dependência, precedência, relação entre frentes e critério aplicável foi incorporado;
     - nenhuma fonte material permaneceu sem tratamento;
     - não existem duplicações normativas desnecessárias;
@@ -42,14 +42,14 @@
     - o RCF resultante é determinístico, suficiente e verificável;
     - as fases 2 e 3 permanecem coerentes, não sobrepostas e prontas para execução futura.
 
-  - [ ] **Encerrar a fase:** após validar a normatização:
+  - [x] **Encerrar a fase:** após validar a normatização:
     1. remover os registros temporários das issues, anexos e arquivos auxiliares cuja função tenha se esgotado;
     2. preservar apenas os artefatos ainda necessários à rastreabilidade ou retomada das fases remanescentes;
     3. realizar commit exclusivo contendo a normatização no RCF, as referências atualizadas e as remoções pertinentes;
     4. marcar este TODO como concluído;
     5. interromper obrigatoriamente a execução, sem iniciar as fases 2 ou 3.
 
-  - [ ] **Comunicação final:** informar ao desenvolvedor que as issues e frentes relacionadas foram integralmente correlacionadas, convergidas e normatizadas no RCF; identificar os commits realizados; e listar nominalmente as fases remanescentes prontas para execução:
+  - [x] **Comunicação final:** informar ao desenvolvedor que as issues e frentes relacionadas foram integralmente correlacionadas, convergidas e normatizadas no RCF; identificar os commits realizados; e listar nominalmente as fases remanescentes prontas para execução:
     - **Implementação da publicação pública e de sua cadeia operacional**;
     - **Conformidade integral do repositório com o RCF**.
 
