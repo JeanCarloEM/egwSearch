@@ -70,5 +70,8 @@ Todos os criterios materiais de RCF §§40-49 e da fonte devem possuir evidencia
 - dry-run causal: `5ebf1ffcf3a378f52085e5cdb49a241dab0a2de12bac35a3edc4a08108794ee2`.
 - inventario: 1576 arquivos, 638098352 bytes, SHA-256 `9900a18f91bac8480c38e1aee91ee28d01f485cad9fe19e2b3995d83599f0e28`.
 - 11 problemas bloqueiam `apply` e foram transferidos nominalmente ao subcontexto 02.
-- subcontexto 02 iniciou pela resolucao probatoria dos 11 bloqueios.
+- os 11 problemas eram lacunas de procedencia: downloads oficiais reproduziram tamanho e SHA-256 dos 11 EPUBs locais;
+- os metadados foram completados sem alterar PDF/EPUB e o plano repetido ficou estavel com zero bloqueio;
+- plano liberado: `5660215656f00e721abc0d67344508380fbc8bc62e063d77816a3e32aded50cb`, 1578 arquivos e 638102876 bytes.
+- subcontexto 02 prossegue pelo `apply` transacional e validacao pre/post.
 - fase 3 permanece bloqueada.

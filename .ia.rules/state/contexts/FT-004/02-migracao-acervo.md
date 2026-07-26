@@ -25,3 +25,22 @@
 - plan ID bloqueado: `5ebf1ffcf3a378f52085e5cdb49a241dab0a2de12bac35a3edc4a08108794ee2`;
 - inventario SHA-256: `9900a18f91bac8480c38e1aee91ee28d01f485cad9fe19e2b3995d83599f0e28`;
 - bloqueios: os 11 paths listados no handoff do subcontexto 01.
+
+## Resolucao probatoria dos bloqueios
+
+- as paginas oficiais `text.egwwritings.org` confirmaram titulo, idioma, autoria, codigo bibliografico e link EPUB dos nove panfletos/livro e dos dois periodicos;
+- codigos confirmados: `PH026`, `PH168`, `3Red`, `4Red`, `6Red`, `7Red`, `8Red`, `PH124`, `RH`, `ST` e `SMO`;
+- URLs oficiais confirmadas: `https://media2.egwwritings.org/epub/en_PH026.epub`, `en_PH168.epub`, `en_3Red.epub`, `en_4Red.epub`, `en_6Red.epub`, `en_7Red.epub`, `en_8Red.epub`, `en_PH124.epub`, `en_RH.epub`, `en_ST.epub` e `pt_SMO.epub` sob o mesmo host/path;
+- cada download temporario foi comparado ao asset local por tamanho e SHA-256; os 11 pares foram integralmente identicos;
+- os nove metadados legados receberam a fonte EPUB comprovada; os dois periodicos receberam metadado de procedencia nominal;
+- nenhum byte de PDF ou EPUB foi alterado.
+
+## Plano liberado
+
+- arquivos: 1578, compostos pelos 1576 originais e pelos dois metadados de procedencia adicionados;
+- bytes: `638102876`;
+- grupos: 527;
+- problemas: zero;
+- inventario SHA-256: `fe9d9b2f4336ee89796140fd3d7aeeafe6a234e55080acd433088e706cb16cbf`;
+- plan ID: `5660215656f00e721abc0d67344508380fbc8bc62e063d77816a3e32aded50cb`;
+- repeticao: plano, inventario, contagens e problema zero identicos.
