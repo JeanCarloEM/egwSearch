@@ -1,13 +1,13 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-07-26T13:32:48.5762423-03:00`.
+Atualizado_em: `2026-07-26T13:49:00.4716030-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: fase 1 do item `[1A]` concluida; fases tecnicas interrompidas.
+Escopo_atual: fase 1 do item `[1A]` reaberta pela ampliacao da fonte; fases tecnicas interrompidas.
 Fonte_local: `.ia.rules/state/TODO.ia.md`.
-Fonte_original: `TODO.id.md`.
-Fonte_original_sha256: `8A21E6FEF4840E32B6381975231094D46C2CD814A8226752E6F8D3380F1AE31B`.
-Fonte_atual_sha256: `2659ABFAA1AFF15ACE7CCCC45115C3BCD32813276AE0FBDCA1935EECF5FD9BE7`.
+Fonte_original: `TODO.id.md@11c4199c150e149c70c4e4d7abb9550b79c929d7`.
+Fonte_original_sha256: `68E3E1E2CB4FCD6DD43358A8DD8585C5A6E27650AC55F8B0CC1BA5C4E924F1A6`.
+Fonte_atual_sha256: `4655483CF985A5C0A9C7E99495B404ED793006CA349BF11138A62925B50953A4`.
 Contexto_mestre: `.ia.rules/state/contexts/FT-003/master.md`.
 Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
@@ -27,83 +27,88 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 - tipo: `implementacao_codigo`
 - criado_em: `2026-07-22T02:57:35.4271891-03:00`
-- origem: `.ia.rules/state/TODO.ia.md:56`, `.ia.rules/state/TODO.ia.md:69` e `.ia.rules/state/TODO.ia.md:95`
+- origem: `.ia.rules/state/TODO.ia.md:56`, `.ia.rules/state/TODO.ia.md:69`, `.ia.rules/state/TODO.ia.md:95` e `.ia.rules/state/TODO.ia.md:1182`
 - escopo: Tecnico
 - prioridade: alta
 - status: pendente de autorizacao humana explicita
 - fase_global: 3 de 3
-- objetivo: implementar o nucleo de busca, indexacao, RAG proporcional, equivalencia numerica, CLI, GUI local e demais capacidades ainda nao materializadas depois da fase publica.
-- dependencias: FT-003 concluida; FT-004 concluida; nova autorizacao humana explicita.
+- objetivo: implementar o nucleo de busca, indexacao, RAG proporcional, equivalencia numerica, Modo Pesquisa, Modo Conversa probatorio, evidencias, referencias, traducao vinculada, rastreabilidade, CLI, GUI local e demais capacidades ainda nao materializadas depois da fase publica.
+- dependencias: FT-003 concluida apos a revisao da fonte; FT-004 concluida; nova autorizacao humana explicita.
 - nao_escopo: duplicar componentes concluidos e validados na FT-004.
-- aceite: conformidade integral e verificavel com o RCF, sem regressao da operacao local/CLI.
+- decomposicao_futura: indices e metadados; recuperacao profunda; citacoes e localizacao; traducao; composicao argumentativa; interface dos modos; sessao e rastreabilidade; avaliacao, desempenho e degradacao.
+- aceite: conformidade integral e verificavel com o RCF, preservacao do Modo Pesquisa e operacao local/CLI sem regressao.
 - proximo_ponto: aguardar conclusao da FT-004 e autorizacao especifica.
 
 ## FT-003 - Normatizacao integrada das frentes do TODO
 
 - tipo: `implementacao_normativa`
 - criado_em: `2026-07-26T13:21:36.8987982-03:00`
-- origem: `.ia.rules/state/TODO.ia.md:56`, `.ia.rules/state/TODO.ia.md:69`, `.ia.rules/state/TODO.ia.md:95`, `.ia.rules/state/TODO.ia.md:214` e `.ia.rules/state/TODO.ia.md:886`
+- origem: `.ia.rules/state/TODO.ia.md:56`, `.ia.rules/state/TODO.ia.md:69`, `.ia.rules/state/TODO.ia.md:95`, `.ia.rules/state/TODO.ia.md:214`, `.ia.rules/state/TODO.ia.md:886` e `.ia.rules/state/TODO.ia.md:1182`
 - escopo: Tecnico
 - prioridade: alta
-- status: concluido
+- status: em andamento; reaberta por alteracao material da fonte
 - fase_global: 1 de 3
 - objetivo: correlacionar integralmente as frentes, absorver seus contratos no RCF e deixar as fases tecnicas futuras ordenadas, nao sobrepostas e rastreaveis.
 - dependencias: FT-001 concluida; fontes locais versionadas; norma operacional ativa.
 - nao_escopo: alterar `src/`, migrar publicacoes, modificar build/publicacao, criar ou adaptar codigo, script ou workflow.
-- aceite: RCF deterministico, suficiente, verificavel e sem perda material das fontes; TODO `[1A]` concluido; validacao normativa registrada; commit exclusivo.
+- aceite: RCF deterministico, suficiente, verificavel e sem perda material das fontes, inclusive a conversa probatoria; TODO `[1A]` e normatizacao do novo bloco concluidos; validacao normativa registrada; commit exclusivo.
 - decisoes:
   - nenhuma issue externa identificavel foi referenciada por URL, numero ou repositorio; as fontes canonicas sao os itens locais versionados.
   - a frente publica forma FT propria por possuir fase, risco, entregaveis e cadeia operacional autonomos.
   - a FT-002 foi conciliada como fase 3 para evitar sobreposicao com a cadeia publica.
+  - a adicao de `11c4199` amplia a mesma finalidade de busca e reabre a FT-003, sem invalidar a normatizacao anterior.
+  - o Modo Conversa integra a FT-002 por compartilhar nucleo, indices, recuperacao, evidencia e interfaces; sua decomposicao interna sera materializada somente na fase tecnica autorizada.
 - verificacoes:
   - `.ia.rules/state/TODO.ia.md` lido integralmente antes da movimentacao: concluido.
-  - `RCF.md`, AGENTS e modulos aplicaveis lidos: concluido.
+  - delta de 234 linhas do commit `11c4199` lido integralmente: concluido.
+  - `RCF.md`, AGENTS e modulos aplicaveis relidos integralmente: concluido.
   - triagem de recusas: concluida; indice ausente equivale a acervo vazio.
 - falhas:
   - `.ia.rules/continue.ia` e o indice local de recusas estavam ausentes apos a atualizacao; o estado canônico e criado nesta FT e o acervo vazio nao exige indice.
-- pendencias: nenhuma nesta FT.
-- proximo_ponto: interromper; aguardar autorizacao humana para FT-004.
+- pendencias: revisar o RCF, auditar a nova fonte, atualizar o TODO, validar, commitar e publicar a revisao normativa.
+- proximo_ponto: concluir novamente a fase 1 e interromper antes da FT-004.
 
 ### Etapa 1/4 - Fontes, triagem e arquitetura do plano
 
-- status: concluido
+- status: concluido na revisao
 - tarefas:
   - preservar e ler fontes: concluido.
   - consultar recusas: concluido.
   - correlacionar frentes e conflitos: concluido.
-  - criar FTs e contextos: concluido.
+  - reabrir e conciliar FTs e contextos: concluido.
 
 ### Etapa 2/4 - Consolidacao no RCF
 
-- status: concluido
+- status: pendente na revisao
 - tarefas:
   - absorver busca numerica, RAG e segmentacao: concluido.
   - absorver CLI, GUI e perfis operacionais: concluido.
   - absorver publicacao, acervo, indice, capas e `NORMA-IF-SIL-001`: concluido.
+  - absorver modos, conversa probatoria, evidencia, sessao e degradacao: pendente.
 
 ### Etapa 3/4 - Validacao normativa
 
-- status: concluido
+- status: pendente na revisao
 - tarefas:
   - auditar origem para RCF: concluido.
   - validar referencias e ausencia de duplicacao: concluido.
   - comprovar ausencia de alteracao tecnica: concluido.
-- evidencias:
+- evidencias_anteriores:
   - `npm run agent:rcf`: `RCF_OK`, 64357 bytes.
   - `npm run agent:status`: sucesso, branch `dev`.
   - `git diff --check`: sem erro.
   - rastreabilidade material: 371 sentencas identificadas; adocao por grupos fica para as FTs tecnicas antes dos respectivos commits materiais.
-- falhas de validacao tecnica:
+- falhas_de_validacao_tecnica_anteriores:
   - `npm run agent:verify`: `TSCONFIG_AUSENTE`; esperado enquanto as FTs tecnicas nao criaram a aplicacao TypeScript, sem invalidar a fase exclusivamente normativa.
 
 ### Etapa 4/4 - Encerramento da fase
 
-- status: concluido
+- status: pendente na revisao
 - tarefas:
-  - atualizar estado e TODO: concluido.
-  - criar commit normativo exclusivo: concluido pelo commit que materializa este estado.
-  - publicar `dev`: concluido pelo fechamento do ciclo.
-  - interromper antes das fases 2 e 3: concluido.
+  - atualizar estado e TODO: pendente.
+  - criar commit normativo exclusivo: pendente.
+  - publicar `dev`: pendente.
+  - interromper antes das fases 2 e 3: pendente.
 
 ## FT-004 - Publicacao publica e cadeia operacional
 
