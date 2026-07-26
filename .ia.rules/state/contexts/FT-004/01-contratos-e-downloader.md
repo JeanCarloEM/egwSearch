@@ -38,6 +38,8 @@
 - inventario SHA-256: `9900a18f91bac8480c38e1aee91ee28d01f485cad9fe19e2b3995d83599f0e28`.
 - plan ID repetido em duas execucoes: `5ebf1ffcf3a378f52085e5cdb49a241dab0a2de12bac35a3edc4a08108794ee2`.
 - igualdade entre repeticoes: plan ID, inventario e lista de problemas identicos.
+- commit material: `fc95baeba5e399c6825cb7e06146163e0e59c122`.
+- rastreabilidade: 30 sentencas sincronizadas e validadas no commit `fb792a4`.
 
 ## Bloqueios transferidos ao subcontexto 02
 

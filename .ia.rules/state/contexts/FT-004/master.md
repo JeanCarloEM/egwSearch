@@ -42,7 +42,7 @@ Processamento bibliografico permanece em Python por adequacao ao ecossistema PDF
 | Ordem | Contexto | Entrega | Estado |
 | ---: | --- | --- | --- |
 | 1 | `01-contratos-e-downloader.md` | contrato comum, RCF especifico, migrador e downloader | concluido |
-| 2 | `02-migracao-acervo.md` | acervo canônico e inventario pre/post | pendente |
+| 2 | `02-migracao-acervo.md` | acervo canônico e inventario pre/post | em andamento |
 | 3 | `03-indice-capas-site.md` | dados formativos, capas, indice, pagina e artefato | pendente |
 | 4 | `04-build-workflow.md` | hook, comandos e GitHub Pages | pendente |
 | 5 | `05-validacao-encerramento.md` | testes, visual, destino, TODO e estado final | pendente |
@@ -66,7 +66,9 @@ Todos os criterios materiais de RCF §§40-49 e da fonte devem possuir evidencia
 ## Estado de integracao
 
 - subcontexto 01 concluiu contrato e ferramentas sem rede nem movimento do acervo.
+- commits do subcontexto 01: material `fc95bae`; rastreabilidade `fb792a4`.
 - dry-run causal: `5ebf1ffcf3a378f52085e5cdb49a241dab0a2de12bac35a3edc4a08108794ee2`.
 - inventario: 1576 arquivos, 638098352 bytes, SHA-256 `9900a18f91bac8480c38e1aee91ee28d01f485cad9fe19e2b3995d83599f0e28`.
 - 11 problemas bloqueiam `apply` e foram transferidos nominalmente ao subcontexto 02.
+- subcontexto 02 iniciou pela resolucao probatoria dos 11 bloqueios.
 - fase 3 permanece bloqueada.
