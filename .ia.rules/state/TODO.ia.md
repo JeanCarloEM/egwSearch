@@ -1178,3 +1178,237 @@
   - URLs públicas validadas;
   - testes executados e resultados;
   - pendências ou ambiguidades que não puderam ser resolvidas sem inventar regras.
+
+- [ ] **Estender a pesquisa para pesquisa assistida e conversa probatória com o acervo:** ampliar o recurso de pesquisa já normatizado no RCF para permitir interação conversacional com as publicações, sem substituir, reduzir, enfraquecer ou descaracterizar os mecanismos, especializações, critérios de relevância, pesquisa avançada, força normativa ou demais capacidades já existentes. A extensão DEVE oferecer modos distintos de atuação, preservar o rigor documental e materializar toda argumentação relevante mediante citações exatas, íntegras, verificáveis e contextualizadas das fontes.
+  - [ ] **Preservar o recurso vigente:** inspecionar integralmente o RCF atual e identificar os contratos, mecanismos, especializações, fluxos, critérios e restrições já normatizados para pesquisa. A implementação DEVE estendê-los por composição e especialização; NÃO DEVE removê-los, substituí-los por uma interface conversacional genérica, reduzir sua precisão nem reinterpretar requisitos vigentes como opcionais.
+
+  - [ ] **Modos explícitos de atuação:** permitir que o usuário selecione, de forma inequívoca, ao menos:
+    1. **Modo Pesquisa:** pesquisa documental avançada, híbrida e não conversacional;
+    2. **Modo Conversa:** diálogo interpretativo, argumentativo e obrigatoriamente fundamentado no acervo.
+
+    A seleção DEVE controlar comportamento, apresentação, profundidade, encadeamento e critérios de resposta. Os modos PODEM compartilhar indexação, recuperação, reranqueamento, interpretação e infraestrutura, mas NÃO DEVEM ser semanticamente confundidos.
+
+  - [ ] **Modo Pesquisa:** preservar integralmente a pesquisa avançada já normatizada, incluindo seus mecanismos híbridos, especializações, filtros, estratégias de recuperação, critérios de relevância, rastreabilidade e formatos de resultado. LLMs PODEM auxiliar expansão de consulta, desambiguação, classificação, reranqueamento, síntese, conexão semântica ou outras etapas quando houver ganho demonstrável de qualidade ou desempenho; contudo:
+    - a LLMs e análogos SÃO desejáveis como meios de otimizar (se e quando houver ganho líquido) mas NÃO exigidos;
+    - a experiência final DEVE permanecer caracterizada como pesquisa, não conversa;
+    - o uso de LLM NÃO DEVE substituir mecanismos determinísticos ou especializados quando estes forem mais adequados;
+    - resultados, evidências e referências DEVEM permanecer verificáveis;
+    - otimização por LLM NÃO DEVE reduzir cobertura, precisão, auditabilidade ou força normativa já estabelecida;
+    - a indisponibilidade ou inadequação do LLM NÃO DEVE inutilizar a pesquisa quando houver mecanismo alternativo aplicável.
+
+  - [ ] **Modo Conversa:** permitir conversa fluida, contextual e iterativa com o acervo, mantendo memória controlada do diálogo e capacidade de aprofundar, comparar, interpretar, relacionar e questionar múltiplas publicações. A IA NÃO DEVE apenas falar em nome das fontes ou apresentar paráfrases desacompanhadas de prova; DEVE explicar o conteúdo e sustentar materialmente seus argumentos mediante o próprio conteúdo documental recuperado.
+
+  - [ ] **Argumentação probatória:** toda afirmação material atribuída ao acervo DEVE ser acompanhada, na granularidade adequada, por evidência documental suficiente para comprovar seu mérito. A resposta DEVE combinar:
+    - interpretação da IA;
+    - rigor lógico e acadêmico;
+    - exposição fluida e proporcional ao usuário;
+    - citações literais exatas;
+    - referências completas;
+    - distinção inequívoca entre conteúdo da fonte, interpretação, inferência, comparação e conclusão da IA.
+
+    A fluidez NÃO PODE ocultar a origem das afirmações, substituir prova por autoridade aparente nem transformar interpretação em texto atribuído à publicação.
+
+  - [ ] **Citações íntegras e pontuais:** as citações DEVEM:
+    - reproduzir fielmente o trecho original, sem reconstrução, complementação ou alteração semântica;
+    - conter extensão suficiente para preservar contexto e inteligibilidade;
+    - evitar fragmentos truncados que distorçam condicionantes, exceções, negações ou conclusão;
+    - apontar precisamente para publicação, edição ou versão, autor ou entidade, título, idioma, formato e localização interna disponível;
+    - incluir, conforme o formato, página, seção, capítulo, artigo, item, parágrafo, posição, âncora, intervalo ou identificador equivalente;
+    - permitir que o usuário localize e confira a passagem;
+    - permanecer associadas à proposição que efetivamente sustentam;
+    - diferenciar citação direta, paráfrase e inferência;
+    - preservar o texto original mesmo quando acompanhadas de tradução.
+
+  - [ ] **Referência completa:** cada fonte utilizada DEVE possuir referência bibliográfica ou documental completa conforme os metadados disponíveis, incluindo, quando aplicável:
+    - autor, órgão, entidade ou responsável;
+    - título;
+    - subtítulo;
+    - edição, versão ou revisão;
+    - data;
+    - editora, órgão emissor ou repositório;
+    - idioma;
+    - tipo e formato;
+    - identificador persistente;
+    - URL pública direta e URL de origem;
+    - data de acesso quando pertinente;
+    - SHA-256 ou outro identificador de integridade normatizado;
+    - localização exata do trecho citado.
+
+    Ausência de metadado NÃO DEVE ser preenchida por invenção. Campos indisponíveis DEVEM ser omitidos ou explicitamente identificados como não determinados, conforme o contrato de saída aplicável.
+
+  - [ ] **Tradução vinculada ao original:** quando a fonte estiver em idioma diferente do utilizado na conversa:
+    - a citação original DEVE ser preservada;
+    - tradução PODE ser adicionada imediatamente associada ao trecho original;
+    - a tradução DEVE ser identificada como tradução;
+    - ambiguidades, termos técnicos, jurídicos, normativos ou semanticamente sensíveis DEVEM preservar também o termo original;
+    - a tradução NÃO DEVE substituir o original como prova;
+    - divergências relevantes entre traduções existentes DEVEM ser explicitadas;
+    - a IA NÃO DEVE atribuir à fonte formulação existente apenas na tradução interpretativa.
+
+  - [ ] **Contexto suficiente da prova:** quando um trecho isolado não for suficiente para sustentar corretamente a afirmação, o sistema DEVE recuperar e apresentar o contexto necessário, incluindo definições, premissas, exceções, notas, parágrafos anteriores ou posteriores, referências internas e demais passagens correlatas. É PROIBIDO utilizar citação formalmente correta, porém materialmente enganosa por descontextualização.
+
+  - [ ] **Pesquisa profunda e multifuente:** o modo Conversa DEVE poder executar pesquisa profunda antes de responder, inclusive:
+    - decompor perguntas complexas;
+    - localizar conceitos expressos com terminologias distintas;
+    - relacionar partes distantes da mesma publicação;
+    - cruzar múltiplas publicações;
+    - identificar convergências, divergências, evolução, dependência ou conflito;
+    - distinguir fontes primárias, secundárias, normativas, interpretativas e históricas;
+    - comparar versões, revisões ou edições;
+    - recuperar fundamentos e não apenas trechos lexicalmente semelhantes;
+    - revisar a suficiência das evidências antes da resposta.
+
+    A pesquisa profunda DEVE ser proporcional à complexidade da pergunta e NÃO DEVE ser simulada mediante resposta baseada apenas nos primeiros fragmentos recuperados.
+
+  - [ ] **Relações entre publicações:** ao conectar fontes, a IA DEVE explicitar o tipo de relação identificado, como confirmação, complementação, especialização, divergência, revogação, dependência, evolução histórica, aplicação, interpretação ou analogia. Relações inferidas DEVEM ser identificadas como inferências e sustentadas por evidências próprias; NÃO DEVEM ser apresentadas como vínculo declarado pelas fontes quando não o forem.
+
+  - [ ] **Publicações técnicas, normativas, governamentais e legais:** o mecanismo DEVE suportar com rigor especial documentos cuja interpretação dependa de hierarquia, vigência, competência, versão, escopo, definições e referências internas, sem limitar o recurso a essas categorias. Nesses casos, DEVE:
+    - privilegiar fontes primárias quando disponíveis;
+    - distinguir texto normativo de explicação, parecer, jurisprudência, doutrina, manual ou comentário;
+    - preservar verbos normativos, condições, exceções e remissões;
+    - identificar versão, vigência e jurisdição quando os metadados permitirem;
+    - evitar conclusão categórica quando a fonte não a sustentar;
+    - sinalizar conflitos, revogações, alterações ou incertezas documentais detectadas.
+
+  - [ ] **Separação entre prova e síntese:** a resposta conversacional DEVE possuir associação clara entre:
+    - **afirmação:** o que está sendo explicado ou defendido;
+    - **evidência:** o trecho literal que a sustenta;
+    - **referência:** a identificação e localização completas da fonte;
+    - **interpretação:** a explicação produzida pela IA;
+    - **inferência:** conclusão derivada, mas não expressamente declarada pela fonte.
+
+    Essa estrutura PODE ser apresentada de forma visualmente fluida, sem obrigar formato enfadonho, repetitivo ou excessivamente acadêmico quando a complexidade não o exigir. A simplificação visual NÃO DEVE reduzir verificabilidade.
+
+  - [ ] **Cobertura e suficiência:** antes de concluir, a IA DEVE avaliar se:
+    - as fontes recuperadas são pertinentes e suficientes;
+    - cada argumento relevante possui prova;
+    - existem passagens contraditórias ou qualificadoras;
+    - a resposta depende de fonte não localizada;
+    - a conclusão excede o conteúdo disponível;
+    - as citações preservam contexto e integridade.
+
+    Quando a prova for insuficiente, a resposta DEVE declarar a limitação e NÃO DEVE preencher a lacuna com aparente segurança.
+
+  - [ ] **Controle de alucinação e fidelidade:** a implementação DEVE impedir ou detectar:
+    - citações inexistentes;
+    - referências fabricadas;
+    - páginas ou seções incorretas;
+    - combinação de trechos de fontes distintas como se fossem um único excerto;
+    - alteração silenciosa de texto citado;
+    - atribuição equivocada;
+    - paráfrase apresentada como citação;
+    - tradução apresentada como original;
+    - conclusão não suportada;
+    - omissão de exceção material;
+    - uso de fragmento sem contexto suficiente.
+
+    Nenhuma resposta DEVE apresentar citação ou localização cuja existência não tenha sido verificada no conteúdo efetivamente indexado ou acessível.
+
+  - [ ] **Granularidade adaptativa:** quantidade, extensão e detalhamento das citações DEVEM ser proporcionais ao risco, complexidade e finalidade da resposta. Perguntas simples PODEM receber prova concisa; comparações, controvérsias, interpretações normativas ou argumentos complexos DEVEM receber fundamentação ampliada. O sistema NÃO DEVE despejar citações extensas sem função, nem reduzir evidência a fragmentos incapazes de comprovação.
+
+  - [ ] **Experiência conversacional:** o modo Conversa DEVE permanecer natural e útil, permitindo perguntas subsequentes, pedidos de aprofundamento, contestação, comparação, mudança de recorte e solicitação de novas provas. A IA DEVE reutilizar contexto válido sem perder o vínculo documental de cada afirmação e DEVE refazer a recuperação quando a nova pergunta exigir evidência distinta.
+
+  - [ ] **Rastreabilidade da sessão:** registrar, conforme as normas de privacidade, contexto e retenção aplicáveis:
+    - consulta original e decomposições relevantes;
+    - modo selecionado;
+    - filtros e recortes;
+    - publicações consultadas;
+    - trechos utilizados;
+    - referências emitidas;
+    - traduções geradas;
+    - relações e inferências relevantes;
+    - limitações ou falhas de recuperação.
+
+    O registro DEVE permitir auditoria e reprodução proporcional da resposta, sem exigir exposição de raciocínio interno privado da IA.
+
+  - [ ] **Desempenho e arquitetura:** selecionar mecanismos de recuperação, indexação, busca lexical, semântica, híbrida, reranqueamento, expansão, leitura contextual e geração conforme aplicabilidade e estado real do projeto. A implementação NÃO DEVE impor LLM a todas as etapas nem degradar pesquisas simples. Cache, pré-processamento, índices especializados e execução local ou remota DEVEM seguir o RCF vigente e ser combinados para maximizar precisão, latência, custo e disponibilidade sem sacrificar fidelidade.
+
+  - [ ] **Degradação controlada:** quando LLM, tradutor, reranqueador ou outro componente avançado estiver indisponível:
+    - o Modo Pesquisa DEVE preservar as capacidades não dependentes desse componente;
+    - o Modo Conversa PODE limitar síntese ou interpretação, mas NÃO DEVE fabricar respostas;
+    - citações e referências somente DEVEM ser emitidas quando verificadas;
+    - a interface DEVE informar objetivamente a limitação aplicável;
+    - mecanismos alternativos DEVEM ser utilizados quando previstos e seguros.
+
+  - [ ] **Interface e apresentação:** projetar a seleção de modo e a apresentação das respostas de forma inequívoca, permitindo ao usuário:
+    - alternar entre Pesquisa e Conversa;
+    - distinguir resultado recuperado de síntese da IA;
+    - abrir a publicação na localização citada, quando tecnicamente suportado;
+    - consultar referência completa;
+    - visualizar original e tradução;
+    - expandir contexto adjacente;
+    - identificar quais afirmações cada citação sustenta;
+    - solicitar mais evidências ou aprofundamento;
+    - copiar referência e citação sem perda de integridade.
+
+  - [ ] **Normatização no RCF:** incorporar integralmente esta extensão ao RCF canônico, reconciliando-a com o recurso de pesquisa vigente e centralizando regras comuns de recuperação, evidência, referência, tradução, rastreabilidade e validação. O RCF DEVE distinguir claramente:
+    - contratos comuns aos dois modos;
+    - requisitos exclusivos do Modo Pesquisa;
+    - requisitos exclusivos do Modo Conversa;
+    - uso opcional e condicionado de LLMs;
+    - critérios de prova, fidelidade e suficiência;
+    - degradação e tratamento de falhas.
+
+    É PROIBIDO criar uma especificação paralela que duplique, contradiga ou enfraqueça a normatização atual.
+
+  - [ ] **Planejamento por FTs:** após inspeção do estado real e normatização, decompor a implementação em FTs rastreáveis conforme unidades materiais, incluindo, quando aplicável:
+    - extensão dos índices e metadados;
+    - recuperação híbrida e profunda;
+    - extração e validação de citações;
+    - localização interna por formato;
+    - tradução vinculada;
+    - composição argumentativa;
+    - interface dos modos;
+    - rastreabilidade;
+    - testes de fidelidade;
+    - desempenho e degradação.
+
+    FTs NÃO DEVEM ser criadas artificialmente por camada quando uma unidade coesa produzir melhor execução, nem fundidas quando responsabilidades ou critérios de aceite forem materialmente distintos.
+
+  - [ ] **Validação:** criar testes determinísticos e conjuntos de avaliação que verifiquem, no mínimo:
+    - preservação integral do Modo Pesquisa atual;
+    - distinção funcional entre os modos;
+    - precisão de recuperação;
+    - fidelidade literal das citações;
+    - validade das localizações;
+    - completude das referências;
+    - preservação de contexto;
+    - associação entre afirmação e prova;
+    - distinção entre fonte, tradução, interpretação e inferência;
+    - tratamento de múltiplas fontes;
+    - detecção de contradições;
+    - ausência de citações fabricadas;
+    - comportamento com metadados incompletos;
+    - degradação sem LLM ou componentes auxiliares;
+    - desempenho proporcional à profundidade solicitada.
+
+  - [ ] **Critérios de aceite:**
+    - [ ] O recurso de pesquisa vigente permanece integralmente preservado.
+    - [ ] O usuário pode selecionar explicitamente Pesquisa ou Conversa.
+    - [ ] O Modo Pesquisa continua não conversacional e utiliza os melhores mecanismos aplicáveis já normatizados.
+    - [ ] LLMs são usadas apenas quando agregam valor e não como substituição obrigatória da pesquisa.
+    - [ ] O Modo Conversa interpreta, conecta e argumenta com base no acervo.
+    - [ ] Afirmações materiais são acompanhadas de citações exatas e referências completas.
+    - [ ] As citações preservam contexto, condicionantes, exceções e integridade.
+    - [ ] Fontes em outro idioma exibem original e, quando necessário, tradução identificada.
+    - [ ] O usuário pode verificar a origem e a localização de cada prova.
+    - [ ] Conteúdo da fonte, interpretação e inferência permanecem distinguíveis.
+    - [ ] Relações entre múltiplas publicações são identificadas e fundamentadas.
+    - [ ] Documentos técnicos, normativos, governamentais e legais recebem tratamento compatível com sua natureza.
+    - [ ] Citações, referências, localizações e atribuições inexistentes são impedidas ou detectadas.
+    - [ ] Limitações de prova são declaradas sem fabricação de resposta.
+    - [ ] A apresentação mantém rigor acadêmico e lógico sem prolixidade ou rigidez desnecessária.
+    - [ ] A extensão foi integralmente incorporada ao RCF sem duplicar ou enfraquecer normas vigentes.
+
+  - [ ] **Relatório final:** registrar:
+    - normas do recurso anterior preservadas ou especializadas;
+    - alterações realizadas no RCF;
+    - arquitetura e mecanismos efetivamente adotados;
+    - diferenças funcionais entre os modos;
+    - critérios de seleção e uso de LLMs;
+    - modelo de citações, referências e traduções;
+    - mecanismos de validação e prevenção de alucinações;
+    - FTs criadas e vínculos;
+    - testes e conjuntos de avaliação executados;
+    - métricas de precisão, fidelidade, cobertura, latência e custo disponíveis;
+    - limitações, pendências e riscos remanescentes.
