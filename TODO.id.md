@@ -1,3 +1,58 @@
+- [ ] **[1A] Orquestrar integralmente:** este item constitui o comando central das solicitações correlatas. Assim como múltiplas frentes integram uma única guerra, TODOs deste arquivo, issues, requisitos, FTs, etapas, tarefas, anexos e normas materialmente relacionados DEVEM ser lidos, analisados, correlacionados e planejados como partes de um único objetivo, ainda que permaneçam separados por rastreabilidade, escopo, fase ou execução. Sua função é coordenar, consolidar, ordenar e preparar todas as frentes, NÃO executá-las indiscriminadamente nesta atuação. O planejamento DEVE prevenir retrabalho, incompatibilidades e futuras reedições ou revisões decorrentes de análise fragmentada ou incompleta.
+  - [ ] **Preservar as fontes:** obter integralmente o texto, os comentários relevantes e os anexos aplicáveis de cada issue ou fonte externa; armazená-los temporariamente em estrutura local versionada, rastreável e devidamente aninhada; e lê-los integralmente antes de qualquer normatização ou implementação. Esses registros DEVEM permanecer até a incorporação normativa integral de seu conteúdo e ser removidos exclusivamente no marco de encerramento definido neste item.
+
+  - [ ] **Analisar o conjunto:** ler os demais TODOs, issues, normas, FTs e trabalhos relacionados; identificar objetivos comuns, sobreposições, dependências, conflitos, precedências, lacunas, duplicações e impactos cruzados; e consolidar uma interpretação única, coerente e rastreável. A IA DEVE planejar a “guerra”, não tratar cada “frente” isoladamente.
+
+  - [ ] **Preservar integralmente o conteúdo:** TODOs, issues e demais fontes PODEM ser reorganizados, fundidos, consolidados, desmembrados ou eliminados como unidades autônomas quando deixarem de possuir função própria. Contudo, nenhuma solicitação, regra, restrição, proibição, exceção, nuance, motivação, anexo, detalhe, dependência, precedência ou critério PODE ser perdido, enfraquecido, ignorado ou simplificado. A consolidação DEVE aumentar coerência, convergência e executabilidade, jamais reduzir substância ou rastreabilidade.
+
+  - [ ] **Consolidação documental:** a IA PODE criar artefato temporário único de consolidação quando isso melhorar compreensão, coordenação, rastreabilidade ou eliminação de redundâncias. Esse artefato NÃO é obrigatório nem substitui as fontes antes da preservação integral de seu conteúdo. Cada requisito consolidado DEVE permanecer vinculável à respectiva origem.
+
+  - [ ] **Planejamento global por FTs:** criar uma ou mais FTs vinculadas diretamente às issues ou demais fontes rastreáveis — JAMAIS a este item de `TODO.ia.md` —, planejadas de forma integrada e segregadas apenas quando houver unidade material, dependência, responsabilidade, risco, entregável ou fase distinta. DEVEM ser evitadas, tanto quanto técnica e operacionalmente possível, FTs, etapas ou tarefas duplicadas, sobrepostas, vazias, prematuras, artificiais, órfãs ou sem função no fluxo global.
+
+  - [ ] **Fases obrigatórias e sequenciais:** estruturar as FTs aplicáveis nas fases abaixo, preservando dependências e impedindo execução antecipada:
+    1. **Normatização:** incorporar integralmente ao RCF canônico todas as regras, contratos, exceções, relações e critérios consolidados.
+
+    2. **Implementação da publicação pública e de sua cadeia operacional:** implementar integralmente, não necessariamente nesta ordem:
+       - **A.** publicação do site do produto no GitHub Pages;
+       - **B.** adaptação e correção do script `baixar.py`, incluindo RCF específico em subdiretório adequado da raiz do repositório, com nome inequívoco e referência normativa no RCF global;
+       - **C.** script temporário, idempotente e verificável para migrar e corrigir as localizações das publicações, assets e metadados existentes;
+       - **D.** script automatizado e workflow associado para gerar e manter o indexador global, incluindo criação, correção ou atualização de capas e demais assets ausentes, inválidos ou desatualizados.
+
+    3. **Conformidade integral do repositório:** implementar, adaptar ou corrigir os demais códigos, scripts, automações, workflows, testes, documentação e artefatos necessários ao cumprimento integral do RCF, excluindo apenas o que já tiver sido concluído e validado na fase 2.
+
+    As fases DEVEM ser planejadas globalmente antes de qualquer execução. A fase 2 NÃO DEVE ser interpretada como autorização para alterar componentes externos à cadeia de publicação pública, salvo dependência estritamente necessária e previamente registrada. A fase 3 NÃO DEVE duplicar trabalho concluído na fase 2.
+
+  - [ ] **Motivação e retomada:** decisões cuja razão não seja evidente, convergências entre solicitações, adiamentos, dependências, exclusões aparentes, conflitos resolvidos ou divisões de escopo DEVEM possuir motivação clara e suficiente. Quando o registro na própria FT for inadequado ou excessivo, a motivação DEVE ser preservada em arquivo temporário rastreável, vinculado às FTs, etapas ou tarefas correspondentes, mantido somente enquanto necessário à retomada e removido integralmente após a conclusão da unidade pertinente.
+
+  - [ ] **Commit das FTs:** após criar, consolidar, revisar e vincular todas as FTs necessárias, realizar commit exclusivo contendo somente as FTs, seus vínculos rastreáveis e, quando indispensáveis à compreensão delas, os artefatos temporários de planejamento. Esse commit DEVE anteceder qualquer alteração normativa ou técnica.
+
+  - [ ] **Executar somente a fase 1:** iniciar imediatamente e concluir integralmente apenas as FTs, etapas e tarefas da fase **1 — Normatização**, incorporando ao RCF canônico a issue e todas as frentes convergentes aplicáveis. Nesta atuação, É PROIBIDO:
+    - alterar diretamente `src/`;
+    - executar migração de arquivos;
+    - modificar a cadeia de build ou publicação;
+    - implementar a norma operacional;
+    - criar, adaptar ou alterar códigos, scripts ou workflows;
+    - iniciar qualquer atividade pertencente às fases 2 ou 3.
+
+  - [ ] **Validar a normatização:** confirmar, mediante revisão rastreável, que:
+    - todo requisito, detalhe, restrição, exceção, motivação, dependência, precedência, relação entre frentes e critério aplicável foi incorporado;
+    - nenhuma fonte material permaneceu sem tratamento;
+    - não existem duplicações normativas desnecessárias;
+    - referências internas e vínculos documentais estão corretos;
+    - o RCF resultante é determinístico, suficiente e verificável;
+    - as fases 2 e 3 permanecem coerentes, não sobrepostas e prontas para execução futura.
+
+  - [ ] **Encerrar a fase:** após validar a normatização:
+    1. remover os registros temporários das issues, anexos e arquivos auxiliares cuja função tenha se esgotado;
+    2. preservar apenas os artefatos ainda necessários à rastreabilidade ou retomada das fases remanescentes;
+    3. realizar commit exclusivo contendo a normatização no RCF, as referências atualizadas e as remoções pertinentes;
+    4. marcar este TODO como concluído;
+    5. interromper obrigatoriamente a execução, sem iniciar as fases 2 ou 3.
+
+  - [ ] **Comunicação final:** informar ao desenvolvedor que as issues e frentes relacionadas foram integralmente correlacionadas, convergidas e normatizadas no RCF; identificar os commits realizados; e listar nominalmente as fases remanescentes prontas para execução:
+    - **Implementação da publicação pública e de sua cadeia operacional**;
+    - **Conformidade integral do repositório com o RCF**.
+
 - [ ] **Ampliar a busca semântica, lexical e por sinônimos em coleções bibliográficas, inclusive multilíngues, para reconhecer equivalência bidirecional entre representações numéricas:** uma consulta expressa em algarismos DEVE localizar ocorrências semanticamente equivalentes escritas por extenso, e vice-versa; por exemplo, `144` DEVE corresponder a `cento e quarenta e quatro`.
   - [ ] **Bidirecionalidade:** a equivalência DEVE funcionar independentemente da representação usada na consulta ou no conteúdo indexado, sem exigir duplicação manual dos termos.
   - [ ] **Multilinguismo:** números por extenso DEVEM ser interpretados conforme o idioma e a variante linguística do documento, campo ou consulta, preservando diferenças normativas entre idiomas e evitando correspondências produzidas por tradução ou análise linguística incorreta.
@@ -827,3 +882,299 @@
     - PDF em Python: [pypdf](https://pypdf.readthedocs.io/en/latest/user/extract-text.html) e [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/).
 
     Não existe vínculo com editoras; o projeto não responde pelo conteúdo de terceiros; atribuição, restrições e integridade permanecem obrigatórias.
+
+- [ ] Reestruturar publicação, indexação e disponibilidade de assets
+
+  ## Objetivo
+
+  Reestruturar integralmente o armazenamento, download, publicação e indexação das publicações para que todo conteúdo relacionado ao mesmo título seja agrupado, normalizado e disponibilizado no GitHub Pages, independentemente de existir link ou botão para ele na página do produto.
+
+  ## Requisitos
+
+  ### 1. Publicação obrigatória
+
+  Ao gerar a página do produto:
+  - todas as publicações e seus assets associados DEVEM ser incluídos no artefato publicado;
+  - os arquivos DEVEM permanecer acessíveis diretamente pelo domínio público do GitHub Pages;
+  - a ausência de links, botões ou referências visuais na página NÃO DEVE impedir cópia, build, deploy ou acesso direto aos arquivos;
+  - rotinas de otimização, tree-shaking, limpeza ou seleção de assets NÃO DEVEM remover arquivos pertencentes à estrutura de publicações.
+
+  ### 2. Estrutura canônica
+
+  Substituir a estrutura atual:
+
+  ```text
+  /publications/<acronimo-autor>/<language>/<tipo>/<titulo>.<extensao>
+  ```
+
+  pela estrutura:
+
+  ```text
+  /publications/<acronimo-autor>/<language>/<tipo>/<titulo>/
+  ```
+
+  Considerando:
+  - origem local: `./src/publications/`;
+  - raiz pública: `/publications/`;
+  - `<tipo>` representa a classificação lógica da publicação, NÃO o formato físico do arquivo;
+  - todos os arquivos relacionados ao mesmo título DEVEM permanecer no mesmo diretório, incluindo PDF, EPUB, metadados, capas e demais assets;
+  - diferenças de extensão ou formato NÃO DEVEM criar diretórios distintos para o mesmo título.
+
+  Exemplo:
+
+  ```text
+  ./src/publications/<acronimo-autor>/<language>/<tipo>/<titulo>/
+  ├── <acronimo-titulo>.pdf
+  ├── <acronimo-titulo>.epub
+  ├── <acronimo-titulo>.json
+  └── <demais-assets>
+  ```
+
+  URL pública correspondente:
+
+  ```text
+  /publications/<acronimo-autor>/<language>/<tipo>/<titulo>/<arquivo>
+  ```
+
+  ### 3. Migração do acervo existente
+
+  Mover os arquivos atualmente existentes para a estrutura canônica, preservando integralmente:
+  - conteúdo;
+  - formatos;
+  - metadados;
+  - assets relacionados;
+  - variantes legítimas;
+  - URLs de origem;
+  - hashes;
+  - idiomas;
+  - autores;
+  - classificações;
+  - rastreabilidade.
+
+  A migração DEVE:
+  1. identificar arquivos pertencentes ao mesmo título;
+  2. normalizar o título;
+  3. determinar seu acrônimo;
+  4. criar o diretório canônico;
+  5. mover todos os arquivos correlatos para esse diretório;
+  6. renomear os arquivos conforme este TO-DO;
+  7. atualizar referências, índices, metadados, scripts, testes e documentação afetados;
+  8. validar que nenhum arquivo foi perdido, sobrescrito ou publicado em caminho incorreto.
+
+  ### 4. Adequação do `baixar.py`
+
+  O script `baixar.py` DEVE ser ajustado para:
+  - baixar diretamente na estrutura canônica;
+  - reutilizar diretório existente do mesmo título;
+  - agrupar no mesmo diretório todos os formatos e assets relacionados;
+  - normalizar título, tags e acrônimo antes de definir o destino;
+  - impedir sobrescrita destrutiva;
+  - preservar variantes com conteúdo distinto;
+  - produzir resultado determinístico para entradas equivalentes;
+  - gerar ou atualizar metadados e índices aplicáveis;
+  - não recriar a estrutura legada.
+
+  ### 5. Normalização dos nomes de arquivo
+
+  Dentro do diretório de cada título, todo arquivo diretamente associado à publicação DEVE utilizar:
+
+  ```text
+  <acronimo-titulo>.<extensao>
+  ```
+
+  O acrônimo DEVE:
+  - derivar exclusivamente do título normalizado;
+  - ignorar tags removidas do título;
+  - ser estável e determinístico;
+  - utilizar a mesma regra em migração, download, indexação e publicação.
+
+  Arquivos auxiliares cuja semântica exija sufixo adicional PODEM utilizar:
+
+  ```text
+  <acronimo-titulo>.<qualificador>.<extensao>
+  ```
+
+  desde que o qualificador seja determinístico, semanticamente necessário e não recrie o título completo de forma redundante.
+
+  ### 6. Colisões e preservação de variantes
+
+  Quando o nome de destino já existir:
+  1. calcular ou obter o SHA-256 de ambos os arquivos;
+  2. se os hashes forem iguais, tratar como duplicata idêntica, sem criar nova cópia;
+  3. se os hashes forem diferentes, preservar ambos mediante variação mínima, estável e não destrutiva do nome.
+
+  Formato preferencial:
+
+  ```text
+  <acronimo-titulo>.<extensao>
+  <acronimo-titulo>.<hash-curto>.<extensao>
+  ```
+
+  O hash curto DEVE:
+  - derivar do SHA-256 do próprio arquivo;
+  - possuir comprimento suficiente para desambiguar os arquivos presentes no diretório;
+  - ser expandido apenas em caso de colisão do próprio prefixo;
+  - permitir rastrear inequivocamente o arquivo ao hash integral registrado.
+
+  É PROIBIDO:
+  - sobrescrever arquivo de hash diferente;
+  - descartar silenciosamente uma variante;
+  - usar contador dependente da ordem de execução quando houver identificador determinístico disponível.
+
+  ### 7. Tags incorporadas ao nome
+
+  Trechos entre parênteses presentes no nome de alguns títulos DEVEM ser avaliados como tags, qualificadores ou atributos, e não automaticamente como parte do título bibliográfico.
+
+  Quando confirmados como tag:
+  - DEVEM ser removidos do título canônico;
+  - NÃO DEVEM integrar `<titulo>`;
+  - NÃO DEVEM integrar `<acronimo-titulo>`;
+  - DEVEM ser normalizados e transferidos ao JSON indexador global apropriado;
+  - DEVEM permanecer associados à publicação correspondente;
+  - sua remoção NÃO DEVE causar perda semântica nem colisão não tratada.
+
+  Parênteses que façam parte legítima do título NÃO DEVEM ser removidos por regra cega. A implementação DEVE utilizar metadados disponíveis e critérios determinísticos; caso não seja possível decidir com segurança, DEVE preservar o valor e registrar a necessidade de revisão, sem convertê-lo silenciosamente em tag.
+
+  ### 8. Metadados locais
+
+  Cada diretório de título DEVE preservar e associar corretamente seus arquivos de metadados.
+
+  Os metadados existentes podem, mas não necessariamente DEVEM, seguir o padrão:
+
+  ```text
+  <nome-publicacao>.source.json
+  ```
+
+  A implementação NÃO DEVE depender exclusivamente do nome do arquivo para identificar metadados. DEVE inspecionar estrutura, campos e associação com a publicação.
+
+  Quando aplicável, os metadados DEVEM ser normalizados para nome aderente ao acrônimo, sem perda de conteúdo:
+
+  ```text
+  <acronimo-titulo>.source.json
+  ```
+
+  ### 9. JSON indexador global
+
+  O JSON indexador global DEVE ser gerado ou atualizado prioritariamente a partir dos metadados locais de cada publicação.
+
+  Para cada origem e formato disponível, incorporar:
+  - URL pública direta do arquivo publicado;
+  - URL original da fonte;
+  - SHA-256 já calculado;
+  - formato;
+  - idioma;
+  - autor;
+  - tipo;
+  - título normalizado;
+  - acrônimo do título;
+  - tags extraídas;
+  - demais metadados existentes e aplicáveis.
+
+  As URLs originais e seus respectivos hashes, normalmente presentes nos arquivos `*.source.json`, DEVEM ser adicionados às URLs diretas já previstas no indexador global, sem substituí-las.
+
+  A composição, estrutura e semântica dessas origens DEVEM obedecer ao normativo anteriormente definido na TO-DO anexada:
+
+  ```text
+  NORMA-IF-SIL-001
+  ```
+
+  Antes de alterar o indexador, a implementação DEVE localizar e ler integralmente `NORMA-IF-SIL-001`. É PROIBIDO presumir sua estrutura, reproduzi-la por memória ou criar contrato incompatível. Em caso de conflito, aplicar a precedência documental vigente e registrar a decisão.
+
+  ### 10. Build e GitHub Pages
+
+  A cadeia de build/deploy DEVE:
+  - copiar integralmente `./src/publications/` para `/publications/` no artefato público;
+  - preservar diretórios, arquivos, extensões e nomes;
+  - não exigir importação por código para publicar os arquivos;
+  - não depender de referências na página do produto;
+  - manter URLs estáveis e diretamente acessíveis;
+  - detectar arquivos ausentes, caminhos inválidos e colisões;
+  - falhar de forma explícita quando houver perda, sobrescrita ou inconsistência estrutural.
+
+  ### 11. Compatibilidade e referências
+
+  Atualizar todas as referências afetadas, incluindo, quando existentes:
+  - página do produto;
+  - geradores;
+  - scripts;
+  - indexadores;
+  - manifestos;
+  - JSONs;
+  - testes;
+  - documentação;
+  - rotinas de download;
+  - validações;
+  - workflows;
+  - caminhos públicos;
+  - URLs internas e externas.
+
+  Compatibilidade temporária com caminhos antigos somente PODE ser mantida quando já houver URLs públicas consumidas externamente. Nesse caso, a solução DEVE privilegiar redirecionamento, alias ou mapa de compatibilidade, sem duplicação indefinida do acervo.
+
+  ### 12. Normatização no RCF
+
+  Todo o comportamento definido neste TO-DO DEVE ser incorporado ao RCF aplicável como norma permanente, incluindo:
+  - estrutura canônica;
+  - agrupamento por título;
+  - nomenclatura;
+  - acrônimos;
+  - tratamento de tags;
+  - colisões;
+  - hashes;
+  - metadados;
+  - indexação;
+  - publicação;
+  - disponibilidade direta;
+  - migração;
+  - validação;
+  - precedência de `NORMA-IF-SIL-001`.
+
+  O RCF NÃO DEVE apenas referenciar este TO-DO como fonte transitória. DEVE absorver integralmente suas regras, reconciliá-las com normas vigentes e remover ambiguidades ou contradições.
+
+  ## Ordem de execução
+  1. Ler normas aplicáveis, incluindo `NORMA-IF-SIL-001`.
+  2. Inspecionar estrutura, acervo, `baixar.py`, indexadores, build e deploy reais.
+  3. Mapear títulos, formatos, metadados, tags, hashes e colisões.
+  4. Definir regras determinísticas de normalização e acrônimos aderentes ao projeto.
+  5. Implementar migração segura e idempotente.
+  6. Migrar os arquivos existentes.
+  7. Ajustar `baixar.py`.
+  8. Atualizar o JSON indexador global.
+  9. Atualizar build, deploy e referências.
+  10. Incorporar as regras ao RCF.
+  11. Executar validações completas.
+  12. Emitir relatório final.
+
+  ## Critérios de aceite
+  - [ ] Todas as publicações estão sob a estrutura canônica.
+  - [ ] Cada título possui diretório próprio.
+  - [ ] PDF, EPUB, metadados e assets do mesmo título estão agrupados.
+  - [ ] Arquivos utilizam o acrônimo normalizado do título.
+  - [ ] Tags válidas foram removidas do título e registradas no índice.
+  - [ ] Parênteses legítimos não foram removidos indevidamente.
+  - [ ] Duplicatas idênticas não foram replicadas.
+  - [ ] Arquivos homônimos com hashes distintos foram preservados.
+  - [ ] Nenhum arquivo foi perdido ou sobrescrito.
+  - [ ] `baixar.py` gera apenas a nova estrutura.
+  - [ ] Metadados locais são associados por conteúdo, não apenas pelo nome.
+  - [ ] URLs originais e SHA-256 foram incorporados ao indexador global.
+  - [ ] URLs públicas diretas permanecem no indexador.
+  - [ ] O índice está aderente à `NORMA-IF-SIL-001`.
+  - [ ] O build publica todo o conteúdo, mesmo sem links na interface.
+  - [ ] Cada arquivo é acessível diretamente no GitHub Pages.
+  - [ ] Referências internas e documentação foram atualizadas.
+  - [ ] As regras foram integralmente normatizadas no RCF.
+  - [ ] Testes e validações passam sem regressão.
+
+  ## Relatório final
+
+  Registrar objetivamente:
+  - arquivos criados, movidos, renomeados, deduplicados ou preservados como variantes;
+  - regra aplicada para título, tag e acrônimo;
+  - colisões e respectivos hashes;
+  - alterações no `baixar.py`;
+  - alterações no indexador global;
+  - aderência à `NORMA-IF-SIL-001`;
+  - alterações no build/deploy;
+  - URLs públicas validadas;
+  - testes executados e resultados;
+  - pendências ou ambiguidades que não puderam ser resolvidas sem inventar regras.
