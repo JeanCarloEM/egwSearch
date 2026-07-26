@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-07-26T13:55:54.3819604-03:00`.
+Atualizado_em: `2026-07-26T14:05:03.9029839-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: fase 1 do item `[1A]` refeita e concluida apos ampliacao da fonte; fases tecnicas interrompidas.
+Escopo_atual: fase 2 do item `[1A]`, exclusivamente FT-004, autorizada e em andamento.
 Fonte_local: `.ia.rules/state/TODO.ia.md`.
 Fonte_original: `TODO.id.md@11c4199c150e149c70c4e4d7abb9550b79c929d7`.
 Fonte_original_sha256: `68E3E1E2CB4FCD6DD43358A8DD8585C5A6E27650AC55F8B0CC1BA5C4E924F1A6`.
@@ -125,10 +125,10 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/TODO.ia.md:214` e `.ia.rules/state/TODO.ia.md:886`
 - escopo: Tecnico
 - prioridade: alta
-- status: pendente de autorizacao humana explicita
+- status: em andamento
 - fase_global: 2 de 3
 - objetivo: materializar a publicacao institucional, a estrutura canonica do acervo, a cadeia de download, a migracao, o indexador, as capas, os assets, o build e o deploy.
-- dependencias: FT-003 concluida; nova autorizacao humana explicita.
+- dependencias: FT-003 concluida; autorizacao humana explicita recebida em `2026-07-26`.
 - nao_escopo: implementar capacidades de busca independentes da cadeia publica, salvo dependencia estritamente necessaria e previamente registrada.
 - etapas_planejadas:
   - A: publicacao do site no GitHub Pages.
@@ -136,4 +136,12 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   - C: migrador temporario, idempotente, verificavel e removivel para o acervo.
   - D: gerador global de indice, metadados, hashes, capas e assets com workflow associado.
 - aceite: cadeia local/CI equivalente, publicacao reproduzivel, acervo preservado e criterios publicos do RCF comprovados.
-- proximo_ponto: aguardar conclusao da FT-003 e autorizacao especifica.
+- contexto_mestre: `.ia.rules/state/contexts/FT-004/master.md`.
+- baseline:
+  - 1576 arquivos de acervo: 525 PDF, 526 EPUB e 525 metadados JSON.
+  - estrutura vigente plana e nao conforme sob idioma/tipo.
+  - nenhum site, build publico, indice global, capa gerada ou workflow de Pages.
+  - `baixar.py` preexistente, executado por importacao e dependente de destinos legados.
+  - branch `dev` limpa quanto a arquivos rastreados; `agents-governance-backups/` permanece intocado.
+- autorizacao: prompt humano `continue, exclusivamente para a fase 2: "Implementação da publicação pública e de sua cadeia operacional", e qualquer coisa precedente que precise se concluído.`
+- proximo_ponto: concluir registro exclusivo da retomada e iniciar subcontexto 01.
