@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-07-27T13:04:50-03:00`.
+Atualizado_em: `2026-07-27T16:24:00-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-008 em validação; navegador persistente visível para descoberta do coletor.
+Escopo_atual: FT-008 concluída; coleta ampla e a decisão editorial da FT-004/03 permanecem fora de escopo.
 Fonte_local: `.ia.rules/state/requests/FT-008/source.txt`.
 Fonte_original: `attachment:pasted-text.txt@3b4d3c5f-dbbe-4137-9f10-ba302e94b4b5`.
 Fonte_original_sha256: `3D811F33720D0B6F794420323ABC9A7A752542EC969E9B3E9E74216BB95BA582`.
@@ -238,12 +238,14 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-008/source.txt`
 - escopo: Tecnico
 - prioridade: alta
-- status: em validação
+- status: concluída
 - objetivo: adaptar e normatizar `scripts/publications/baixar.py` para reutilizar preferencialmente uma única guia visível com perfil persistente durante descoberta remota, aguardando intervenção humana legítima em desafios sem contorno.
 - dependencias: FT-006 e FT-007 concluídas.
 - nao_escopo: resolver CAPTCHA automaticamente, burlar controles, aumentar volume de coleta, executar coleta ampla ou resolver a decisão editorial da FT-004/03.
 - contexto_mestre: `.ia.rules/state/contexts/FT-008/master.md`
 - baseline: `baixar.py` usava Selenium/Firefox headless por coleção, criava driver em `_process_collection` e encerrava no `finally`; desafios encerravam a coleção sem espera humana.
 - implementacao: RCF global e específico atualizados; `BrowserSessionManager` centraliza lifecycle, perfil persistente, guia operacional, espera humana, recuperação e encerramento; config adicionada em `config/publications.json`; testes simulados adicionados.
-- validacao: pendente de suíte completa.
-- pendencias: executar testes offline, `py_compile`, ajuda da CLI e validação normativa.
+- validacao: `python -m unittest discover -s tests/publications -v`: 39 testes aprovados; `py_compile`, ajuda da CLI e `python -m pip check`: aprovados; `npm run agent:rcf`: `RCF_OK` com 92 entradas e 91 sentenças materiais; `agent:status` e `git diff --check`: aprovados.
+- rastreabilidade: sete sentenças materiais do RCF especializado sincronizadas ao commit causal `48f42dd38063fdf400eef18d890ac069377eac45`; mapa `.ia.rules/state/traceability/rcf-map.json` atualizado.
+- pendencias: nenhuma nesta FT. Coleta ampla continua fora de escopo e exige autorização própria; a decisão editorial da FT-004/03 permanece separada.
+- proximo_ponto: interromper; aguardar solicitação humana explícita para coleta ampliada, para a decisão editorial da FT-004/03 ou para outra FT.

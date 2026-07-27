@@ -48,3 +48,11 @@ Normatizar e implementar o uso preferencial de uma única instância visível de
 - fechamento/invalidação da guia aciona recuperação finita.
 - fixtures e fluxo no-network continuam sem navegador.
 - testes automatizados não acessam CAPTCHA real.
+
+## Encerramento e validação
+
+- testes offline: `python -m unittest discover -s tests/publications -v` com 39 testes aprovados, incluindo reuso da guia, espera humana simulada e retomada sem loop ocupado.
+- validações adicionais: `py_compile`, ajuda da CLI e `python -m pip check` aprovados; nenhuma coleta remota foi executada.
+- validação normativa: `npm run agent:rcf` aprovou com 92 entradas e 91 sentenças materiais; sete sentenças do RCF especializado foram sincronizadas ao commit material `48f42dd38063fdf400eef18d890ac069377eac45`.
+- integridade: `npm run agent:status` e `git diff --check` aprovados.
+- resultado: FT-008 concluída. A coleta ampla e a decisão editorial da FT-004/03 continuam fora de escopo.
