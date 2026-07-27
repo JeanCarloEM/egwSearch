@@ -1,6 +1,11 @@
 # Pipeline RAG completa — aula sintetizada como bate-papo entre dois desenvolvedores
 
-NOTA: um revisão suscinta e rápida pode ser lida em `pipeline-rag-aula-revisao-rapida.md`.
+- Termos da aula foram inferidos a partir de legenda gerada automaticamente, por conter erros.
+- Video aula original: https://www.youtube.com/watch?v=9i6r90i17iA
+- Repositório usado na aula:
+  - https://github.com/caio-moliveira/rag-project
+  - https://github.com/lvgalvao/data-engineering-roadmap
+- NOTA: um revisão suscinta e rápida pode ser lida em `pipeline-rag-aula-revisao-rapida.md`.
 
 > **Nota editorial:** o diálogo abaixo preserva o conteúdo técnico, as demonstrações, os exemplos, as ressalvas e as respostas relevantes da live, mas remove saudações prolongadas, sorteios, divulgação comercial e interrupções sem valor técnico. Termos inferidos incorretamente pela legenda automática foram normalizados, entre eles: **RAG, Qdrant, LangChain, LangGraph, Langfuse, LlamaIndex, MarkItDown, Context7, Chainlit, FastAPI, PydanticAI, Groq, dense, sparse, retrieval, query, reranking e `__init__.py`**.
 

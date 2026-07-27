@@ -2,6 +2,12 @@
 
 > Síntese compacta da videoaula (`pipeline-rag-aula-sintetizada-dialogo.md`). Preserva arquitetura, decisões, exemplos, limitações e correções técnicas relevantes; remove divulgação, saudações e repetições. Termos incorretamente inferidos pela legenda automática foram normalizados.
 
+- Termos da aula foram inferidos a partir de legenda gerada automaticamente, por conter erros.
+- Video aula original: https://www.youtube.com/watch?v=9i6r90i17iA
+- Repositório usado na aula:
+  - https://github.com/caio-moliveira/rag-project
+  - https://github.com/lvgalvao/data-engineering-roadmap
+
 ## 1. Objetivo e arquitetura
 
 **Dev 1:** Qual problema a aula resolve?
