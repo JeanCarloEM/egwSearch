@@ -12,7 +12,8 @@
 - FTs: `FT-005` (`implementacao_normativa`) e `FT-006`
   (`implementacao_codigo`).
 - RCFs afetados: `RCF.md` e `src/publications/egw/RCF.md`.
-- incorporação: pendente; a fonte permanece até a conclusão das duas FTs.
+- incorporação: normativa concluída na `FT-005`; código pendente na `FT-006`;
+  a fonte permanece até a conclusão das duas FTs.
 
 O arquivo `source.txt` preserva integralmente o conteúdo textual recebido. A
 normalização de fim de linha pelo Git pode produzir hash de bytes diferente do

@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-07-26T20:55:56.6217442-03:00`.
+Atualizado_em: `2026-07-26T21:02:50.9392196-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: fase normativa da evolução do coletor, exclusivamente FT-005.
+Escopo_atual: interrupção normativa; FT-005 concluída e FT-006 pendente de nova autorização humana explícita.
 Fonte_local: `.ia.rules/state/requests/FT-005/source.txt`.
 Fonte_original: `TODO.id.md@11c4199c150e149c70c4e4d7abb9550b79c929d7`.
 Fonte_original_sha256: `68E3E1E2CB4FCD6DD43358A8DD8585C5A6E27650AC55F8B0CC1BA5C4E924F1A6`.
@@ -125,7 +125,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/TODO.ia.md:214` e `.ia.rules/state/TODO.ia.md:886`
 - escopo: Tecnico
 - prioridade: alta
-- status: em andamento
+- status: concluído
 - fase_global: 2 de 3
 - objetivo: materializar a publicacao institucional, a estrutura canonica do acervo, a cadeia de download, a migracao, o indexador, as capas, os assets, o build e o deploy.
 - dependencias: FT-003 concluida; autorizacao humana explicita recebida em `2026-07-26`.
@@ -175,7 +175,14 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - contexto_mestre: `.ia.rules/state/contexts/FT-005/master.md`.
 - evidencia_local: 527 grupos; 525 PDF; 526 EPUB; 1051 registros legados de origem; downloader solicita o ativo antes da comparação de hash.
 - evidencia_publica: coleções `pt/1055` e `en/15`; a tentativa HTTP direta recebeu desafio anti-automação e foi interrompida sem evasão.
-- proximo_ponto: consolidar os contratos no RCF global e especializado, validar, encerrar a FT e interromper antes da FT-006.
+- rcf_global: §§42.1-42.8 incorporam identidade, elegibilidade, preflight, estado, rede, extração, descoberta limitada e gates.
+- rcf_especializado: ampliado para adaptador multiautor, `publication-source/v3`, cliente responsável, Markdown/EPUB e suíte futura.
+- rastreabilidade: 60 sentenças materiais especializadas vinculadas à FT-006 como `[PENDENTE-CODIGO]`.
+- evidencia_publica: a tentativa direta acionou desafio anti-automação e foi interrompida imediatamente, sem evasão ou download.
+- validacao: `RCF_OK` com 92778 bytes; trace válido com 103 entradas/84 sentenças; `agent:status` sucesso; `git diff --check` sem erro.
+- verify: `TSCONFIG_AUSENTE`, condição preexistente esperada até a materialização futura da aplicação TypeScript da cadeia pública.
+- alteracao_tecnica: nenhuma em código, configuração, dependências, testes, workflow ou acervo.
+- proximo_ponto: interromper e aguardar autorização humana explícita para `continue a FT-006`.
 
 ## FT-006 - Implementação do coletor incremental
 
@@ -184,10 +191,10 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-005/source.txt`
 - escopo: Tecnico
 - prioridade: alta
-- status: bloqueado por autorização normativa
+- status: pendente de nova autorização humana explícita
 - fase_global: 2 de 3
 - objetivo: implementar descoberta, ledger, cliente responsável, ativos nativos, texto, Markdown, EPUB derivado, testes e amostra mínima.
-- dependencias: FT-005 concluída; nova autorização humana explícita.
+- dependencias: FT-005 concluída; nova autorização humana explícita ainda ausente.
 - nao_escopo: coleta em massa sem gates e autorização próprios; decisão editorial pendente da FT-004/03.
 - contexto_mestre: `.ia.rules/state/contexts/FT-006/master.md`.
 - proximo_ponto: aguardar conclusão normativa e nova autorização humana explícita.

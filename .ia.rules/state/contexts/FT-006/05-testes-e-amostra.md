@@ -6,5 +6,4 @@
 - métricas: descobertos, pulados, baixados, atualizados, extraídos,
   convertidos, rejeitados, falhos, taxa e bloqueios.
 - restrição: desafio anti-automação ou `403` encerra a amostra sem evasão.
-- estado: bloqueado pela `FT-005`.
-
+- estado: aguarda nova autorização humana explícita.

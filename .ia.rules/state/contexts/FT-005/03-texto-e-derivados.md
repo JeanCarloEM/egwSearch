@@ -12,10 +12,15 @@
 - exclusões: navegação, controles, recomendações, telemetria, scripts, estilos,
   publicidade e qualquer conteúdo alheio ao corpo editorial.
 - bloqueio: lacuna ou ordem incerta impede estado concluído.
-- estado: pendente.
+- estado: concluído.
 
 ## Aceite
 
 O derivado preserva texto, hierarquia, notas, tabelas textuais, Unicode e ordem;
 é marcado como local e nunca recebe URL/hash que o apresente como original.
 
+## Resultado
+
+O RCF exige ausência de PDF/EPUB nativo, completude verificável, separação
+editorial determinística, segmentos rastreáveis, Markdown ordenado e EPUB
+validado como `local-conversion`, fora dos hashes/URLs formativos originais.

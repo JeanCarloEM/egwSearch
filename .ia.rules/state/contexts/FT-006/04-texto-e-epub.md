@@ -5,5 +5,4 @@
   gerar EPUB derivado sem nova coleta.
 - testes: interface excluída, hierarquia, notas, lacunas, Unicode, proveniência
   e validade técnica do EPUB.
-- estado: bloqueado pela `FT-005`.
-
+- estado: aguarda nova autorização humana explícita.

@@ -636,6 +636,181 @@ O downloader DEVE preservar variante material, produzir destino deterministico, 
 
 Alteracao do downloader DEVE preservar cabecalho autoral/licenca e receber testes de path, colisao, repeticao, falha, retomada e metadado.
 
+### 42.1 Escopo de aquisição e identidade
+
+O coletor de `egwwritings.org` DEVE preservar integralmente o suporte a Ellen
+G. White e ampliar a descoberta às coleções públicas `Biblioteca dos Pioneiros
+Adventistas`, identificada no catálogo observado por `pt/1055`, e `Adventist
+Pioneer Library`, identificada por `en/15`.
+
+Coleção NÃO DEVE ser tratada como autor. Identidade de publicação DEVE combinar
+identificador remoto estável quando disponível, coleção, autor, idioma, tipo,
+título editorial, edição/versão e origem; obra homônima de autor ou edição
+distintos NÃO DEVE ser fundida.
+
+O catálogo público estruturado consumido pela aplicação DEVE ser preferido a
+parsing visual. Lista fixa de autores, tipos ou obras somente PODE atuar como
+fixture de teste ou fallback finito versionado e NÃO DEVE declarar coleção
+completa.
+
+Somente conteúdo editorial em `pt-BR` e `en` PODE ser incorporado. Alias
+`pt`, `pt_BR` ou equivalente comprovado DEVE projetar-se em `pt-BR`; alias
+inglês sem variante material DEVE projetar-se em `en`. Valor original e valor
+normalizado DEVEM permanecer registrados, e variante material NÃO DEVE ser
+fundida por alias.
+
+O segmento de path DEVE continuar ASCII/minúsculo: `pt-BR` projeta-se como
+`pt-br` e `en` como `en`. O acervo legado `en-us` DEVE ser reconhecido como
+alias local durante a transição e migrado atomicamente para `en` somente após
+prova de ausência de variante material, sem download ou grupo duplicado.
+
+Cada autor DEVE receber chave autoral determinística na estrutura canônica
+global; o diretório do coletor sob `egw` identifica o provedor/adaptador e NÃO
+autoriza armazenar autores pioneiros como se fossem Ellen G. White.
+
+### 42.2 Elegibilidade e precedência de formatos
+
+Para uma edição elegível, a precedência DEVE ser EPUB nativo, PDF nativo e,
+somente quando nenhum dos dois existir, conteúdo textual oficial de leitura
+on-line.
+
+Quando EPUB e PDF nativos existirem, ambos DEVEM ser preservados no mesmo grupo
+editorial. Áudio, vídeo, imagem isolada, bundle, HTML bruto, interface e
+artefato não editorial NÃO DEVEM ser incorporados.
+
+Ausência de download nativo NÃO autoriza extração por si só. Conteúdo textual
+somente PODE ser adquirido quando for público sem contorno, possuir identidade,
+ordem e completude verificáveis e permitir separação determinística entre corpo
+editorial e aplicação.
+
+### 42.3 Preflight incremental e idempotência
+
+Antes de descobrir novamente uma unidade conhecida, solicitar ativo, extrair,
+converter ou reindexar, o coletor DEVE executar preflight progressivo por:
+
+1. ledger/índice local e estado da publicação;
+2. identificador remoto e metadados persistidos;
+3. existência, formato e tamanho do arquivo canônico;
+4. ETag, `Last-Modified`, tamanho ou hash remoto quando disponíveis;
+5. SHA-256 local somente quando a evidência anterior não concluir;
+6. requisição condicionada ou download somente como último nível.
+
+Publicação concluída, íntegra e coerente com índice/metadado DEVE resultar em
+`skipped`, sem request do ativo, conversão, extração, regravação, alteração de
+timestamp ou recálculo desnecessário.
+
+Nome ou existência isolada NÃO comprovam conclusão. Temporário, parcial,
+assinatura inválida, hash divergente, metadado incoerente ou índice ausente
+DEVE resultar em estado incompleto, corrompido ou revisão, nunca em sucesso.
+
+Atualização somente DEVE ocorrer por evidência material: hash, edição/versão,
+novo ativo associado, correção remota, metadado editorial relevante ou arquivo
+local ausente/inválido. Versão anterior e nova DEVEM manter relação e evidência
+sem sobrescrita destrutiva.
+
+### 42.4 Estado, metadados e retomada
+
+O ledger incremental DEVE distinguir `pending`, `processing`, `completed`,
+`skipped`, `incomplete`, `corrupt`, `unavailable`, `ineligible`,
+`temporary_failure`, `permanent_failure` e `review_required`.
+
+Estado de execução, cache e validadores HTTP DEVEM residir fora de
+`formative_data` e não obrigar alteração de arquivo rastreado em reexecução
+sem mudança material. Metadado canônico DEVE registrar coleção, identidade
+remota/local, autor, títulos original/normalizado, idiomas original/canônico,
+tipo, edição, URL pública, fontes por ativo/segmento, formato, método, data,
+tamanho, hashes, ordem, completude, ressalvas e relações de derivação.
+
+Metadado legado DEVE permanecer legível. Escrita nova ou atualização material
+DEVE usar schema versionado posterior, determinístico, fechado e migrável; dado
+original NÃO DEVE ser perdido quando divergir de normalização.
+
+Execução interrompida DEVE preservar ativos promovidos e estado confirmado.
+`processing` abandonado DEVE ser retomado como unidade incompleta após validar
+temporários; parcial nunca DEVE ser promovido ou indexado como concluído.
+
+### 42.5 Acesso responsável e contenção
+
+O cliente DEVE ser sequencial por padrão, com concorrência `1`, atraso base
+configurável de no mínimo dois segundos entre requests e jitter moderado
+positivo. Aumento até concorrência `2` somente PODE ocorrer por configuração
+explícita e evidência de que a origem o tolera; valor superior é proibido.
+
+Timeout, limite de bytes, sessão reutilizável, cache, deduplicação de request,
+`User-Agent` identificável, número máximo de três tentativas e backoff
+exponencial limitado DEVEM ser configuráveis e observáveis.
+
+Resposta `429` DEVE respeitar `Retry-After`; `408` e `5xx` PODEM repetir dentro
+do limite. `403`, CAPTCHA, desafio anti-automação, bloqueio, limitação
+persistente ou contrato inesperado DEVEM interromper imediatamente a unidade ou
+coleção afetada, sem intensificação, evasão, proxy, rotação de identidade ou
+tentativa de resolver o desafio.
+
+Progresso concluído DEVE ser preservado e o diagnóstico DEVE registrar taxa,
+tentativa, espera, status e escopo bloqueado sem segredo ou payload editorial
+desnecessário.
+
+### 42.6 Extração editorial e derivados
+
+Extração textual DEVE obter somente título, autoria e corpo editorial legítimo:
+prefácio, introdução, capítulos, seções, parágrafos, notas, citações, listas,
+tabelas textuais, epígrafes e referências.
+
+Menus, cabeçalhos/rodapés da aplicação, breadcrumbs, controles, recomendações,
+resultados relacionados, publicidade, telemetria, scripts, estilos, mensagens
+de interface, duplicações de renderização e conteúdo de outra publicação DEVEM
+ser excluídos.
+
+Cada segmento DEVE preservar identificador, URL, posição e hash; sequência
+DEVE validar primeiro/último segmento, quantidade declarada/obtida, lacunas,
+duplicações e ordem. Incerteza ou lacuna DEVE impedir `completed` e exigir
+`review_required`.
+
+Fonte textual completa DEVE ser persistida como Markdown UTF-8 estruturado,
+numerado pela ordem editorial e acompanhado de metadado. Conversão posterior
+DEVE seguir `fonte estruturada -> Markdown normalizado -> EPUB validado` sem
+nova coleta.
+
+EPUB gerado DEVE possuir sumário, metadados, idioma, autor, título, capítulos,
+notas, ordem e proveniência e passar validação EPUB. Ele DEVE ser identificado
+como derivado local da edição on-line, nunca como EPUB nativo nem como URL/hash
+original em `formative_data`.
+
+Transformação NÃO DEVE corrigir, resumir, modernizar, traduzir ou reescrever o
+texto. Sanitização DEVE impedir execução/injeção e preservar Unicode e conteúdo
+editorial, registrando transformação potencialmente material.
+
+### 42.7 Descoberta técnica limitada
+
+Inspeção PODE observar rede do navegador, contratos públicos, JavaScript
+entregue ao cliente e chamadas legítimas de leitura. NÃO PODE acessar endpoint
+privado, obter credencial/token alheio, explorar vulnerabilidade, modificar o
+serviço, contornar proteção ou executar varredura agressiva.
+
+Bundle temporário somente PODE existir durante análise rastreada e DEVE ser
+removido quando sua função se esgotar. Implementação DEVE acoplar-se a contrato
+de dados observável, com fixture, e NÃO a detalhe minificado frágil quando
+houver alternativa.
+
+### 42.8 Segurança, testes e gate de coleta
+
+Toda entrada remota DEVE ser não confiável: esquema/host/path, DNS/IP,
+redirecionamento, tamanho, MIME, assinatura, arquivo compactado, nome e destino
+DEVEM cumprir as guardas das §§41 e 44.6-44.7. Escrita DEVE usar temporário
+segregado, hash durante streaming e promoção atômica; conteúdo obtido nunca
+DEVE ser executado.
+
+Testes offline DEVEM comprovar skip sem request, parcial, corrupção,
+deduplicação, colisão, atualização real, idiomas, formatos, multiautor,
+coleções, extração ordenada, exclusão da interface, lacunas, Markdown, EPUB,
+original/derivado, `Retry-After`, backoff, limite, parada por bloqueio,
+retomada, path hostil e coerência de índice.
+
+Fixture/mock DEVE preceder amostra pública mínima. Coleta ampliada somente PODE
+ocorrer após os gates de descoberta, elegibilidade, idempotência, fidelidade,
+contenção e integridade e mediante autorização material própria; a conclusão
+normativa ou da amostra NÃO autoriza download em massa.
+
 ## 43. Indice global
 
 Um indice JSON global DEVE representar todas as publicacoes e ser gerado deterministicamente por uma unica fonte ou etapa canônica.

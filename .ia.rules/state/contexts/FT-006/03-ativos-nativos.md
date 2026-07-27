@@ -5,5 +5,4 @@
   detectar atualização real, validar MIME/assinatura/hash e promover
   atomicamente.
 - testes: concluído, parcial, corrompido, idêntico, distinto e atualizado.
-- estado: bloqueado pela `FT-005`.
-
+- estado: aguarda nova autorização humana explícita.

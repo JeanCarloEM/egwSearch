@@ -5,5 +5,4 @@
   `pt-BR`/`en`, múltiplos autores/tipos e identidade remota estável.
 - testes: contratos por fixture; idiomas inelegíveis; homônimos e variantes.
 - rede: nenhuma durante teste unitário.
-- estado: bloqueado pela `FT-005`.
-
+- estado: aguarda nova autorização humana explícita.

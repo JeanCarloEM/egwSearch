@@ -8,7 +8,7 @@
 - fonte: `.ia.rules/state/requests/FT-005/source.txt`.
 - RCF: global e `src/publications/egw/RCF.md`.
 - autorização: solicitação explícita recebida em `2026-07-26`.
-- estado: em andamento.
+- estado: concluído.
 
 ## Objetivo e fronteira
 
@@ -44,9 +44,9 @@ humana explícita depois da conclusão desta fase normativa.
 
 | Ordem | Contexto | Entrega | Estado |
 | ---: | --- | --- | --- |
-| 1 | `01-identidade-e-elegibilidade.md` | coleções, autores, idiomas, tipos e variantes | em andamento |
-| 2 | `02-incremental-e-rede.md` | estado, idempotência, atualização e acesso responsável | pendente |
-| 3 | `03-texto-e-derivados.md` | extração editorial, Markdown, EPUB e proveniência | pendente |
+| 1 | `01-identidade-e-elegibilidade.md` | coleções, autores, idiomas, tipos e variantes | concluído |
+| 2 | `02-incremental-e-rede.md` | estado, idempotência, atualização e acesso responsável | concluído |
+| 3 | `03-texto-e-derivados.md` | extração editorial, Markdown, EPUB e proveniência | concluído |
 
 ## Invariantes
 
@@ -72,3 +72,35 @@ humana explícita depois da conclusão desta fase normativa.
   mínima antes de qualquer coleta ampliada;
 - a `FT-006` permanece bloqueada até nova autorização humana explícita.
 
+## Evidências e decisões
+
+- causa do reprocessamento: o downloader atual executa o `GET` completo e
+  calcula hashes antes de consultar a igualdade com o ativo já incorporado;
+- acervo auditado: 527 grupos, 525 PDF, 526 EPUB, 527 metadados legados e 1051
+  registros de fonte, todos no host `media2.egwwritings.org`;
+- coleções públicas confirmadas: `pt/1055` e `en/15`;
+- a coleção portuguesa observada enumera nove autores; a inglesa organiza
+  `Pioneer Authors`, `Periodicals`, `Misc Titles` e `Recent Authors`;
+- o navegador interno estava indisponível; a leitura pública direta recebeu
+  desafio anti-automação e foi interrompida na primeira ocorrência;
+- o RCF global recebeu §§42.1-42.8 e o RCF especializado foi ampliado para
+  identidade multiautor, v3, preflight, rede, texto, derivados e testes;
+- 60 sentenças materiais do RCF especializado ficaram vinculadas à `FT-006`
+  como `[PENDENTE-CODIGO]`;
+- nenhuma alteração ocorreu em código, configuração, dependência, teste,
+  workflow ou acervo.
+
+## Validação
+
+- `npm run agent:rcf`: `RCF_OK`, 92778 bytes;
+- `npm run agent:rcf:trace -- validate`: 103 entradas e 84 sentenças materiais;
+- `npm run agent:status`: sucesso na branch `dev`;
+- `npm run agent:verify`: `TSCONFIG_AUSENTE`, condição preexistente esperada
+  enquanto a aplicação TypeScript da cadeia pública não foi materializada;
+- `git diff --check`: sem erro;
+- captura da fonte: 597 linhas, sem diferença textual.
+
+## Handoff
+
+A execução DEVE interromper aqui. `FT-006` somente PODE iniciar após nova
+autorização humana explícita, preferencialmente por `continue a FT-006`.

@@ -11,7 +11,7 @@
 - identidade: coleção, autor, idioma, tipo, título original/normalizado,
   edição, identificador remoto e origem.
 - restrição: homônimos de autores ou edições distintos nunca são fundidos.
-- estado: em andamento.
+- estado: concluído.
 
 ## Evidência pública mínima
 
@@ -30,3 +30,10 @@ O RCF deve permitir descoberta incremental por coleção, autor e publicação,
 registrar elegíveis e rejeitados e impedir incorporação de outro idioma ou
 artefato.
 
+## Resultado
+
+- identidades de coleção confirmadas: `pt/1055` e `en/15`;
+- nove autores foram observados na coleção portuguesa;
+- a coleção inglesa confirmou tipos/categorias além de autores;
+- idioma canônico editorial: `pt-BR`/`en`; path: `pt-br`/`en`;
+- `en-us` permanece alias de transição, sem duplicação ou migração antecipada.

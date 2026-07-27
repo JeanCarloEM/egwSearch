@@ -14,10 +14,15 @@
 - contenção: `403`, CAPTCHA, bloqueio ou limitação persistente interrompem a
   unidade sem repetição intensiva ou evasão.
 - persistência: temporário segregado e promoção atômica após integridade.
-- estado: pendente.
+- estado: concluído.
 
 ## Aceite
 
 Reexecução equivalente não solicita ativo concluído, não altera timestamps ou
 metadados sem mudança material e preserva progresso diante de falha.
 
+## Resultado
+
+O RCF agora exige preflight em níveis, ledger segregado, estados fechados,
+condicionais HTTP, concorrência `1` por padrão, atraso mínimo, jitter, três
+tentativas, backoff, `Retry-After` e parada imediata por desafio/`403`.
