@@ -1,75 +1,129 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "source_root": "src/publications",
   "public_root": "/publications",
+  "state_root": "constructor/.state/publications-acquisition",
   "authors": {
     "egw": {
-      "name": "Ellen G. White",
-      "collections": [
-        {
-          "id": "pt-br-livros",
-          "catalog_url": "https://egwwritings.org/allCollection/pt/245",
-          "language": "pt-br",
-          "type": "livros"
-        },
-        {
-          "id": "pt-br-devocionais",
-          "catalog_url": "https://egwwritings.org/allCollection/pt/246",
-          "language": "pt-br",
-          "type": "devocionais"
-        },
-        {
-          "id": "en-us-books",
-          "catalog_url": "https://egwwritings.org/allCollection/en/4",
-          "language": "en-us",
-          "type": "books"
-        },
-        {
-          "id": "en-us-devotionals",
-          "catalog_url": "https://egwwritings.org/allCollection/en/1227",
-          "language": "en-us",
-          "type": "devotionals"
-        },
-        {
-          "id": "en-us-manuscript",
-          "catalog_url": "https://egwwritings.org/allCollection/en/9",
-          "language": "en-us",
-          "type": "manuscript"
-        },
-        {
-          "id": "en-us-pamphlets",
-          "catalog_url": "https://egwwritings.org/allCollection/en/8",
-          "language": "en-us",
-          "type": "pamphlets"
-        },
-        {
-          "id": "en-us-periodicals",
-          "catalog_url": "https://egwwritings.org/allCollection/en/5",
-          "language": "en-us",
-          "type": "periodicals"
-        },
-        {
-          "id": "en-us-misc",
-          "catalog_url": "https://egwwritings.org/allCollection/en/10",
-          "language": "en-us",
-          "type": "misc"
-        }
-      ]
+      "name": "Ellen G. White"
     }
   },
+  "collections": [
+    {
+      "id": "pt-br-livros",
+      "name": "Escritos de Ellen White - Livros",
+      "catalog_url": "https://egwwritings.org/allCollection/pt/245",
+      "language": "pt-BR",
+      "type": "livros",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "pt-br-devocionais",
+      "name": "Escritos de Ellen White - Devocionais",
+      "catalog_url": "https://egwwritings.org/allCollection/pt/246",
+      "language": "pt-BR",
+      "type": "devocionais",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "en-books",
+      "name": "EGW Writings - Books",
+      "catalog_url": "https://egwwritings.org/allCollection/en/4",
+      "language": "en",
+      "type": "books",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "en-devotionals",
+      "name": "EGW Writings - Devotionals",
+      "catalog_url": "https://egwwritings.org/allCollection/en/1227",
+      "language": "en",
+      "type": "devotionals",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "en-manuscript",
+      "name": "EGW Writings - Letters and Manuscripts",
+      "catalog_url": "https://egwwritings.org/allCollection/en/9",
+      "language": "en",
+      "type": "manuscript",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "en-pamphlets",
+      "name": "EGW Writings - Pamphlets",
+      "catalog_url": "https://egwwritings.org/allCollection/en/8",
+      "language": "en",
+      "type": "pamphlets",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "en-periodicals",
+      "name": "EGW Writings - Periodicals",
+      "catalog_url": "https://egwwritings.org/allCollection/en/5",
+      "language": "en",
+      "type": "periodicals",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "en-misc",
+      "name": "EGW Writings - Misc",
+      "catalog_url": "https://egwwritings.org/allCollection/en/10",
+      "language": "en",
+      "type": "misc",
+      "default_author_key": "egw",
+      "default_author_name": "Ellen G. White"
+    },
+    {
+      "id": "pt-br-pioneiros",
+      "name": "Biblioteca dos Pioneiros Adventistas",
+      "catalog_url": "https://egwwritings.org/allCollection/pt/1055",
+      "language": "pt-BR",
+      "type": "livros",
+      "discover_authors": true
+    },
+    {
+      "id": "en-pioneers",
+      "name": "Adventist Pioneer Library",
+      "catalog_url": "https://egwwritings.org/allCollection/en/15",
+      "language": "en",
+      "type": "books",
+      "discover_authors": true
+    }
+  ],
   "download": {
     "allowed_catalog_hosts": [
       "egwwritings.org",
-      "www.egwwritings.org"
+      "www.egwwritings.org",
+      "m.egwwritings.org",
+      "text.egwwritings.org",
+      "next.egwwritings.org"
     ],
     "allowed_asset_hosts": [
-      "media2.egwwritings.org"
+      "media2.egwwritings.org",
+      "media4.egwwritings.org"
     ],
     "connect_timeout_seconds": 10,
     "read_timeout_seconds": 60,
     "max_redirects": 5,
     "max_bytes": 1073741824,
     "chunk_bytes": 1048576,
-    "workers": 4
+    "workers": 1,
+    "max_workers": 2,
+    "delay_seconds": 2.0,
+    "jitter_min_seconds": 0.5,
+    "jitter_max_seconds": 1.5,
+    "max_attempts": 3,
+    "backoff_base_seconds": 2.0,
+    "backoff_cap_seconds": 60.0,
+    "retry_after_cap_seconds": 900.0,
+    "user_agent": "egwSearch/FT-006 (+https://github.com/JeanCarloEM/egwSearch)"
   }
 }

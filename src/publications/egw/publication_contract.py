@@ -27,6 +27,7 @@ import zipfile
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CONFIG_PATH = REPOSITORY_ROOT / "config" / "publications.json"
 SOURCE_SCHEMA = "egw-source/v2"
+SOURCE_SCHEMA_V3 = "publication-source/v3"
 FORMAT_ORDER = {"pdf": 0, "epub": 1}
 WINDOWS_RESERVED = {
     "con",
@@ -110,11 +111,31 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
         data = json.loads(config_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         raise ContractError(f"configuracao invalida: {config_path}: {error}") from error
-    required = {"schema_version", "source_root", "public_root", "authors", "download"}
-    if set(data) != required or data["schema_version"] != 1:
+    schema = data.get("schema_version")
+    required_v1 = {"schema_version", "source_root", "public_root", "authors", "download"}
+    required_v2 = {
+        "schema_version",
+        "source_root",
+        "public_root",
+        "state_root",
+        "authors",
+        "collections",
+        "download",
+    }
+    if schema == 1 and set(data) != required_v1:
         raise ContractError("configuracao deve seguir publications-config/v1")
+    if schema == 2 and set(data) != required_v2:
+        raise ContractError("configuracao deve seguir publications-config/v2")
+    if schema not in {1, 2}:
+        raise ContractError("schema de configuracao nao suportado")
     if not isinstance(data["authors"], dict) or not data["authors"]:
         raise ContractError("configuracao sem autores")
+    if schema == 2:
+        if not isinstance(data["collections"], list) or not data["collections"]:
+            raise ContractError("configuracao sem colecoes")
+        ids = [item.get("id") for item in data["collections"] if isinstance(item, dict)]
+        if len(ids) != len(data["collections"]) or len(ids) != len(set(ids)):
+            raise ContractError("colecoes invalidas ou duplicadas")
     return data
 
 
@@ -355,7 +376,26 @@ def read_source_records(path: Path | str) -> list[dict]:
         data = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
     except (OSError, json.JSONDecodeError) as error:
         raise ContractError(f"metadado invalido: {metadata_path}: {error}") from error
-    if isinstance(data, dict) and data.get("schema_version") == SOURCE_SCHEMA:
+    if isinstance(data, dict) and data.get("schema_version") in {
+        SOURCE_SCHEMA,
+        SOURCE_SCHEMA_V3,
+    }:
+        if data["schema_version"] == SOURCE_SCHEMA_V3:
+            required_v3 = {
+                "schema_version",
+                "identity",
+                "collection",
+                "state",
+                "sources",
+                "segments",
+                "derivations",
+                "history",
+            }
+            if set(data) != required_v3:
+                raise ContractError(f"metadado v3 com raiz divergente: {metadata_path}")
+            if not isinstance(data["sources"], list):
+                raise ContractError(f"sources invalido: {metadata_path}")
+            return list(data["sources"])
         if set(data) != {"schema_version", "identity", "sources"}:
             raise ContractError(f"metadado v2 com raiz divergente: {metadata_path}")
         if not isinstance(data["sources"], list):
