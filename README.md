@@ -33,9 +33,17 @@ python -m unittest discover -s tests/publications -v
 O coletor operacional reside fora do conteúdo público:
 
 ```powershell
-python scripts/publications/baixar.py --help
-python -m pip install -r scripts/publications/requirements.txt
+npm install
+npm run publications:baixar -- --help
 ```
+
+`npm install` prepara o ambiente Python local em
+`constructor/.state/publications-python` usando os requisitos fixados do
+coletor, sem instalar pacotes globalmente nem executar a coleta. Para verificar
+ou reparar o ambiente manualmente, use `npm run publications:bootstrap`; para
+validá-lo sem instalar, use `npm run publications:check`. Para atualizar as
+dependências npm e então reconciliar obrigatoriamente o ambiente Python, use
+`npm run update`.
 
 Uma amostra pública da CLI deve usar `--limit 1` e uma única coleção. O padrão usa um
 worker, atraso e jitter. Quando a descoberta exige navegador, a CLI abre Firefox
