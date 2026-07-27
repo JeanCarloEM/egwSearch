@@ -30,6 +30,13 @@ conversao contra fixtures locais, sem rede nem alteracao do acervo:
 python -m unittest discover -s tests/publications -v
 ```
 
+O coletor operacional reside fora do conteúdo público:
+
+```powershell
+python scripts/publications/baixar.py --help
+python -m pip install -r scripts/publications/requirements.txt
+```
+
 Uma amostra pública da CLI deve usar `--limit 1` e uma única coleção. O padrão usa um
 worker, atraso e jitter; `403`, CAPTCHA ou desafio interrompem a coleção.
 `--revalidate` envia `If-None-Match`/`If-Modified-Since` somente quando o

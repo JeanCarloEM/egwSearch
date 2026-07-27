@@ -11,7 +11,7 @@
 - captura textual versionada: `source.txt`.
 - FTs: `FT-005` (`implementacao_normativa`) e `FT-006`
   (`implementacao_codigo`).
-- RCFs afetados: `RCF.md` e `src/publications/egw/RCF.md`.
+- RCFs afetados: `RCF.md` e `scripts/publications/RCF.md`.
 - incorporação: normativa concluída na `FT-005`; código e testes concluídos na
   `FT-006` pelo commit causal
   `d1579e891031e3bbabaf23603352bbc0f90f05cd`.

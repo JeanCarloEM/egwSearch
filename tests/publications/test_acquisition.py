@@ -15,7 +15,7 @@ import unittest
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-MODULE_ROOT = REPOSITORY_ROOT / "src" / "publications" / "egw"
+MODULE_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(MODULE_ROOT))
 
 from acquisition import (  # noqa: E402
@@ -104,6 +104,13 @@ class IdentityAndCatalogTests(unittest.TestCase):
         self.assertIn("en-pioneers", identifiers)
         self.assertEqual(config["download"]["workers"], 1)
         self.assertLessEqual(config["download"]["max_workers"], 2)
+        source_root = REPOSITORY_ROOT / config["source_root"]
+        self.assertNotIn(source_root, MODULE_ROOT.parents)
+        self.assertTrue((MODULE_ROOT / "requirements.txt").is_file())
+        self.assertFalse(
+            (source_root / "egw" / "baixar.py").exists(),
+            "automacao operacional nao pode integrar a raiz publica",
+        )
 
 
 class LedgerAndRateTests(unittest.TestCase):

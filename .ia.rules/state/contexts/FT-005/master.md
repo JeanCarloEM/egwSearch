@@ -6,7 +6,7 @@
 - tipo: `implementacao_normativa`.
 - fase global: 2 de 3.
 - fonte: `.ia.rules/state/requests/FT-005/source.txt`.
-- RCF: global e `src/publications/egw/RCF.md`.
+- RCF: global e `scripts/publications/RCF.md`.
 - autorização: solicitação explícita recebida em `2026-07-26`.
 - estado: concluído.
 

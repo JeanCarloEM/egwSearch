@@ -38,7 +38,7 @@
 - runtime observado: Python 3.14.0;
 - dependencias proporcionais ensaiadas: `Pillow==12.3.0` e
   `pypdfium2==5.12.1`, ambas fixadas em
-  `requirements-publications.txt`;
+  `scripts/publications/requirements.txt`;
 - grupos descobertos: 527;
 - formatos: 526 EPUB e 525 PDF;
 - capas editoriais EPUB utilizaveis: 525, todas JPEG;

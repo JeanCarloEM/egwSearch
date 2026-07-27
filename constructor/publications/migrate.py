@@ -22,7 +22,7 @@ from typing import Iterable
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_ROOT = REPOSITORY_ROOT / "src" / "publications" / "egw"
+CONTRACT_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 if str(CONTRACT_ROOT) not in sys.path:
     sys.path.insert(0, str(CONTRACT_ROOT))
 

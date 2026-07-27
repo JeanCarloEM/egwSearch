@@ -24,7 +24,7 @@ from urllib.parse import urlsplit
 import zipfile
 
 
-REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
+REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONFIG_PATH = REPOSITORY_ROOT / "config" / "publications.json"
 SOURCE_SCHEMA = "egw-source/v2"
 SOURCE_SCHEMA_V3 = "publication-source/v3"

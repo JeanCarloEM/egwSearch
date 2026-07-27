@@ -19,16 +19,16 @@
 
 ## Entregaveis
 
-- `src/publications/egw/RCF.md`: contrato especifico subordinado.
-- `src/publications/egw/publication_contract.py`: identidade, paths, hashes, formatos, colisoes e metadados.
+- `scripts/publications/RCF.md`: contrato especifico subordinado.
+- `scripts/publications/publication_contract.py`: identidade, paths, hashes, formatos, colisoes e metadados.
 - `constructor/publications/migrate.py`: `plan`, `apply`, `rollback` e `finalize`.
-- `src/publications/egw/baixar.py`: importacao sem efeito, rede limitada, destino canônico, incorporacao e metadado atomicos.
+- `scripts/publications/baixar.py`: importacao sem efeito, rede limitada, destino canônico, incorporacao e metadado atomicos.
 - `tests/publications/`: testes unitarios sem rede.
 
 ## Evidencias
 
 - `python -m unittest discover -s tests/publications -v`: 10 testes, sucesso.
-- `python src/publications/egw/baixar.py --help`: sucesso sem carregar dependencias opcionais.
+- `python scripts/publications/baixar.py --help`: sucesso sem carregar dependencias opcionais.
 - `python constructor/publications/migrate.py --help`: sucesso.
 - `npm run agent:rcf`: `RCF_OK`, 83550 bytes.
 - `npm run agent:status`: sucesso, branch `dev`.

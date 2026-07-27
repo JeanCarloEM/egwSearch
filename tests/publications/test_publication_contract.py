@@ -16,7 +16,7 @@ import zipfile
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_ROOT = REPOSITORY_ROOT / "src" / "publications" / "egw"
+CONTRACT_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(CONTRACT_ROOT))
 
 from publication_contract import (  # noqa: E402
