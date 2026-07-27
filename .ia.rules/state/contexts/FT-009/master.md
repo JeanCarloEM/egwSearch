@@ -42,3 +42,25 @@ os requisitos Python do coletor em `scripts/publications/requirements.txt`.
 - a instalação não executa coleta nem usa sessão/navegador;
 - falhas de runtime ou de instalação possuem diagnóstico e saída segura;
 - a fase de código permanece explicitamente pendente de autorização.
+
+## Decisão normativa
+
+- `npm install` e o evento npm que altera a árvore de dependências deverão
+  delegar a um bootstrap local versionado; a implementação deverá validar o
+  comportamento efetivo do lifecycle na versão npm suportada.
+- O ambiente Python será local e segregado, e os comandos do coletor deverão
+  expor um invocador que selecione esse ambiente sem exigir alteração global do
+  sistema.
+- `--ignore-scripts` continuará sendo respeitado; haverá comando explícito para
+  executar ou reparar o bootstrap quando os hooks forem desabilitados.
+
+## Encerramento da fase normativa
+
+- RCF global e RCF especializado atualizados com bootstrap multi-runtime,
+  ambiente Python local, ausência de instalação global, idempotência e falhas
+  diagnosticáveis.
+- `npm run agent:rcf` aprovado com 94 entradas e 93 sentenças materiais.
+- Duas sentenças especializadas foram registradas como pendentes para o futuro
+  commit material; nenhum hook, subscript, ambiente virtual ou instalação de
+  dependência foi criado nesta fase.
+- Próxima fase: código e testes, somente após autorização humana explícita.

@@ -149,6 +149,10 @@ local inválido/ausente. [e59c122]
 
 Dependencias de Selenium, Requests e tqdm DEVEM ser carregadas apenas pela execucao da CLI. Ausencia de dependencia DEVE produzir diagnostico e codigo `3`, sem impedir importacao, teste do contrato ou migracao. [3301a97]
 
+Os requisitos fixados em `requirements.txt` DEVEM ser preparados pelo bootstrap multi-runtime do repositório em ambiente Python local segregado, antes da execução suportada da CLI. [PENDENTE-CODIGO]
+
+O bootstrap DEVE ser idempotente, não executar a CLI, não iniciar navegador e não realizar coleta; ausência ou incompatibilidade do interpretador/instalador DEVE produzir diagnóstico acionável. [PENDENTE-CODIGO]
+
 ## 7. Cliente HTTP responsável
 
 O cliente DEVE operar sequencialmente por padrão, com concorrência `1`, atraso [3301a97]

@@ -38,6 +38,31 @@ Node.js com TypeScript DEVE ser o eixo principal de integracao, orquestracao, co
 
 Python, Ruby, Rust, Java, C#, shell ou outro runtime PODEM ser utilizados em segmentos especializados quando apresentarem ganho tecnico demonstravel de desempenho, integracao, maturidade, seguranca ou adequacao ao ecossistema.
 
+### 3.1 Bootstrap multi-runtime
+
+Quando um comando suportado depender de runtime ou biblioteca de outra linguagem,
+o repositório DEVE declarar a dependência em arquivo versionado próprio do
+ecossistema e oferecer bootstrap local idempotente acionável pelos ciclos npm.
+`npm install` DEVE preparar as dependências externas necessárias aos comandos
+suportados; o fluxo npm que atualiza ou altera a árvore local DEVE aplicar a
+mesma verificação, sem depender de execução manual implícita. [PENDENTE-CODIGO]
+
+O bootstrap DEVE usar subscript versionado, com diagnóstico estruturado, e
+instalar somente dependências declaradas e necessárias. Para o coletor de
+publicações, os requisitos fixados em
+`scripts/publications/requirements.txt` DEVEM ser instalados em ambiente Python
+local segregado do repositório; o bootstrap NÃO DEVE instalar runtime global,
+alterar `PATH`, executar coleta, abrir navegador, acessar origem remota ou
+expor credenciais. [PENDENTE-CODIGO]
+
+Ausência, versão incompatível ou falha de `python`/`pip` DEVE interromper o
+bootstrap com diagnóstico acionável e sem estado parcialmente aceito. A
+reexecução com manifestos inalterados DEVE reutilizar o ambiente válido ou
+reconciliá-lo de forma segura; mudança de requisito DEVE ser detectada antes da
+execução do comando dependente. Scripts de instalação desabilitados
+explicitamente pelo usuário DEVEM permanecer desabilitados, e o comando manual
+canônico de bootstrap DEVE continuar disponível. [PENDENTE-CODIGO]
+
 TypeScript, Python, Rust, SQLite, indice invertido, indice vetorial, embeddings, modelos multilingues, reranking e ferramentas nativas PODEM integrar a avaliacao; nenhuma biblioteca, framework, banco, modelo ou servico especifico fica preselecionado sem comparacao material.
 
 Arquitetura hibrida somente DEVE ser adotada quando o ganho verificavel superar complexidade, distribuicao, instalacao, manutencao e risco operacional adicionais.
