@@ -2,7 +2,8 @@
 
 - origem: prompt humano desta conversa.
 - recebido em: `2026-07-26T22:49:34.6550184-03:00`.
-- incorporação: em andamento.
+- incorporação: concluída na FT-007; contrato normativo em `768e17c` e
+  movimento material em `ce230029828a4bc398d24590c992357db3301a97`.
 
 ## Solicitação integral
 
@@ -11,4 +12,3 @@
 > adequadamente aninhados se for o caso; e alteres os importar e demais
 > assciações e refeencias menções e path relativos incluindo em configs ou
 > internos aos próprios scripts.
-
