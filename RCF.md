@@ -20,7 +20,7 @@ Precisao, rastreabilidade, reutilizacao de tecnologia existente, resiliencia, pr
 
 ## 2. Estado material e limites de aceite
 
-O repositorio contem acervo PDF/EPUB, metadados locais e `src/publications/egw/baixar.py`; essa existencia NÃO DEVE ser interpretada como conformidade do acervo, do downloader, do buscador, da GUI, do indice global, das capas, do build ou da publicacao com este RCF.
+O repositorio contem acervo PDF/EPUB e metadados locais sob `src/publications/`, além da automação em `scripts/publications/`; essa existencia NÃO DEVE ser interpretada como conformidade do acervo, do downloader, do buscador, da GUI, do indice global, das capas, do build ou da publicacao com este RCF. [PENDENTE-CODIGO]
 
 Nenhuma capacidade DEVE ser declarada implementada ou aceita sem validacao material proporcional e registrada.
 
@@ -628,7 +628,7 @@ O migrador DEVE agrupar identidade editorial, preservar titulo, calcular acronim
 
 Falha NÃO DEVE deixar estado parcial silencioso; checkpoint, temporario, backup e rollback DEVEM preservar recuperacao.
 
-`src/publications/egw/baixar.py` DEVE possuir RCF especifico futuro em `src/publications/egw/RCF.md`, subordinado a este RCF e criado somente na FT-004.
+`scripts/publications/baixar.py` DEVE possuir RCF especifico em `scripts/publications/RCF.md`, subordinado a este RCF; automação operacional e requisitos do coletor NÃO DEVEM integrar `src/` nem o artefato do GitHub Pages. [PENDENTE-CODIGO]
 
 O downloader DEVE baixar diretamente na estrutura canonica, reutilizar diretorio da mesma identidade, agrupar formatos/assets, normalizar titulo/tags/acronimo, derivar o mesmo slug RFC 3986 usado pelo migrador e impedir sobrescrita destrutiva.
 
