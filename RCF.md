@@ -741,10 +741,27 @@ Timeout, limite de bytes, sessão reutilizável, cache, deduplicação de reques
 exponencial limitado DEVEM ser configuráveis e observáveis.
 
 Resposta `429` DEVE respeitar `Retry-After`; `408` e `5xx` PODEM repetir dentro
-do limite. `403`, CAPTCHA, desafio anti-automação, bloqueio, limitação
-persistente ou contrato inesperado DEVEM interromper imediatamente a unidade ou
-coleção afetada, sem intensificação, evasão, proxy, rotação de identidade ou
-tentativa de resolver o desafio.
+do limite. [3301a97] Quando a descoberta ou etapa remota exigir navegador, o coletor DEVE
+usar preferencialmente uma única instância visível, perfil persistente local
+segregado e uma única guia operacional reutilizada entre coleções e páginas,
+com `workers=1` enquanto essa guia for necessária. Nova guia, sessão ou perfil
+somente PODE ocorrer por fechamento, invalidação, corrupção comprovada ou
+recuperação controlada, sempre com motivo registrado. [PENDENTE-CODIGO]
+
+CAPTCHA, página de desafio, verificação de navegador, bloqueio temporário,
+`403`, `429`, redirecionamento de validação, alteração de título/URL/DOM ou
+ausência do conteúdo esperado somente DEVEM ser classificados como verificação
+humana quando houver evidência suficiente e não por indisponibilidade comum
+isolada. Diante de verificação legitimamente interativa, o coletor DEVE pausar
+a unidade dependente, manter a guia aberta, suspender intensificação de acesso,
+informar instrução objetiva ao usuário, aguardar em baixa frequência e retomar
+automaticamente após validar que o conteúdo esperado voltou. [PENDENTE-CODIGO]
+
+`403`, CAPTCHA, desafio anti-automação, bloqueio, limitação persistente ou
+contrato inesperado que não puderem ser liberados de forma legítima pela guia
+visível DEVEM interromper a unidade ou coleção afetada, preservando progresso,
+sem evasão, proxy, rotação de identidade, solução automática de CAPTCHA,
+simulação humana ou tentativa de ocultar o cliente. [PENDENTE-CODIGO]
 
 Progresso concluído DEVE ser preservado e o diagnóstico DEVE registrar taxa,
 tentativa, espera, status e escopo bloqueado sem segredo ou payload editorial

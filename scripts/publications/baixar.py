@@ -638,6 +638,245 @@ def re_search_book_url(url: str) -> bool:
     return "/book/" in path or "/read/" in path
 
 
+class BrowserSessionManager:
+    """Mantem uma unica sessao/guia Selenium visivel para descoberta remota."""
+
+    def __init__(self, runtime: dict, download_config: dict, state_root: Path) -> None:
+        self.runtime = runtime
+        self.config = dict(download_config)
+        self.state_root = Path(state_root)
+        self.profile_dir = resolve_repository_path(
+            str(
+                self.config.get(
+                    "browser_profile_dir",
+                    "constructor/.state/publications-browser-profile",
+                )
+            ),
+            REPOSITORY_ROOT,
+        )
+        self.visible = bool(self.config.get("browser_visible", True))
+        self.wait_interval = max(
+            1.0,
+            float(self.config.get("browser_wait_interval_seconds", 5.0)),
+        )
+        self.human_wait_limit = max(
+            0.0,
+            float(self.config.get("browser_human_wait_seconds", 0.0)),
+        )
+        self.catalog_wait = max(
+            self.wait_interval,
+            float(self.config.get("browser_catalog_wait_seconds", 30.0)),
+        )
+        self.recovery_limit = max(
+            0,
+            int(self.config.get("browser_recovery_limit", 2)),
+        )
+        self._driver = None
+        self._primary_handle = None
+        self._recoveries = 0
+
+    def close(self) -> None:
+        if self._driver is None:
+            return
+        try:
+            self._driver.quit()
+            print("BROWSER_SESSION_CLOSED")
+        finally:
+            self._driver = None
+            self._primary_handle = None
+
+    def discover_catalog_items(
+        self,
+        collection: dict,
+        limiter: RateLimiter,
+    ) -> list[CatalogItem]:
+        driver = self._usable_driver()
+        limiter.before_request()
+        print(
+            f"BROWSER_TAB_REUSE collection={collection['id']} "
+            f"profile={self._safe_profile_label()}"
+        )
+        driver.get(collection["catalog_url"])
+        self._wait_for_human_release(collection["id"])
+        self._accept_cookie_banner()
+        self._scroll_until_stable()
+        self._wait_for_catalog_grid(collection["id"])
+        self._wait_for_human_release(collection["id"])
+        books = driver.find_elements(self.runtime["By"].CLASS_NAME, "book-list-item")
+        return [_catalog_item_from_element(book, collection, self.runtime) for book in books]
+
+    def _safe_profile_label(self) -> str:
+        try:
+            return self.profile_dir.relative_to(REPOSITORY_ROOT).as_posix()
+        except ValueError:
+            return "<perfil-segregado>"
+
+    def _usable_driver(self):
+        if self._driver is None:
+            return self._launch_driver("create")
+        try:
+            handles = list(self._driver.window_handles)
+        except Exception:
+            return self._recover_driver("navegador encerrado")
+        if not handles:
+            return self._recover_driver("guia operacional fechada")
+        if self._primary_handle not in handles:
+            return self._recover_driver("guia operacional invalida")
+        self._driver.switch_to.window(self._primary_handle)
+        return self._driver
+
+    def _launch_driver(self, action: str):
+        self.profile_dir.mkdir(parents=True, exist_ok=True)
+        options = self.runtime["FirefoxOptions"]()
+        if self.visible:
+            options.add_argument("-profile")
+            options.add_argument(str(self.profile_dir))
+        else:
+            options.add_argument("--headless")
+            options.add_argument("-profile")
+            options.add_argument(str(self.profile_dir))
+        driver = self.runtime["webdriver"].Firefox(options=options)
+        try:
+            driver.set_window_size(
+                int(self.config.get("browser_window_width", 1920)),
+                int(self.config.get("browser_window_height", 1080)),
+            )
+        except Exception:
+            pass
+        handles = list(driver.window_handles)
+        if not handles:
+            driver.quit()
+            raise DownloadError("navegador sem guia operacional")
+        self._driver = driver
+        self._primary_handle = handles[0]
+        print(
+            f"BROWSER_SESSION_{action.upper()} visible={str(self.visible).lower()} "
+            f"profile={self._safe_profile_label()} tabs=1"
+        )
+        return driver
+
+    def _recover_driver(self, reason: str):
+        if self._recoveries >= self.recovery_limit:
+            raise DownloadError(
+                f"recuperacao do navegador excedeu limite: {reason}"
+            )
+        self._recoveries += 1
+        print(
+            f"BROWSER_SESSION_RECOVERY attempt={self._recoveries} "
+            f"reason={json.dumps(reason, ensure_ascii=False)}",
+            file=sys.stderr,
+        )
+        if self._driver is not None:
+            try:
+                self._driver.quit()
+            except Exception:
+                pass
+        self._driver = None
+        self._primary_handle = None
+        return self._launch_driver("recover")
+
+    def _accept_cookie_banner(self) -> None:
+        driver = self._usable_driver()
+        try:
+            wait = self.runtime["WebDriverWait"](
+                driver,
+                self.catalog_wait,
+                poll_frequency=self.wait_interval,
+            )
+            cookie = wait.until(
+                self.runtime["EC"].presence_of_element_located(
+                    (
+                        self.runtime["By"].CSS_SELECTOR,
+                        "div[class^='Ripple_root__lmfsr Ripple_dark__']",
+                    )
+                )
+            )
+            self.runtime["ActionChains"](driver).move_to_element(cookie).click().perform()
+        except Exception:
+            pass
+
+    def _scroll_until_stable(self) -> None:
+        driver = self._usable_driver()
+        last_height = driver.execute_script("return document.body.scrollHeight")
+        stable = 0
+        while stable < 3:
+            self._wait_for_human_release("scroll")
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(float(self.config["delay_seconds"]))
+            current_height = driver.execute_script("return document.body.scrollHeight")
+            stable = stable + 1 if current_height == last_height else 0
+            last_height = current_height
+
+    def _wait_for_catalog_grid(self, collection_id: str) -> None:
+        while True:
+            driver = self._usable_driver()
+            self._wait_for_human_release(collection_id)
+            try:
+                wait = self.runtime["WebDriverWait"](
+                    driver,
+                    self.catalog_wait,
+                    poll_frequency=self.wait_interval,
+                )
+                wait.until(
+                    self.runtime["EC"].presence_of_element_located(
+                        (
+                            self.runtime["By"].CLASS_NAME,
+                            "ReactVirtualized__Grid__innerScrollContainer",
+                        )
+                    )
+                )
+                return
+            except Exception as error:
+                if self._challenge_detected(driver):
+                    continue
+                raise DownloadError(
+                    f"catalogo sem grade esperada: {collection_id}"
+                ) from error
+
+    def _wait_for_human_release(self, scope: str) -> None:
+        started = None
+        notified = False
+        while True:
+            driver = self._usable_driver()
+            if not self._challenge_detected(driver):
+                if started is not None:
+                    duration = int(time.monotonic() - started)
+                    print(f"HUMAN_VERIFICATION_RELEASED scope={scope} seconds={duration}")
+                return
+            if started is None:
+                started = time.monotonic()
+            if not notified:
+                print(
+                    "Verificação humana detectada. Conclua-a na guia aberta. "
+                    "O processamento permanecerá pausado e será retomado automaticamente.",
+                    file=sys.stderr,
+                )
+                print(f"HUMAN_VERIFICATION_WAIT scope={scope}", file=sys.stderr)
+                notified = True
+            if (
+                self.human_wait_limit
+                and time.monotonic() - started >= self.human_wait_limit
+            ):
+                raise OriginBlocked(
+                    "tempo configurado de espera humana excedido; estado preservado"
+                )
+            time.sleep(self.wait_interval)
+
+    def _challenge_detected(self, driver) -> bool:
+        try:
+            material = "\n".join(
+                (
+                    str(driver.title or ""),
+                    str(driver.current_url or ""),
+                    str(driver.page_source or ""),
+                )
+            )
+        except Exception:
+            self._recover_driver("falha ao inspecionar guia operacional")
+            return False
+        return contains_block_marker(material)
+
+
 def _write_v3_metadata(
     source_root: Path,
     item: CatalogItem,
@@ -930,6 +1169,7 @@ def _process_collection(
     fixture_payload: object | None = None,
     shared_limiter: RateLimiter | None = None,
     revalidate: bool = False,
+    browser_manager: BrowserSessionManager | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -949,7 +1189,6 @@ def _process_collection(
     session = runtime["requests"].Session() if runtime else None
     if session is not None:
         session.headers["User-Agent"] = download_config["user_agent"]
-    driver = None
     summary = {
         "collection": collection["id"],
         "discovered": 0,
@@ -967,54 +1206,9 @@ def _process_collection(
         else:
             if no_network:
                 raise ContractError("fixture obrigatoria com --no-network")
-            options = runtime["FirefoxOptions"]()
-            options.add_argument("--headless")
-            driver = runtime["webdriver"].Firefox(options=options)
-            driver.set_window_size(1920, 1080)
-            wait = runtime["WebDriverWait"](driver, 15)
-            actions = runtime["ActionChains"](driver)
-            limiter.before_request()
-            driver.get(collection["catalog_url"])
-            page_source = str(driver.page_source or "")
-            if contains_block_marker(page_source):
-                raise OriginBlocked("desafio anti-automacao no catalogo")
-            try:
-                cookie = wait.until(
-                    runtime["EC"].presence_of_element_located(
-                        (
-                            runtime["By"].CSS_SELECTOR,
-                            "div[class^='Ripple_root__lmfsr Ripple_dark__']",
-                        )
-                    )
-                )
-                actions.move_to_element(cookie).click().perform()
-            except Exception:
-                pass
-            last_height = driver.execute_script("return document.body.scrollHeight")
-            stable = 0
-            while stable < 3:
-                driver.execute_script(
-                    "window.scrollTo(0, document.body.scrollHeight);"
-                )
-                time.sleep(download_config["delay_seconds"])
-                current_height = driver.execute_script(
-                    "return document.body.scrollHeight"
-                )
-                stable = stable + 1 if current_height == last_height else 0
-                last_height = current_height
-            wait.until(
-                runtime["EC"].presence_of_element_located(
-                    (
-                        runtime["By"].CLASS_NAME,
-                        "ReactVirtualized__Grid__innerScrollContainer",
-                    )
-                )
-            )
-            books = driver.find_elements(runtime["By"].CLASS_NAME, "book-list-item")
-            items = [
-                _catalog_item_from_element(book, collection, runtime)
-                for book in books
-            ]
+            if browser_manager is None:
+                raise ContractError("gerenciador de navegador ausente")
+            items = browser_manager.discover_catalog_items(collection, limiter)
         if limit is not None:
             items = items[:limit]
         summary["discovered"] = len(items)
@@ -1066,8 +1260,6 @@ def _process_collection(
     finally:
         if session is not None:
             session.close()
-        if driver is not None:
-            driver.quit()
 
 
 class _NullProgress:
@@ -1145,50 +1337,63 @@ def run(
         raise ContractError("limit deve ser positivo")
     results = []
     shared_limiter = RateLimiter(_rate_policy(config["download"]))
-    if worker_count == 1:
-        for collection in collections:
-            results.append(
-                _process_collection(
-                    collection,
-                    config,
-                    source_root,
-                    state_root,
-                    runtime,
-                    limit=limit,
-                    no_network=no_network,
-                    fixture_payload=(
-                        _fixture_for_collection(fixture, collection["id"])
-                        if fixture is not None
-                        else None
-                    ),
-                    shared_limiter=shared_limiter,
-                    revalidate=revalidate,
-                )
+    needs_browser = fixture is None and not no_network
+    browser_manager = None
+    if needs_browser:
+        if worker_count != 1:
+            raise ContractError(
+                "descoberta com navegador persistente exige workers=1"
             )
-    else:
-        with ThreadPoolExecutor(max_workers=worker_count) as executor:
-            futures = {
-                executor.submit(
-                    _process_collection,
-                    collection,
-                    config,
-                    source_root,
-                    state_root,
-                    runtime,
-                    limit=limit,
-                    no_network=no_network,
-                    fixture_payload=(
-                        _fixture_for_collection(fixture, collection["id"])
-                        if fixture is not None
-                        else None
-                    ),
-                    shared_limiter=shared_limiter,
-                    revalidate=revalidate,
-                ): collection["id"]
-                for collection in collections
-            }
-            for future in as_completed(futures):
-                results.append(future.result())
+        browser_manager = BrowserSessionManager(runtime, config["download"], state_root)
+    try:
+        if worker_count == 1:
+            for collection in collections:
+                results.append(
+                    _process_collection(
+                        collection,
+                        config,
+                        source_root,
+                        state_root,
+                        runtime,
+                        limit=limit,
+                        no_network=no_network,
+                        fixture_payload=(
+                            _fixture_for_collection(fixture, collection["id"])
+                            if fixture is not None
+                            else None
+                        ),
+                        shared_limiter=shared_limiter,
+                        revalidate=revalidate,
+                        browser_manager=browser_manager,
+                    )
+                )
+        else:
+            with ThreadPoolExecutor(max_workers=worker_count) as executor:
+                futures = {
+                    executor.submit(
+                        _process_collection,
+                        collection,
+                        config,
+                        source_root,
+                        state_root,
+                        runtime,
+                        limit=limit,
+                        no_network=no_network,
+                        fixture_payload=(
+                            _fixture_for_collection(fixture, collection["id"])
+                            if fixture is not None
+                            else None
+                        ),
+                        shared_limiter=shared_limiter,
+                        revalidate=revalidate,
+                    ): collection["id"]
+                    for collection in collections
+                }
+                for future in as_completed(futures):
+                    results.append(future.result())
+    finally:
+        if browser_manager is not None:
+            browser_manager.close()
     results.sort(key=lambda item: item["collection"])
     print(json.dumps({"collections": results}, ensure_ascii=False, sort_keys=True))
     return 1 if any(item["failures"] or item["blocked"] for item in results) else 0

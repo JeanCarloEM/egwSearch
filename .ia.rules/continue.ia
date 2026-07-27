@@ -1,14 +1,14 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-07-26T22:59:15-03:00`.
+Atualizado_em: `2026-07-27T13:04:50-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-007 concluída; automação retirada de `src/`.
-Fonte_local: `.ia.rules/state/requests/FT-007/source.md`.
-Fonte_original: `TODO.id.md@11c4199c150e149c70c4e4d7abb9550b79c929d7`.
-Fonte_original_sha256: `68E3E1E2CB4FCD6DD43358A8DD8585C5A6E27650AC55F8B0CC1BA5C4E924F1A6`.
-Fonte_atual_sha256: `AC993E66450524BF868A7D7F753524271F2595E9D6D3256D7BD75AA428E94E05`.
-Contexto_mestre: `.ia.rules/state/contexts/FT-007/master.md`.
+Escopo_atual: FT-008 em validação; navegador persistente visível para descoberta do coletor.
+Fonte_local: `.ia.rules/state/requests/FT-008/source.txt`.
+Fonte_original: `attachment:pasted-text.txt@3b4d3c5f-dbbe-4137-9f10-ba302e94b4b5`.
+Fonte_original_sha256: `3D811F33720D0B6F794420323ABC9A7A752542EC969E9B3E9E74216BB95BA582`.
+Fonte_atual_sha256: `3D811F33720D0B6F794420323ABC9A7A752542EC969E9B3E9E74216BB95BA582`.
+Contexto_mestre: `.ia.rules/state/contexts/FT-008/master.md`.
 Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 ## FT-001 - Inicializacao normativa do projeto
@@ -230,3 +230,20 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - rastreabilidade: 85 sentenças materiais sincronizadas ao commit causal; `RCF_OK` com 85 entradas/85 sentenças.
 - preservacao: nenhum arquivo de publicação foi movido ou regravado.
 - proximo_ponto: nenhuma pendência nesta FT; coleta ampla e FT-004/03 continuam separadas.
+
+## FT-008 - Sessão e guia persistentes no coletor de publicações
+
+- tipo: `implementacao_codigo`
+- criado_em: `2026-07-27T13:04:50-03:00`
+- origem: `.ia.rules/state/requests/FT-008/source.txt`
+- escopo: Tecnico
+- prioridade: alta
+- status: em validação
+- objetivo: adaptar e normatizar `scripts/publications/baixar.py` para reutilizar preferencialmente uma única guia visível com perfil persistente durante descoberta remota, aguardando intervenção humana legítima em desafios sem contorno.
+- dependencias: FT-006 e FT-007 concluídas.
+- nao_escopo: resolver CAPTCHA automaticamente, burlar controles, aumentar volume de coleta, executar coleta ampla ou resolver a decisão editorial da FT-004/03.
+- contexto_mestre: `.ia.rules/state/contexts/FT-008/master.md`
+- baseline: `baixar.py` usava Selenium/Firefox headless por coleção, criava driver em `_process_collection` e encerrava no `finally`; desafios encerravam a coleção sem espera humana.
+- implementacao: RCF global e específico atualizados; `BrowserSessionManager` centraliza lifecycle, perfil persistente, guia operacional, espera humana, recuperação e encerramento; config adicionada em `config/publications.json`; testes simulados adicionados.
+- validacao: pendente de suíte completa.
+- pendencias: executar testes offline, `py_compile`, ajuda da CLI e validação normativa.

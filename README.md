@@ -38,7 +38,10 @@ python -m pip install -r scripts/publications/requirements.txt
 ```
 
 Uma amostra pública da CLI deve usar `--limit 1` e uma única coleção. O padrão usa um
-worker, atraso e jitter; `403`, CAPTCHA ou desafio interrompem a coleção.
+worker, atraso e jitter. Quando a descoberta exige navegador, a CLI abre Firefox
+visível com perfil persistente local e reutiliza a mesma guia; CAPTCHA ou
+verificação humana pausam a descoberta até intervenção do usuário, sem tentativa
+de resolução automática.
 `--revalidate` envia `If-None-Match`/`If-Modified-Since` somente quando o
 metadado local contém validadores. Coleta ampla não é implícita nem autorizada
 por esses comandos.

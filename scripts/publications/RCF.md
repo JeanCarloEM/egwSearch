@@ -163,14 +163,35 @@ backoff exponencial limitado DEVEM ser aplicados. Requisições condicionais [33
 validadores.
 
 `429` DEVE respeitar `Retry-After`; `408` e `5xx` PODEM repetir dentro do [3301a97]
-limite. `403`, CAPTCHA, desafio anti-automação, bloqueio ou contenção
-persistente DEVEM parar imediatamente a unidade/coleção, preservar progresso e [3301a97]
-marcar revisão, sem resolver desafio, intensificar, usar proxy, rotacionar
-identidade ou ocultar o cliente.
+limite. [3301a97] Descoberta que dependa de navegador DEVE usar uma única instância [PENDENTE-CODIGO]
+visível, perfil persistente local segregado e uma única guia operacional [PENDENTE-CODIGO]
+reutilizada em todas as coleções processadas pela execução; concorrência com [PENDENTE-CODIGO]
+navegador DEVE ser `1`, e nova guia/sessão somente PODE ocorrer por fechamento, [PENDENTE-CODIGO]
+invalidação, corrupção ou recuperação controlada, com log do motivo. [PENDENTE-CODIGO]
+
+CAPTCHA, challenge page, verificação de navegador, bloqueio temporário, [PENDENTE-CODIGO]
+redirecionamento de validação, `403`, `429`, título/URL/DOM inesperado ou [PENDENTE-CODIGO]
+ausência de grade do catálogo DEVEM ser avaliados por múltiplos sinais. Quando [PENDENTE-CODIGO]
+houver verificação humana legitimamente interativa, a automação DEVE manter a [PENDENTE-CODIGO]
+guia aberta, pausar somente o fluxo dependente, reduzir requisições ao mínimo, [PENDENTE-CODIGO]
+emitir mensagem objetiva ao usuário, aguardar com intervalo configurável de [PENDENTE-CODIGO]
+baixa frequência e retomar automaticamente após a grade ou conteúdo esperado [PENDENTE-CODIGO]
+voltar. [PENDENTE-CODIGO]
+
+`403`, CAPTCHA, desafio anti-automação, bloqueio ou contenção persistente que [PENDENTE-CODIGO]
+não puderem ser liberados pela guia visível DEVEM parar a unidade/coleção, [PENDENTE-CODIGO]
+preservar progresso e marcar revisão, sem resolver desafio, intensificar, usar [PENDENTE-CODIGO]
+proxy, rotacionar identidade, simular comportamento humano ou ocultar o cliente. [PENDENTE-CODIGO]
 
 Log DEVE registrar coleção/unidade, taxa, tentativa, espera, status, [3301a97]
 cache/condicional e motivo de parada, sem credencial, token, corpo editorial
 desnecessário ou dados privados.
+
+Configuração do downloader DEVE declarar visibilidade do navegador, diretório [PENDENTE-CODIGO]
+do perfil persistente, intervalo de verificação, limite opcional de espera [PENDENTE-CODIGO]
+humana, tempo de espera da grade, limite de recuperação e tamanho da janela. [PENDENTE-CODIGO]
+Padrões DEVEM privilegiar navegador visível, perfil fora de commits, espera sem [PENDENTE-CODIGO]
+timeout curto, baixo consumo e recuperação finita. [PENDENTE-CODIGO]
 
 ## 8. Conteúdo textual e derivados
 

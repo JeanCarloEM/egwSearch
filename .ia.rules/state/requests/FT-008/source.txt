@@ -1,0 +1,397 @@
+Leia integralmente o contexto, o estado real do repositório, o que for aplicável e apenas se necessário de `AGENTS.md`, os RCFs aplicáveis, as FTs, os TODOs, o `baixar.py` e todos os módulos, scripts, dependências, testes e workflows associados antes de alterar qualquer artefato.
+
+# Objetivo
+
+Adaptar e normatizar o `baixar.py` e seus componentes associados para utilizar, preferencialmente, uma única guia/aba persistente de navegador visível ao usuário durante toda a execução que exija interação com a origem remota.
+
+Essa guia DEVE ser reutilizada para:
+
+* preservar a mesma sessão;
+* manter cookies, armazenamento local, tokens legítimos e demais estados produzidos pela navegação normal;
+* reduzir reinicializações que possam provocar novas verificações contra automação;
+* permitir que o usuário responda manualmente a CAPTCHA, desafio antirrobô ou verificação equivalente quando solicitado pela própria origem;
+* retomar automaticamente a operação após a liberação legítima da sessão.
+
+O objetivo NÃO é contornar, resolver automaticamente, ocultar ou enfraquecer mecanismos antirrobô. O sistema DEVE apenas manter uma sessão interativa legítima e aguardar a intervenção humana quando a origem a exigir.
+
+# 1. Inspeção obrigatória
+
+Antes de implementar:
+
+1. identificar como o navegador é atualmente iniciado, reutilizado e encerrado;
+2. localizar todas as rotinas que:
+
+   * criam contexto, perfil, sessão, janela, guia ou aba;
+   * limpam cookies ou armazenamento;
+   * reiniciam o navegador;
+   * alternam entre navegador e cliente HTTP;
+   * detectam bloqueios, CAPTCHA, desafios ou páginas intermediárias;
+   * aplicam timeout, retry, skip ou encerramento;
+3. determinar por que novas sessões ou guias podem ser criadas;
+4. verificar se o navegador utilizado suporta:
+
+   * perfil persistente;
+   * contexto reutilizável;
+   * guia única;
+   * detecção de fechamento manual;
+   * espera assíncrona;
+   * retomada após interação do usuário;
+5. preservar integralmente os recursos já existentes que não conflitarem com esta norma.
+
+NÃO presumir Playwright, Selenium, Puppeteer, WebDriver, navegador específico ou arquitetura sem inspeção do estado real.
+
+# 2. Sessão e guia persistentes
+
+Quando a operação exigir navegador, o sistema DEVE, preferencialmente:
+
+1. iniciar uma única instância visível;
+2. criar ou recuperar uma única sessão persistente;
+3. abrir ou reutilizar uma única guia operacional;
+4. navegar nessa mesma guia entre as páginas necessárias;
+5. manter a guia e a sessão enquanto houver trabalho pendente;
+6. encerrar somente ao término normal, cancelamento explícito ou falha irrecuperável.
+
+É PROIBIDO criar nova guia, janela, contexto, perfil ou sessão a cada publicação, página, tentativa ou requisição sem necessidade técnica comprovada.
+
+Nova guia ou sessão somente PODE ser criada quando:
+
+* a anterior tiver sido encerrada ou invalidada;
+* a origem exigir isolamento legítimo;
+* houver corrupção comprovada do contexto;
+* existir incompatibilidade técnica inevitável;
+* a recuperação na mesma sessão tiver falhado após procedimento controlado.
+
+A exceção DEVE ser registrada em log com motivo suficiente.
+
+# 3. Navegador visível e controlável
+
+O navegador utilizado para interação antirrobô DEVE permanecer visível ao usuário.
+
+A interface DEVE permitir que o usuário:
+
+* visualize o desafio;
+* interaja diretamente com a página;
+* conclua a verificação;
+* consulte instrução objetiva sobre o estado de espera;
+* cancele a operação de forma segura;
+* retome sem reiniciar todo o processamento.
+
+Modo headless NÃO DEVE ser usado em etapas nas quais possa ocorrer verificação que exija interação humana, salvo quando a execução tenha comprovadamente acesso direto legítimo sem desafio e haja fallback automático para modo visível.
+
+# 4. Detecção de verificação contra bot
+
+Implementar detecção robusta e não dependente exclusivamente de um único seletor, texto ou provedor.
+
+Considerar, conforme evidência real:
+
+* CAPTCHA;
+* challenge page;
+* verificação de navegador;
+* pedido de confirmação humana;
+* página de espera;
+* bloqueio temporário;
+* respostas HTTP como `403`, `429` ou equivalentes;
+* redirecionamentos para fluxo de validação;
+* alteração inesperada do título, URL, DOM ou conteúdo;
+* ausência temporária do conteúdo esperado acompanhada de elementos de desafio.
+
+A detecção NÃO DEVE tratar indisponibilidade comum, página vazia, erro de rede ou alteração estrutural como CAPTCHA sem evidência suficiente.
+
+# 5. Espera cooperativa pelo usuário
+
+Ao detectar verificação que possa ser legitimamente respondida pelo usuário, o sistema DEVE:
+
+1. interromper apenas a unidade de trabalho dependente da liberação;
+2. preservar fila, progresso, arquivos temporários, metadados e estado;
+3. manter o navegador e a mesma guia abertos;
+4. informar claramente que aguarda intervenção humana;
+5. aguardar sem polling agressivo;
+6. detectar a conclusão da verificação;
+7. validar que o conteúdo esperado voltou a estar acessível;
+8. retomar automaticamente do ponto seguro apropriado.
+
+O sistema NÃO DEVE:
+
+* falhar imediatamente;
+* pular silenciosamente a publicação;
+* reiniciar a sessão de forma automática e repetitiva;
+* abrir sucessivas guias;
+* tentar resolver CAPTCHA automaticamente;
+* simular comportamento humano para contornar a proteção;
+* intensificar requisições durante o desafio;
+* perder o progresso já concluído.
+
+# 6. Não bloqueio do computador
+
+A espera pela intervenção humana DEVE ser cooperativa, assíncrona ou baseada em eventos, sem consumir CPU de forma contínua nem bloquear a aplicação inteira.
+
+É PROIBIDO:
+
+* loop ocupado;
+* polling sem intervalo;
+* espera síncrona que congele interface ou processo controlador;
+* criação ilimitada de threads ou processos;
+* retenção excessiva de memória;
+* repetição contínua de navegação ou reload;
+* monopolização da máquina enquanto aguarda o usuário.
+
+A implementação DEVE utilizar, conforme a tecnologia real:
+
+* espera assíncrona;
+* temporizadores de baixa frequência;
+* eventos de navegação;
+* observação controlada do DOM;
+* sinais do navegador;
+* mecanismo equivalente de baixo consumo.
+
+Enquanto aguarda, o consumo de CPU, memória, rede e disco DEVE permanecer baixo e estável.
+
+# 7. Timeout e decisão do usuário
+
+A espera por intervenção humana NÃO DEVE possuir timeout curto que provoque falha ou skip indevido.
+
+Quando um limite máximo for necessário por motivo técnico ou operacional:
+
+* DEVE ser configurável;
+* DEVE ser suficientemente amplo;
+* DEVE permitir prorrogação;
+* DEVE avisar antes do encerramento;
+* NÃO DEVE apagar o progresso;
+* DEVE registrar a unidade como aguardando, interrompida ou retomável, não como concluída.
+
+Sempre que tecnicamente viável, oferecer ao usuário ações explícitas:
+
+* continuar aguardando;
+* tentar novamente na mesma guia;
+* cancelar somente o item atual;
+* cancelar toda a execução;
+* salvar estado e encerrar para retomada posterior.
+
+# 8. Retomada segura
+
+Após a conclusão do desafio, o sistema DEVE verificar:
+
+* se a sessão continua válida;
+* se a URL corresponde ao fluxo esperado;
+* se o conteúdo legítimo está disponível;
+* se não houve redirecionamento para página de erro;
+* se a publicação ou recurso ainda corresponde ao item em processamento;
+* se a operação pode continuar sem duplicação.
+
+A retomada DEVE ser idempotente. Nenhum download, extração, conversão ou gravação já concluído DEVE ser repetido apenas porque houve uma pausa antirrobô.
+
+# 9. Persistência legítima da sessão
+
+Quando compatível com o RCF e com a origem, utilizar perfil ou contexto persistente para reaproveitar:
+
+* cookies;
+* armazenamento local;
+* armazenamento de sessão quando tecnicamente preservável;
+* preferências legítimas;
+* estado de autenticação permitido;
+* liberações temporárias concedidas pela origem.
+
+Dados de sessão DEVEM:
+
+* permanecer fora de commits;
+* ser protegidos contra exposição;
+* não ser registrados integralmente em logs;
+* não ser compartilhados entre usuários;
+* possuir localização e ciclo de vida definidos;
+* poder ser removidos pelo usuário;
+* respeitar as normas de segurança e privacidade aplicáveis.
+
+É PROIBIDO extrair, exportar ou reutilizar credenciais, tokens ou cookies para contornar controles ou operar fora da sessão legítima do usuário.
+
+# 10. Recuperação de falhas
+
+Se a guia for fechada manualmente, o navegador encerrar ou a sessão se tornar irrecuperável:
+
+1. preservar o estado do processamento;
+2. informar objetivamente o ocorrido;
+3. tentar recuperação controlada somente quando segura;
+4. reutilizar o mesmo perfil persistente, quando aplicável;
+5. evitar sequência ilimitada de reinicializações;
+6. solicitar intervenção do usuário quando necessária;
+7. permitir retomada sem reprocessar conteúdo concluído.
+
+Definir limite configurável de recuperações automáticas. Ao excedê-lo, interromper de forma segura e retomável.
+
+# 11. Acesso responsável
+
+A persistência da guia NÃO autoriza aumento de frequência ou volume de acesso.
+
+Manter:
+
+* concorrência mínima;
+* atraso configurável;
+* jitter moderado;
+* backoff exponencial;
+* respeito a `Retry-After`;
+* cache;
+* deduplicação;
+* retomada;
+* interrupção diante de contenção persistente.
+
+Durante verificação antirrobô, requisições automáticas à origem DEVEM ser suspensas ou reduzidas ao mínimo estritamente necessário para detectar a liberação.
+
+# 12. Logs e comunicação
+
+Registrar, sem dados sensíveis:
+
+* criação ou reutilização da sessão;
+* criação, reutilização ou recuperação da guia;
+* detecção de desafio;
+* início da espera;
+* duração da espera;
+* intervenção ou cancelamento do usuário;
+* liberação detectada;
+* retomada;
+* reinicializações excepcionais e seus motivos;
+* falhas de recuperação.
+
+A comunicação ao usuário DEVE ser objetiva, como:
+
+```text
+Verificação humana detectada. Conclua-a na guia aberta. O processamento permanecerá pausado e será retomado automaticamente.
+```
+
+Não exibir mensagens que sugiram bypass, evasão ou resolução automática.
+
+# 13. Arquitetura
+
+Centralizar o gerenciamento do navegador em componente único responsável por:
+
+* ciclo de vida;
+* perfil;
+* contexto;
+* guia operacional;
+* navegação;
+* detecção de desafio;
+* espera cooperativa;
+* retomada;
+* recuperação;
+* encerramento.
+
+Módulos de catálogo, download e extração NÃO DEVEM criar sessões ou guias diretamente, salvo contrato explícito e exceção tecnicamente justificada.
+
+O componente DEVE fornecer interface suficiente para reutilização pelos scripts associados sem duplicação de lógica.
+
+# 14. Configuração
+
+Adicionar ou consolidar configurações equivalentes, conforme a arquitetura real:
+
+* navegador visível;
+* diretório de perfil persistente;
+* intervalo de detecção;
+* limite de espera;
+* limite de recuperação;
+* comportamento ao fechar a guia;
+* retomada automática;
+* nível de log.
+
+Os padrões DEVEM privilegiar:
+
+* uma sessão;
+* uma guia;
+* navegador visível;
+* espera humana;
+* baixo consumo;
+* preservação do progresso;
+* ausência de evasão.
+
+# 15. Testes
+
+Criar ou atualizar testes que comprovem, no mínimo:
+
+* múltiplos itens reutilizam a mesma guia;
+* a sessão não é reiniciada entre publicações sem necessidade;
+* CAPTCHA ou desafio simulado pausa somente o fluxo dependente;
+* a espera não utiliza loop ocupado;
+* CPU e número de requisições permanecem controlados;
+* o usuário pode concluir a verificação;
+* a execução retoma automaticamente;
+* conteúdo já processado não é repetido;
+* fechamento da guia preserva estado;
+* recuperação possui limite;
+* cancelamento é seguro;
+* timeout configurável não marca item como concluído;
+* cookies e dados sensíveis não aparecem em logs;
+* nenhuma tentativa automática de resolver ou contornar o desafio é executada.
+
+Testes automatizados NÃO DEVEM interagir com CAPTCHA real. Utilizar fixtures, mocks ou páginas locais de simulação.
+
+# 16. Normatização
+
+Incorporar integralmente ao RCF aplicável:
+
+* preferência por sessão e guia únicas;
+* navegador visível;
+* persistência legítima;
+* detecção de desafios;
+* espera cooperativa;
+* intervenção humana;
+* retomada automática;
+* baixo consumo;
+* recuperação;
+* cancelamento;
+* segurança dos dados de sessão;
+* proibição de bypass;
+* testes e critérios de aceite.
+
+Atualizar também o RCF especializado do `baixar.py` e seus vínculos com o RCF global, evitando duplicação e respeitando a precedência documental vigente.
+
+# 17. Ordem de execução
+
+1. Ler normas e código aplicáveis.
+2. Inspecionar o ciclo de vida atual do navegador.
+3. Identificar reinicializações, múltiplas guias e falhas diante de desafios.
+4. Normatizar o comportamento.
+5. Criar ou atualizar FTs rastreáveis.
+6. Centralizar o gerenciamento da sessão e da guia.
+7. Implementar persistência e reutilização.
+8. Implementar detecção de desafios.
+9. Implementar espera cooperativa e intervenção humana.
+10. Implementar retomada idempotente.
+11. Implementar recuperação e cancelamento.
+12. Atualizar logs e configurações.
+13. Executar testes simulados.
+14. Validar consumo de recursos.
+15. Atualizar documentação e emitir relatório final.
+
+# 18. Critérios de aceite
+
+* [ ] O `baixar.py` e seus associados reutilizam preferencialmente uma única guia visível.
+* [ ] A mesma sessão é preservada entre itens e páginas.
+* [ ] Novas sessões ou guias somente são criadas mediante necessidade comprovada.
+* [ ] Verificações contra bot não provocam falha ou skip imediato.
+* [ ] O usuário pode responder ao desafio na guia aberta.
+* [ ] A execução aguarda sem congelar o computador.
+* [ ] A espera não utiliza polling agressivo nem loop ocupado.
+* [ ] Requisições automáticas são suspensas ou minimizadas durante o desafio.
+* [ ] A retomada ocorre automaticamente após a liberação.
+* [ ] O progresso anterior é preservado.
+* [ ] Itens concluídos não são reprocessados.
+* [ ] Fechamento da guia ou navegador permite recuperação controlada ou retomada posterior.
+* [ ] Dados de sessão não são expostos nem versionados.
+* [ ] Nenhum mecanismo de bypass ou resolução automática de CAPTCHA foi implementado.
+* [ ] O comportamento foi integralmente incorporado ao RCF.
+* [ ] Testes passam sem regressão.
+
+# 19. Relatório final
+
+Informar objetivamente:
+
+* comportamento anterior;
+* causa das reinicializações ou múltiplas guias;
+* tecnologia e estratégia efetivamente adotadas;
+* forma de persistência da sessão;
+* mecanismo de detecção de desafios;
+* mecanismo de espera cooperativa;
+* forma de retomada;
+* tratamento de fechamento e falhas;
+* configurações adicionadas;
+* consumo de recursos observado;
+* arquivos e normas alterados;
+* testes executados e resultados;
+* limitações remanescentes.

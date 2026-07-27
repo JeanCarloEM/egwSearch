@@ -44,6 +44,106 @@ class _Response:
         self.closed = True
 
 
+class _FakeOptions:
+    def __init__(self) -> None:
+        self.arguments: list[str] = []
+
+    def add_argument(self, value: str) -> None:
+        self.arguments.append(value)
+
+
+class _FakeSwitch:
+    def __init__(self, driver) -> None:
+        self.driver = driver
+
+    def window(self, handle: str) -> None:
+        self.driver.current_handle = handle
+
+
+class _FakeDriver:
+    def __init__(self, page_sources: list[str] | None = None) -> None:
+        self.window_handles = ["main"]
+        self.current_handle = "main"
+        self.switch_to = _FakeSwitch(self)
+        self.page_sources = page_sources or ["<html><div class='book-list-item'></div></html>"]
+        self.visited: list[str] = []
+        self.quit_count = 0
+        self.title = "Catalogo"
+        self.current_url = "https://egwwritings.org/allCollection/pt/245"
+
+    @property
+    def page_source(self) -> str:
+        if len(self.page_sources) > 1:
+            return self.page_sources.pop(0)
+        return self.page_sources[0]
+
+    def set_window_size(self, _width: int, _height: int) -> None:
+        return None
+
+    def get(self, url: str) -> None:
+        self.visited.append(url)
+        self.current_url = url
+
+    def execute_script(self, _script: str) -> int:
+        return 100
+
+    def find_elements(self, by, value):
+        if value == "book-list-item":
+            return [object()]
+        return []
+
+    def quit(self) -> None:
+        self.quit_count += 1
+
+
+class _FakeActionChains:
+    def __init__(self, _driver) -> None:
+        pass
+
+    def move_to_element(self, _element):
+        return self
+
+    def click(self):
+        return self
+
+    def perform(self) -> None:
+        return None
+
+
+class _FakeWait:
+    def __init__(self, driver, _timeout, poll_frequency=0.5) -> None:
+        self.driver = driver
+        self.poll_frequency = poll_frequency
+
+    def until(self, predicate):
+        return predicate(self.driver)
+
+
+class _FakeEC:
+    @staticmethod
+    def presence_of_element_located(_locator):
+        return lambda _driver: object()
+
+
+class _FakeBy:
+    CSS_SELECTOR = "css selector"
+    CLASS_NAME = "class name"
+    TAG_NAME = "tag name"
+
+
+def _runtime(driver_factory):
+    return {
+        "requests": Mock(Session=Mock(return_value=Mock(headers={}, close=Mock()))),
+        "tqdm": lambda **_kwargs: _Progress(),
+        "webdriver": Mock(Firefox=driver_factory),
+        "ActionChains": _FakeActionChains,
+        "By": _FakeBy,
+        "FirefoxOptions": _FakeOptions,
+        "EC": _FakeEC,
+        "WebDriverWait": _FakeWait,
+    }
+
+
 class DownloaderTests(unittest.TestCase):
     def test_private_dns_is_blocked(self) -> None:
         with patch.object(
@@ -311,6 +411,81 @@ class DownloaderTests(unittest.TestCase):
             self.assertEqual(repeated, target)
             self.assertFalse(installed)
             self.assertEqual(target.stat().st_mtime_ns, before)
+
+    def test_browser_manager_reuses_visible_persistent_tab(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            driver = _FakeDriver()
+            firefox = Mock(return_value=driver)
+            runtime = _runtime(firefox)
+            profile = "constructor/.state/test-browser-profile"
+            manager = baixar.BrowserSessionManager(
+                runtime,
+                {
+                    "delay_seconds": 2.0,
+                    "browser_visible": True,
+                    "browser_profile_dir": profile,
+                    "browser_wait_interval_seconds": 1.0,
+                },
+                Path(temporary),
+            )
+            collection_a = {
+                "id": "a",
+                "catalog_url": "https://egwwritings.org/allCollection/pt/245",
+            }
+            collection_b = {
+                "id": "b",
+                "catalog_url": "https://egwwritings.org/allCollection/en/4",
+            }
+            with patch.object(
+                baixar,
+                "_catalog_item_from_element",
+                return_value=Mock(),
+            ):
+                manager.discover_catalog_items(collection_a, Mock(before_request=Mock()))
+                manager.discover_catalog_items(collection_b, Mock(before_request=Mock()))
+            self.assertEqual(firefox.call_count, 1)
+            options = firefox.call_args.kwargs["options"]
+            self.assertIn("-profile", options.arguments)
+            self.assertNotIn("--headless", options.arguments)
+            self.assertEqual(driver.visited, [collection_a["catalog_url"], collection_b["catalog_url"]])
+            manager.close()
+            self.assertEqual(driver.quit_count, 1)
+
+    def test_browser_challenge_waits_without_busy_loop_and_resumes(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            driver = _FakeDriver(
+                [
+                    "<html><title>Checking your browser</title><div>captcha</div></html>",
+                    "<html><div class='book-list-item'></div></html>",
+                ]
+            )
+            runtime = _runtime(Mock(return_value=driver))
+            manager = baixar.BrowserSessionManager(
+                runtime,
+                {
+                    "delay_seconds": 2.0,
+                    "browser_visible": True,
+                    "browser_profile_dir": "constructor/.state/test-browser-profile",
+                    "browser_wait_interval_seconds": 1.0,
+                    "browser_human_wait_seconds": 5.0,
+                },
+                Path(temporary),
+            )
+            with patch.object(baixar.time, "sleep") as sleep_mock:
+                with patch.object(
+                    baixar,
+                    "_catalog_item_from_element",
+                    return_value=Mock(),
+                ):
+                    manager.discover_catalog_items(
+                        {
+                            "id": "a",
+                            "catalog_url": "https://egwwritings.org/allCollection/pt/245",
+                        },
+                        Mock(before_request=Mock()),
+                    )
+            sleep_mock.assert_any_call(1.0)
+            manager.close()
 
 
 if __name__ == "__main__":
