@@ -1955,3 +1955,8 @@
   PODEM ser removidos somente depois de restauração byte a byte comprovada. Uma
   contracapa separada DEVE identificar-se como nota não editorial e registrar
   origem, URL e data de acesso em referência de estilo ABNT.
+
+  A capa DEVE ser a primeira página exclusiva do EPUB e preencher a viewport
+  inteira, borda a borda, sem margem, faixa ou texto visível. Divergência de
+  proporção DEVE usar recorte central mínimo, preservando a proporção e sem
+  deformar a imagem.

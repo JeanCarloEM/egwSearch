@@ -336,6 +336,7 @@ proveniência DEVEM residir no envelope global e no metadado v3. [3301a97]
 Quando a ficha pública da obra textual declarar capa por `og:image`, relação equivalente ou endpoint oficial do mesmo identificador remoto, essa URL DEVE ser preservada e adquirida de host allowlisted como fonte obrigatória. [PENDENTE-CODIGO]
 A imagem DEVE ser limitada, decodificada e normalizada deterministicamente para `cover.png`, com no máximo 800 px por eixo, proporção preservada, sem ampliação e sem metadados dispensáveis; escrita e promoção DEVEM ser atômicas. [PENDENTE-CODIGO]
 O EPUB derivado DEVE incluir a imagem no manifesto com propriedade `cover-image`, página de capa no início do spine e bytes iguais ao `cover.png`; um gerador PDF futuro DEVE usar o mesmo arquivo como capa antes do texto, sem autorizar PDF rasterizado como falso equivalente editorial. [PENDENTE-CODIGO]
+A página `cover.xhtml` DEVE ser o primeiro item do spine e conter exclusivamente a capa, com viewport e página sem margens e preenchimento integral de borda a borda; proporções divergentes DEVEM usar escala proporcional `slice` e recorte central, sem faixas ou deformação. [PENDENTE-CODIGO]
 Metadado v3 DEVE registrar separadamente a fonte remota e o derivado normalizado, com URL, método, path, tamanho e hashes verificáveis. [PENDENTE-CODIGO]
 Reexecução sem mudança DEVE validar e reutilizar capa e EPUB; `--revalidate` DEVE readquirir ou revalidar a capa antes de concluir. [PENDENTE-CODIGO]
 O EPUB textual DEVE manter documentos XHTML semânticos no spine e armazenar fora dele os bytes Markdown intermediários, acompanhados de manifesto versionado com nome, ordem e SHA-256. [PENDENTE-CODIGO]
@@ -375,6 +376,7 @@ desabilitado, cadeia textual multiunidade, ciclo, quebra de obra, ausência de
 contêiner, preservação semântica, isolamento de fixture e comparação do texto
 real no EPUB. [PENDENTE-CODIGO]
 O gate também DEVE cobrir capa oficial JPEG/PNG, host e redirecionamento permitidos, limite de bytes/dimensões, remoção de metadados, determinismo, `cover.png`, manifesto/spine EPUB, igualdade de bytes e falha de capa. [PENDENTE-CODIGO]
+O gate DEVE inspecionar `cover.xhtml` e comprovar primeira página exclusiva, ausência de margens/faixas/texto visível, preenchimento integral e recorte central proporcional. [PENDENTE-CODIGO]
 O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte, remoção pós-validação, indexabilidade XHTML e separação/texto/data/link da nota ABNT não editorial. [PENDENTE-CODIGO]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação

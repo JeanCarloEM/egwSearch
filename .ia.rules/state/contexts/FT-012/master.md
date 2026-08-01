@@ -52,6 +52,9 @@ capa oficialmente declarada para a obra.
   partir do EPUB; a nota de proveniência não integra o texto editorial.
 - conversão Markdown materializa somente EPUB nesta FT; geração PDF permanece
   opcional, futura e fora do escopo implementado.
+- a capa é o único conteúdo da primeira página do EPUB e ocupa a viewport
+  inteira, borda a borda, sem margens ou faixas; diferença de proporção usa
+  preenchimento com recorte central, sem deformar a imagem.
 
 ## Aceite global
 
@@ -67,6 +70,8 @@ capa oficialmente declarada para a obra.
 - EPUB expõe estrutura adequada à indexação, contém contracapa não editorial e
   restaura os Markdown originais com nomes, ordem e hashes idênticos, sem exigir
   sua persistência externa.
+- primeira página do EPUB contém exclusivamente a capa e preenche toda a área
+  visível, comprovada no XHTML interno por layout sem margens e escala `slice`.
 
 ## Resultado
 

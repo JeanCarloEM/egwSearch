@@ -1019,6 +1019,7 @@ sem autorizar coleta em massa. [be82602]
 Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da mesma obra, inclusive `og:image`, DEVE ser adquirida como fonte editorial e NÃO PODE ser substituída por imagem inferida por título, semelhança ou posição. [PENDENTE-CODIGO]
 A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [PENDENTE-CODIGO]
 Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [PENDENTE-CODIGO]
+A página de capa DEVE ser o primeiro e exclusivo item visual do EPUB, sem margens, faixas ou texto, preenchendo toda a viewport de borda a borda; diferença de proporção DEVE preservar a imagem por escala proporcional com recorte central, nunca por deformação. [PENDENTE-CODIGO]
 
 O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [PENDENTE-CODIGO]
 Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [PENDENTE-CODIGO]

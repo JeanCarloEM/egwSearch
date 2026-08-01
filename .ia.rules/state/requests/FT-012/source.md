@@ -54,3 +54,11 @@ arquivos `.md` externos serão removidos.
 Logo, a FT-012 não implementará gerador PDF; apenas preservará no contrato que
 um gerador futuro reutilize a mesma capa canônica e não produza falso
 equivalente rasterizado.
+
+## Ajuste de 2026-08-01 — capa em página inteira
+
+> A capa deve ocupar a primeira página inteira, borda a borda.
+
+A página de capa do EPUB será exclusiva, sem margens, faixas ou texto visível.
+A imagem preencherá toda a viewport e preservará sua proporção por recorte
+central mínimo quando a proporção do dispositivo diferir da capa.
