@@ -1412,3 +1412,312 @@
     - testes e conjuntos de avaliação executados;
     - métricas de precisão, fidelidade, cobertura, latência e custo disponíveis;
     - limitações, pendências e riscos remanescentes.
+
+- [ ] Corrigir o tratamento de desafios anti-bot com intervenção humana real
+
+  ## Objetivo
+
+  Corrigir o fluxo atualmente responsável por detectar desafios anti-bot, exibir o navegador e transferir a resolução a um operador humano, pois a intervenção manual não tem produzido uma sessão aceita, especialmente em páginas protegidas pelo Cloudflare.
+
+  A solução DEVE permitir que, diante de desafio incompatível com automação legítima, o sistema interrompa integralmente a atuação automatizada, entregue o controle a uma sessão de navegação humana válida e somente retome o processamento após confirmação objetiva de que o acesso foi autorizado.
+
+  Esta tarefa NÃO autoriza burlar, enfraquecer, enganar ou neutralizar mecanismos de segurança. A correção DEVE respeitar termos de uso, políticas do serviço, autorização de acesso e mecanismos oficiais disponíveis.
+
+  ## Problema observado
+
+  O mecanismo atual:
+  - detecta ou alcança uma verificação anti-bot;
+  - abre uma janela visível;
+  - permite que uma pessoa real interaja manualmente com o desafio;
+  - ainda assim permanece classificado como automação, bot ou sessão não confiável;
+  - falha de modo recorrente, com maior incidência em proteções do Cloudflare.
+
+  Há suspeita, ainda não comprovada, de que o desafio seja resolvido dentro de uma sessão criada ou controlada por navegador automatizado, permanecendo detectável como ambiente de automação mesmo durante a atuação humana.
+
+  Essa hipótese DEVE ser investigada, mas NÃO PODE ser tratada como causa confirmada sem evidência.
+
+  ## Resultado obrigatório
+
+  O fluxo corrigido DEVE:
+  1. distinguir navegação automatizável de desafio que exige intervenção humana;
+  2. cessar toda interação automatizada antes da intervenção;
+  3. transferir o usuário para uma sessão realmente apropriada ao uso humano;
+  4. preservar, quando permitido e tecnicamente seguro, o estado legítimo obtido após a validação;
+  5. retomar somente após verificar que o desafio desapareceu e que a página esperada foi efetivamente liberada;
+  6. falhar de forma explícita quando o acesso continuar bloqueado;
+  7. nunca simular resolução humana nem mascarar automação.
+
+  ## Limites obrigatórios
+
+  É PROIBIDO implementar ou utilizar:
+  - técnicas de evasão de fingerprint;
+  - alteração destinada a ocultar `webdriver` ou sinais equivalentes;
+  - plugins, patches ou bibliotecas de modo `stealth`;
+  - falsificação de navegador, dispositivo, entrada humana ou telemetria;
+  - serviços automáticos de resolução de CAPTCHA;
+  - terceirização não autorizada de desafios;
+  - repetição agressiva de tentativas;
+  - rotação de identidade, IP, proxy ou sessão para contornar bloqueio;
+  - reutilização indevida de cookies, tokens ou autorizações;
+  - engenharia destinada a enganar Cloudflare ou outro sistema anti-bot;
+  - qualquer mecanismo incompatível com os termos, autorização ou finalidade legítima do acesso.
+
+  A implementação DEVE preferir APIs oficiais, integrações autorizadas, autenticação própria, feeds, exportações ou outros canais suportados pelo serviço sempre que existirem.
+
+  ## Inspeção prévia
+
+  Antes de alterar o fluxo, a IA executora DEVE:
+  - ler integralmente os normativos aplicáveis;
+  - localizar todo código relacionado a navegador, automação, sessão, perfil, cookies, CAPTCHA, Cloudflare, retries e retomada;
+  - identificar a tecnologia real utilizada, como Playwright, Puppeteer, Selenium, WebDriver, CDP ou equivalente;
+  - mapear onde a sessão é criada, controlada, pausada, entregue ao usuário e retomada;
+  - verificar se a janela exibida continua anexada ao controlador automatizado;
+  - verificar se eventos, navegação, polling, scripts ou manipulações continuam ativos durante a intervenção;
+  - verificar se a resolução ocorre em contexto persistente ou descartável;
+  - verificar se cookies, storage, headers, perfil e origem são preservados de forma legítima;
+  - verificar se a retomada reutiliza exatamente a sessão validada ou cria outra;
+  - identificar timeouts, recarregamentos, redirecionamentos ou retries que possam invalidar a resolução;
+  - registrar evidências reproduzíveis, sem coletar ou expor dados sensíveis.
+
+  ## Arquitetura do fluxo humano
+
+  ### 1. Detecção
+
+  O sistema DEVE reconhecer de forma conservadora estados como:
+  - challenge page;
+  - CAPTCHA;
+  - verificação intersticial;
+  - bloqueio por automação;
+  - resposta HTTP ou navegação incompatível com a página esperada;
+  - loop de redirecionamento;
+  - tela de espera que exija ação humana.
+
+  A detecção NÃO DEVE tentar interagir automaticamente com o desafio.
+
+  ### 2. Suspensão integral da automação
+
+  Ao detectar desafio:
+  - toda ação automatizada DEVE cessar;
+  - filas, timers, polling, cliques, preenchimentos, recargas e navegações automáticas DEVEM ser suspensos;
+  - nenhum script DEVE continuar manipulando a página;
+  - o estado da tarefa DEVE mudar para `AGUARDANDO_INTERVENCAO_HUMANA` ou estado equivalente;
+  - o operador DEVE receber instrução objetiva sobre o que precisa concluir;
+  - o sistema NÃO DEVE impor timeout curto incompatível com ação humana.
+
+  ### 3. Sessão humana
+
+  A implementação DEVE avaliar, em ordem de preferência e conforme a arquitetura real:
+  1. utilizar o navegador normal do usuário, já instalado e operado diretamente por ele;
+  2. abrir a URL no perfil humano autorizado e persistente, sem automação ativa;
+  3. permitir que o usuário conclua autenticação ou verificação fora do contexto automatizado;
+  4. retomar por mecanismo legítimo de handoff, callback, importação autorizada de estado ou reabertura da sessão;
+  5. quando o site for controlado pelo próprio projeto, utilizar integração oficial do provedor, inclusive os mecanismos oficiais do Cloudflare aplicáveis ao caso.
+
+  Uma sessão apenas visível, mas ainda integralmente criada, instrumentada e controlada por automação, NÃO DEVE ser presumida como sessão humana válida.
+
+  A escolha técnica DEVE decorrer de inspeção e testes. Não se DEVE prometer aceitação por terceiros quando o provedor puder legitimamente recusar sessões automatizadas.
+
+  ### 4. Preservação de estado
+
+  Quando juridicamente autorizado e tecnicamente compatível, o estado resultante da intervenção humana PODE ser preservado para continuidade da mesma tarefa.
+
+  A preservação DEVE:
+  - restringir-se ao domínio e finalidade aplicáveis;
+  - usar armazenamento seguro;
+  - respeitar expiração e escopo;
+  - impedir exposição em logs;
+  - não reutilizar credenciais ou tokens fora do contexto autorizado;
+  - não transformar tokens temporários em mecanismo permanente;
+  - invalidar o estado quando houver erro, expiração ou mudança de identidade;
+  - manter separação entre perfis, usuários e submódulos.
+
+  Cookies, tokens, local storage, session storage ou perfis NÃO DEVEM ser copiados entre contextos sem compatibilidade comprovada e autorização explícita.
+
+  ### 5. Retomada
+
+  A automação somente PODE retomar quando verificar objetivamente:
+  - ausência do desafio;
+  - carregamento da origem esperada;
+  - correspondência com a página, recurso ou estado requerido;
+  - inexistência de redirecionamento recorrente;
+  - sessão ainda válida;
+  - ausência de novo bloqueio;
+  - identidade correta do usuário ou perfil, quando aplicável.
+
+  Um clique humano, isoladamente, NÃO constitui confirmação suficiente.
+
+  Se o desafio persistir, o sistema DEVE:
+  - manter a automação suspensa;
+  - informar que a sessão continua bloqueada;
+  - oferecer cancelamento seguro;
+  - registrar diagnóstico conciso;
+  - impedir loop ilimitado de novas tentativas.
+
+  ## Cloudflare
+
+  ### Sites de terceiros
+
+  Para páginas de terceiros protegidas pelo Cloudflare, o sistema DEVE:
+  - respeitar a decisão do provedor;
+  - utilizar API, integração, autenticação ou acesso autorizado quando disponível;
+  - tratar bloqueio persistente como impedimento legítimo;
+  - evitar qualquer tentativa de ocultação ou evasão;
+  - permitir continuidade somente quando a sessão humana for efetivamente aceita.
+
+  Não há garantia técnica legítima de que uma sessão automatizada, ainda que visível e operada manualmente por alguns instantes, seja aceita.
+
+  ### Sites controlados pelo projeto
+
+  Quando o domínio protegido pertencer ao próprio projeto, a implementação DEVE avaliar mecanismos oficiais e documentados, como:
+  - configuração adequada das regras de segurança;
+  - allowlists restritas e justificadas;
+  - Service Tokens ou mecanismos equivalentes para automação autorizada;
+  - integração oficial do Turnstile;
+  - verificação server-side;
+  - ambientes ou rotas específicas para automação interna;
+  - políticas diferenciadas por identidade autenticada, origem ou serviço.
+
+  Qualquer exceção DEVE ser mínima, auditável, revogável e limitada ao sistema autorizado. É PROIBIDO desabilitar proteção de forma ampla apenas para facilitar testes ou automação.
+
+  ## Resiliência
+
+  O fluxo DEVE:
+  - ser idempotente;
+  - suportar cancelamento;
+  - suportar retomada controlada;
+  - impedir concorrência entre automação e operador;
+  - impedir múltiplas janelas para o mesmo desafio;
+  - não perder o estado da tarefa;
+  - não recarregar a página durante a intervenção;
+  - não reiniciar a sessão sem consentimento;
+  - limitar retries;
+  - registrar transições de estado;
+  - distinguir falha de rede, autenticação, desafio e bloqueio definitivo;
+  - preservar compatibilidade com os submódulos existentes.
+
+  ## Centralização
+
+  A lógica comum de:
+  - detecção de desafio;
+  - suspensão;
+  - handoff humano;
+  - preservação de estado;
+  - retomada;
+  - retry;
+  - timeout;
+  - logging;
+  - cancelamento;
+  - segurança;
+
+  DEVE ser centralizada e reutilizada por todos os submódulos.
+
+  É PROIBIDO manter correções isoladas por site ou submódulo quando o comportamento for comum.
+
+  Especializações locais somente PODEM declarar:
+  - padrões de detecção próprios;
+  - URL ou estado esperado após validação;
+  - requisitos legítimos de autenticação;
+  - timeout humano específico;
+  - política de retomada;
+  - integrações oficiais próprias do serviço.
+
+  ## Observabilidade
+
+  Registrar, sem dados sensíveis:
+  - momento da detecção;
+  - tipo provável de desafio;
+  - origem afetada;
+  - estado anterior;
+  - suspensão efetiva da automação;
+  - início e término da intervenção humana;
+  - método de handoff utilizado;
+  - resultado da validação;
+  - motivo de falha;
+  - quantidade de tentativas;
+  - transição final da tarefa.
+
+  É PROIBIDO registrar:
+  - senhas;
+  - respostas de CAPTCHA;
+  - tokens integrais;
+  - cookies integrais;
+  - conteúdo sensível de formulários;
+  - dados pessoais desnecessários;
+  - material que permita reutilização indevida da sessão.
+
+  ## Testes obrigatórios
+
+  Validar, conforme aplicabilidade:
+  - desafio detectado sem interação automática;
+  - automação integralmente suspensa;
+  - intervenção humana sem concorrência;
+  - cancelamento pelo usuário;
+  - sessão aceita;
+  - sessão recusada;
+  - desafio reapresentado;
+  - expiração durante a intervenção;
+  - retomada na mesma sessão legítima;
+  - retomada inválida bloqueada;
+  - ausência de loops;
+  - isolamento entre usuários e submódulos;
+  - ausência de segredos nos logs;
+  - funcionamento em execução local e ambientes suportados;
+  - fallback para API ou integração oficial, quando existente;
+  - comportamento específico para domínio próprio e domínio de terceiro.
+
+  Testes NÃO DEVEM atacar, sobrecarregar ou tentar evadir serviços externos. Sempre que possível, utilizar fixtures, mocks, ambiente controlado ou domínio próprio.
+
+  ## Ordem de execução
+  1. Ler as normas aplicáveis.
+  2. Mapear integralmente o fluxo atual.
+  3. Reproduzir a falha de forma controlada e autorizada.
+  4. Confirmar se a automação permanece ativa durante a intervenção.
+  5. Identificar a causa real, sem assumir que a suspeita inicial está correta.
+  6. Classificar o domínio como próprio ou de terceiro.
+  7. Verificar APIs e integrações oficiais.
+  8. Definir o contrato central de detecção, suspensão, handoff e retomada.
+  9. Implementar sessão humana adequada ao contexto.
+  10. Remover concorrência entre automação e operador.
+  11. Implementar validação objetiva antes da retomada.
+  12. Limitar retries e eliminar loops.
+  13. Centralizar configuração e comportamento comum.
+  14. Atualizar todos os submódulos.
+  15. Adicionar testes e observabilidade segura.
+  16. Executar validação regressiva.
+  17. Atualizar documentação e rastreabilidade.
+  18. Emitir relatório final.
+
+  ## Critérios de aceite
+
+  A tarefa somente estará concluída quando:
+  - desafios forem detectados sem tentativa automática de resolução;
+  - a automação cessar integralmente antes da intervenção;
+  - o operador atuar sem concorrência do controlador automatizado;
+  - houver handoff legítimo para sessão adequada ao uso humano;
+  - a retomada ocorrer somente após validação objetiva;
+  - bloqueios persistentes não gerarem loop nem evasão;
+  - integrações oficiais forem preferidas quando disponíveis;
+  - domínios próprios e de terceiros receberem tratamento distinto;
+  - nenhuma técnica de stealth, spoofing ou bypass tiver sido introduzida;
+  - sessões, tokens e dados sensíveis forem tratados com segurança;
+  - a lógica estiver centralizada;
+  - todos os submódulos aplicáveis utilizarem o mesmo contrato;
+  - testes cobrirem sucesso, falha, cancelamento, expiração e repetição do desafio;
+  - o comportamento permanecer compatível com as normas e os termos aplicáveis.
+
+  ## Relatório final
+
+  Registrar:
+  - causa raiz confirmada;
+  - tecnologias e fluxos inspecionados;
+  - estado da automação durante a intervenção antes e depois da correção;
+  - estratégia de handoff adotada;
+  - forma de preservação ou descarte de estado;
+  - integrações oficiais utilizadas;
+  - diferenças entre domínios próprios e de terceiros;
+  - arquivos e componentes alterados;
+  - submódulos migrados;
+  - testes executados;
+  - resultados;
+  - limitações externas inevitáveis;
+  - comprovação de que nenhuma técnica de evasão foi implementada.
