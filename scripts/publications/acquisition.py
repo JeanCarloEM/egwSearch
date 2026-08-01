@@ -189,6 +189,7 @@ class CatalogItem:
     edition: str = ""
     assets: tuple[CatalogAsset, ...] = ()
     segments: tuple[CatalogSegment, ...] = ()
+    local_complete: bool = False
 
     def publication_identity(self) -> PublicationIdentity:
         return publication_identity(
@@ -666,7 +667,14 @@ def write_markdown_publication(
     return markdown_paths, evidence
 
 
-def _xhtml(title: str, body: str, language: str) -> str:
+def _xhtml(
+    title: str,
+    body: str,
+    language: str,
+    *,
+    page_name: str,
+    running_header: str,
+) -> str:
     def inline(value: str) -> str:
         escaped = escape(value)
         escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
@@ -681,11 +689,24 @@ def _xhtml(title: str, body: str, language: str) -> str:
                 paragraphs.append(f"<h{level}>{inline(match.group(2))}</h{level}>")
                 continue
         paragraphs.append(f"<p>{inline(block)}</p>")
+    header_css = json.dumps(running_header, ensure_ascii=False)
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<!DOCTYPE html>\n'
         f'<html xmlns="http://www.w3.org/1999/xhtml" lang="{escape(language)}">'
-        f"<head><title>{escape(title)}</title></head><body>{''.join(paragraphs)}</body></html>"
+        f'<head><title>{escape(title)}</title>'
+        f'<meta name="egwsearch:running-header" content="{escape(running_header, quote=True)}"/>'
+        '<meta name="egwsearch:page-chrome" content="css-page-margin-boxes"/>'
+        '<style>'
+        f'@page {page_name}'
+        '{margin:16mm 14mm 18mm;'
+        f'@top-center{{content:{header_css};font-size:.75em;color:#555}}'
+        '@bottom-center{content:counter(page);font-size:.75em;color:#555}}'
+        f'@page {page_name}:first{{@top-center{{content:none}}}}'
+        f'body{{page:{page_name};}}'
+        '</style></head>'
+        f'<body epub:type="bodymatter" xmlns:epub="http://www.idpf.org/2007/ops">'
+        f"{''.join(paragraphs)}</body></html>"
     )
 
 
@@ -713,7 +734,7 @@ def _provenance_xhtml(item: CatalogItem, accessed_at: str) -> str:
         '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" '
         'xmlns:epub="http://www.idpf.org/2007/ops" '
         f'lang="{escape(item.language)}"><head><title>Nota de proveniência (não editorial)</title></head>'
-        '<body epub:type="colophon" class="non-editorial-provenance">'
+        '<body epub:type="frontmatter acknowledgments" class="non-editorial-provenance">'
         '<h1>Nota de proveniência (não editorial)</h1>'
         '<p>Esta nota foi acrescentada pelo gerador e não integra o conteúdo editorial da obra.</p>'
         f'<p>{escape(citation_prefix)}<a href="{escape(item.public_url, quote=True)}">'
@@ -756,7 +777,18 @@ def generate_epub(
             markdown = markdown_bytes.decode("utf-8")
         except UnicodeDecodeError as error:
             raise ContractError(f"Markdown nao UTF-8: {path.name}") from error
-        content = _xhtml(title, markdown, item.language)
+        segment_title = (
+            item.segments[index - 1].title
+            if index <= len(item.segments) and item.segments[index - 1].title
+            else title
+        )
+        content = _xhtml(
+            segment_title,
+            markdown,
+            item.language,
+            page_name=item_id,
+            running_header=segment_title,
+        )
         documents.append((name, content))
         markdown_sources.append((path.name, markdown_bytes))
         markdown_manifest.append(
@@ -771,7 +803,7 @@ def generate_epub(
             f'<item id="{item_id}" href="{name}" media-type="application/xhtml+xml"/>'
         )
         spine.append(f'<itemref idref="{item_id}"/>')
-        navigation.append(f'<li><a href="{name}">{escape(title)}</a></li>')
+        navigation.append(f'<li><a href="{name}">{escape(segment_title)}</a></li>')
     cover_navigation = '<li><a href="cover.xhtml">Capa</a></li>' if cover_bytes else ""
     provenance_navigation = '<li><a href="provenance.xhtml">Nota de proveniência (não editorial)</a></li>'
     nav = (
@@ -779,7 +811,7 @@ def generate_epub(
         '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" '
         'xmlns:epub="http://www.idpf.org/2007/ops">'
         f"<head><title>{escape(item.title_original)}</title></head>"
-        f'<body><nav epub:type="toc"><ol>{cover_navigation}{"".join(navigation)}{provenance_navigation}</ol></nav></body></html>'
+        f'<body><nav epub:type="toc"><h1>Sumário</h1><ol>{cover_navigation}{provenance_navigation}{"".join(navigation)}</ol></nav></body></html>'
     )
     cover_metadata = '<meta name="cover" content="cover-image"/>' if cover_bytes else ""
     cover_manifest = (
@@ -803,8 +835,9 @@ def generate_epub(
         "</metadata><manifest>"
         '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>'
         '<item id="provenance" href="provenance.xhtml" media-type="application/xhtml+xml"/>'
-        f'{cover_manifest}{"".join(manifest)}</manifest><spine>{cover_spine}{"".join(spine)}'
-        '<itemref idref="provenance"/></spine></package>'
+        f'{cover_manifest}{"".join(manifest)}</manifest><spine>{cover_spine}'
+        '<itemref idref="provenance"/><itemref idref="nav"/>'
+        f'{"".join(spine)}</spine></package>'
     )
     container = (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -962,14 +995,33 @@ def validate_generated_epub(
         provenance = archive.read("OEBPS/provenance.xhtml").decode("utf-8")
         if (
             "Nota de proveniência (não editorial)" not in provenance
-            or 'epub:type="colophon"' not in provenance
-            or opf.find('idref="provenance"') <= opf.find('idref="section-0001"')
+            or 'epub:type="frontmatter acknowledgments"' not in provenance
         ):
-            raise ContractError("nota nao editorial ausente ou fora da contracapa")
+            raise ContractError("nota nao editorial inicial ausente")
+        provenance_position = opf.find('idref="provenance"')
+        nav_position = opf.find('idref="nav"')
+        first_section_position = opf.find('idref="section-0001"')
+        if not (0 <= provenance_position < nav_position < first_section_position):
+            raise ContractError("proveniencia e sumario fora da ordem inicial")
         if expected_public_url is not None and f'href="{escape(expected_public_url, quote=True)}"' not in provenance:
             raise ContractError("nota nao editorial sem URL oficial")
         if expected_accessed_at is not None and _abnt_access_date(expected_accessed_at) not in provenance:
             raise ContractError("nota nao editorial sem data de acesso")
+        for section_name in sections:
+            section = archive.read(section_name).decode("utf-8")
+            section_id = Path(section_name).stem
+            body_match = re.search(r"<body\b[^>]*>(.*?)</body>", section, re.DOTALL)
+            if (
+                body_match is None
+                or '<meta name="egwsearch:running-header"' not in section
+                or '<meta name="egwsearch:page-chrome" content="css-page-margin-boxes"/>' not in section
+                or f"@page {section_id}" not in section
+                or "@top-center{content:" not in section
+                or "@bottom-center{content:counter(page)" not in section
+                or f"@page {section_id}:first{{@top-center{{content:none}}}}" not in section
+                or re.search(r"<(?:header|footer)\b", body_match.group(1))
+            ):
+                raise ContractError("cabecalho ou rodape paginado divergente")
         if expected_cover_sha256 is not None:
             if not {"OEBPS/cover.png", "OEBPS/cover.xhtml"}.issubset(names):
                 raise ContractError("EPUB derivado sem capa")

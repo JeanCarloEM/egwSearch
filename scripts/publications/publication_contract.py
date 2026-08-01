@@ -88,9 +88,10 @@ class PublicationIdentity:
     route_slug: str
 
     def relative_directory(self) -> Path:
-        parts = [self.author, self.language]
+        parts = []
         if self.category != self.author:
             parts.append(self.category)
+        parts.extend((self.author, self.language))
         parts.extend((self.publication_type, self.route_slug))
         return Path(*parts)
 

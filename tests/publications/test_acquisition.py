@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 import tempfile
 import unittest
@@ -77,8 +78,8 @@ class IdentityAndCatalogTests(unittest.TestCase):
         identity = items[0].publication_identity()
         self.assertEqual(identity.category, "pioneiros")
         self.assertEqual(
-            identity.relative_directory().parts[2],
-            "pioneiros",
+            identity.relative_directory().as_posix(),
+            "pioneiros/alonzo-trevier-jones/pt-br/livros/estudos-sobre-a-fe",
         )
         metadata = build_source_v3(items[0], "completed", [{"format": "epub", "url": "https://example.test/a.epub"}])
         self.assertEqual(metadata["identity"]["category_original"], "Biblioteca dos Pioneiros Adventistas")
@@ -255,14 +256,27 @@ class TextAndEpubTests(unittest.TestCase):
                 provenance = archive.read("OEBPS/provenance.xhtml").decode("utf-8")
                 self.assertLess(
                     opf.find('idref="cover-page"'),
-                    opf.find('idref="section-0001"'),
-                )
-                self.assertGreater(
                     opf.find('idref="provenance"'),
+                )
+                self.assertLess(
+                    opf.find('idref="provenance"'),
+                    opf.find('idref="nav"'),
+                )
+                self.assertLess(
+                    opf.find('idref="nav"'),
                     opf.find('idref="section-0001"'),
                 )
                 self.assertIn("Nota de proveniência (não editorial)", provenance)
                 self.assertIn(item.public_url, provenance)
+                self.assertIn('epub:type="frontmatter acknowledgments"', provenance)
+                section = archive.read("OEBPS/section-0002.xhtml").decode("utf-8")
+                body = re.search(r"<body\b[^>]*>(.*?)</body>", section, re.DOTALL)
+                self.assertIsNotNone(body)
+                self.assertIn('content="Capítulo 1"', section)
+                self.assertIn('@top-center{content:"Capítulo 1"', section)
+                self.assertIn('@bottom-center{content:counter(page)', section)
+                self.assertIn('@page section-0002:first{@top-center{content:none}}', section)
+                self.assertNotRegex(body.group(1), r"<(?:header|footer)\b")
                 self.assertIn('@page{margin:0;padding:0}', cover_page)
                 self.assertIn('epub:type="cover"', cover_page)
                 self.assertIn('width="100%" height="100%"', cover_page)

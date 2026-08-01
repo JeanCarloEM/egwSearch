@@ -35,7 +35,7 @@ O acronimo do titulo DEVE derivar apenas de suas palavras normalizadas: titulo d
 
 ## 2. Paths e colisoes
 
-A raiz local é `src/publications/`; cada grupo DEVE ocupar `<author-key>/<language-path>/[<category>/]<type>/<slug-titulo>/`; `category` DEVE ser código curto explícito em PT-BR e URI-safe, aplicável também à coleção inglesa, e o segmento DEVE ser omitido somente quando igual a `author-key`. [3c94152]
+A raiz local é `src/publications/`; cada grupo DEVE ocupar `[<category>/]<author-key>/<language-path>/<type>/<slug-titulo>/`; `category` DEVE anteceder o autor como agrupamento semântico, usar código curto explícito em PT-BR e URI-safe também na coleção inglesa, e ser omitida somente quando igual a `author-key`. [961ffd0]
 O rótulo remoto original e o código da categoria DEVEM integrar metadado e identidade estável; ausência, categoria arbitrária ou inferência por título/autor DEVEM bloquear aquisição. [3c94152]
 Para Ellen G. White,
 `author-key` permanece `egw`; autores pioneiros NÃO DEVEM ser gravados sob [3301a97]
@@ -343,8 +343,11 @@ Reexecução sem mudança DEVE validar e reutilizar capa e EPUB; `--revalidate` 
 O EPUB textual DEVE manter documentos XHTML semânticos no spine e armazenar fora dele os bytes Markdown intermediários, acompanhados de manifesto versionado com nome, ordem e SHA-256. [3c94152]
 Uma operação de restauração DEVE validar paths, cardinalidade, ordem e hashes do manifesto e recriar os `.md` byte a byte sem interpretar o XHTML. [3c94152]
 Os `.md` externos somente PODEM ser removidos após validação integral do EPUB e round trip de restauração em runtime temporário; qualquer falha DEVE preservar os arquivos e bloquear conclusão. [3c94152]
-O último item do spine DEVE ser uma página `epub:type="colophon"`, rotulada “Nota de proveniência (não editorial)”, separada das fontes Markdown e do corpo editorial. [3c94152]
-A nota DEVE registrar autor, título, plataforma EGW Writings, URL oficial e data de acesso em forma de referência ABNT, usando data da aquisição efetiva e sem inventar local, editora ou data de publicação ausentes. [3c94152]
+A página `provenance.xhtml` DEVE suceder imediatamente à capa no spine e anteceder o sumário e qualquer conteúdo, usar `epub:type="frontmatter acknowledgments"` e permanecer separada das fontes Markdown e do corpo editorial. [616e131]
+A nota DEVE registrar autor, título, plataforma EGW Writings, URL oficial clicável e data de acesso em forma de referência ABNT, usando data da aquisição efetiva e sem inventar local, editora ou data de publicação ausentes. [616e131]
+O sumário navegável DEVE integrar o spine depois da proveniência e antes da primeira seção editorial. [616e131]
+Cada documento de conteúdo DEVE declarar cabeçalho corrente contextual conforme o título editorial da unidade — inclusive capítulo/seção, edição de periódico ou dia de meditação quando essa for a autoridade disponível — e rodapé com `counter(page)` por caixas de margem CSS `@page`, sem inserir `header` ou `footer` no corpo XHTML indexável. [616e131]
+A pseudo-página `:first` de cada capítulo, seção ou unidade equivalente DEVE suprimir o cabeçalho corrente e manter o rodapé numerado. [616e131]
 Metadado de segmentos DEVE referenciar paths internos do EPUB e a validação incremental DEVE comprovar os hashes diretamente no contêiner, sem depender de `.md` externo. [3c94152]
 
 ## 9. Segurança, validação e fronteira

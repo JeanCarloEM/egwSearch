@@ -1961,11 +1961,34 @@
   proporção DEVE usar recorte central mínimo, preservando a proporção e sem
   deformar a imagem.
 
-  O path canônico DEVE incorporar um diretório adicional de categoria entre
-  idioma e tipo. A categoria DEVE vir da classificação editorial da coleção no
+  O path canônico DEVE incorporar um diretório adicional de categoria antes do
+  autor, agrupando autores pela classificação editorial da coleção no
   site de origem, preservar seu rótulo em metadados e projetá-lo pelo slug URI
   comum; NÃO PODE ser inferida por título ou autoria.
 
   O diretório categórico DEVE usar código curto em PT-BR também para coleções
   inglesas (`pioneiros`, `comentarios` etc.). Quando esse código for igual ao
   `author-key` — caso `egw` — sua duplicação no path DEVE ser omitida.
+
+  A proveniência ABNT com URL oficial clicável DEVE aparecer entre capa e
+  sumário. Após o sumário, conteúdo DEVE usar cabeçalho contextual e rodapé
+  numerado fora do corpo XHTML indexável; a primeira página de cada capítulo,
+  seção ou unidade equivalente NÃO DEVE exibir cabeçalho.
+
+  Evidência superveniente: a navegação da obra `14623` foi corrigida e
+  concluiu 12 unidades; o `og:image` oficial responde conclusivamente
+  `404 Cover not found`. A decisão humana autorizou capa técnica determinística
+  e explicitamente não editorial somente nessa ausência estruturada.
+
+  Depois de obter e normalizar a lista da coleção, o coletor DEVE validar a
+  publicação local inteira antes de qualquer acesso específico da obra. Quando
+  PDF/EPUB, capa aplicável, metadado, derivados e fontes reversíveis estiverem
+  completos e íntegros, DEVE registrar `skipped` sem abrir página, texto, capa
+  ou ativo remoto; unidade incompleta, inválida ou executada com `--revalidate`
+  continua no fluxo remoto normal.
+
+  Concluído no commit material `90dda8a`: a obra pública `14623` produziu capa
+  técnica não editorial, EPUB válido com 12 fontes Markdown reversíveis, nota
+  ABNT antes do sumário e nenhum `.md` externo. A repetição consultou somente o
+  catálogo, registrou `PUBLICATION_LOCAL_VALID`/`ITEM_SKIPPED` e não abriu a
+  página, texto, capa, EPUB ou PDF da obra.

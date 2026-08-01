@@ -112,45 +112,26 @@ def _iter_legacy_files(source_root: Path) -> Iterable[tuple[str, str, str, Path]
 def _iter_canonical_directories(
     source_root: Path,
 ) -> Iterable[tuple[str, str, str, str, Path]]:
-    for author_directory in sorted(source_root.iterdir(), key=lambda item: item.name.casefold()):
-        if not author_directory.is_dir():
-            continue
-        for language_directory in sorted(
-            author_directory.iterdir(), key=lambda item: item.name.casefold()
+    for candidate in sorted(
+        (item for item in source_root.rglob("*") if item.is_dir()),
+        key=lambda item: item.as_posix().casefold(),
+    ):
+        if not any(
+            item.is_file()
+            and (item.name.endswith(".source.json") or item.suffix.casefold() in {".pdf", ".epub"})
+            for item in candidate.iterdir()
         ):
-            if not language_directory.is_dir():
-                continue
-            for category_or_type in sorted(
-                language_directory.iterdir(), key=lambda item: item.name.casefold()
-            ):
-                if not category_or_type.is_dir():
-                    continue
-                children = sorted(
-                    category_or_type.iterdir(), key=lambda item: item.name.casefold()
-                )
-                for candidate in children:
-                    if candidate.is_dir() and any(item.is_file() for item in candidate.iterdir()):
-                        yield (
-                            author_directory.name,
-                            language_directory.name,
-                            "geral",
-                            category_or_type.name,
-                            candidate,
-                        )
-                for type_directory in children:
-                    if not type_directory.is_dir():
-                        continue
-                    for candidate in sorted(
-                        type_directory.iterdir(), key=lambda item: item.name.casefold()
-                    ):
-                        if candidate.is_dir() and any(item.is_file() for item in candidate.iterdir()):
-                            yield (
-                                author_directory.name,
-                                language_directory.name,
-                                category_or_type.name,
-                                type_directory.name,
-                                candidate,
-                            )
+            continue
+        parts = candidate.relative_to(source_root).parts
+        if len(parts) == 4:
+            author, language, publication_type, _slug = parts
+            yield author, language, "geral", publication_type, candidate
+        elif len(parts) == 5 and re.fullmatch(r"[a-z]{2,3}(?:-[a-z0-9]{2,8})*", parts[2]):
+            category, author, language, publication_type, _slug = parts
+            yield author, language, category, publication_type, candidate
+        elif len(parts) == 5 and re.fullmatch(r"[a-z]{2,3}(?:-[a-z0-9]{2,8})*", parts[1]):
+            author, language, category, publication_type, _slug = parts
+            yield author, language, category, publication_type, candidate
 
 
 def _canonical_kind(path: Path, acronym: str) -> str | None:
@@ -224,7 +205,13 @@ def _build_canonical_plan(
             title = identity.title
             slug = identity.route_slug
             acronym = identity.acronym
-        target_directory = Path(author, language, category, publication_type, slug).as_posix()
+        target_directory = publication_identity(
+            author,
+            language,
+            publication_type,
+            title or directory.name,
+            category=category,
+        ).relative_directory().as_posix()
         descriptor = {
             "author": author,
             "language": language,

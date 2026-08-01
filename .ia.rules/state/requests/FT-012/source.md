@@ -84,3 +84,73 @@ O rótulo remoto continuará preservado como evidência, mas o path usará códi
 curto explícito em português. Quando categoria e autor forem ambos `egw`, o
 segmento não será duplicado; para autores pioneiros haverá `pioneiros/` antes
 do tipo. A mesma tabela semântica valerá para coleções em inglês.
+
+## Ajuste de 2026-08-01 — categoria antes do autor
+
+> Os diretórios `pioneiros` e equivalentes devem anteceder o nome do autor na
+> estrutura e no slug, como subcategoria organizacional.
+
+A projeção canônica passa a ser
+`[<categoria>/]<autor>/<idioma>/<tipo>/<slug-titulo>/`. A omissão quando
+categoria e autor forem idênticos continua evitando a duplicação `egw/egw`.
+
+## Ajuste de 2026-08-01 — procedência e paginação editorial
+
+> A referência ABNT com link oficial deve aparecer no início, para permitir
+> validação imediata. Depois do sumário, páginas de conteúdo devem usar
+> cabeçalho contextual e rodapé numerado; a página de abertura de capítulo ou
+> equivalente não deve exibir cabeçalho.
+
+O EPUB refluível usará a ordem `capa -> proveniência -> sumário -> conteúdo`.
+Cabeçalhos e números serão conteúdo gerado em caixas de margem CSS paginada,
+fora do corpo XHTML, para não integrar o texto editorial consumido por parser,
+indexador, tokenizador ou LLM. A primeira página de cada unidade suprimirá o
+cabeçalho, preservando o contador no rodapé.
+
+## Evidência superveniente de 2026-08-01 — navegação e capa inexistente
+
+> `TEXT_DISCOVERY_PROGRESS book=14623 units=1 complete=false`
+> `ERRO_CONTRATO: navegação editorial anterior/próximo divergente`
+
+A execução pública controlada comprovou que uma página pode apontar em
+`rel=prev` para o identificador do primeiro bloco editorial da página anterior,
+em vez da rota pela qual ela foi acessada. A correção passou a reconhecer essas
+duas identidades somente quando ambas pertencem à mesma obra e página; a obra
+`14623` então concluiu sua cadeia real com 12 unidades.
+
+Na fase seguinte, o `og:image` oficial da mesma obra declarou
+`https://a.egwwritings.org/covers/14623?type=large`, mas o próprio endpoint
+respondeu conclusivamente `404`, `application/problem+json` e
+`detail="Cover not found"`; as variantes oficiais conhecidas também não
+oferecem imagem válida. O RCF vigente bloqueia `completed` nessa condição. A
+decisão entre manter o bloqueio ou reconhecer metadado remoto quebrado como
+ausência comprovada de capa exige confirmação humana antes de evolução
+comportamental.
+
+## Decisão e ajuste de 2026-08-01 — ausência oficial e preflight integral
+
+> sim, está funcional. O script baixar deve evitar disperdiçar requisições http
+> com publicações que já existam, ou seja, se ele conseguiu uma lista de
+> publicações de determinado autor, fez a normalização, e a publicação já existe
+> localmente (íntegra, verificável e válida), não há necessidade de gastar
+> recursos e, muito menos acessar o servidor e potencialmente acionar mecanismo
+> de prevenção de ataques. Corrija este ponto, faça o merge com main/master e
+> push.
+>
+> isso se aplica, não apenas a logo mas a própria publicação epub/pdf.
+
+O “sim” autoriza a evolução solicitada para a ausência oficial comprovada de
+capa da obra `14623`. O preflight passa a ocorrer entre a listagem normalizada e
+o enriquecimento individual: somente uma publicação inteira validada pode ser
+dispensada, abrangendo PDF, EPUB, capa, metadado, derivados e fontes reversíveis.
+Uma unidade incompleta ou inválida continua no fluxo remoto, e `--revalidate`
+permanece como opt-in humano para conferência condicional.
+
+## Evidência de conclusão de 2026-08-01
+
+A execução controlada de `14623` terminou `completed`, com 12 segmentos, um
+EPUB derivado e `cover.png` técnico originado exclusivamente do `404` oficial
+estruturado. A validação do contêiner confirmou a ordem de spine `capa ->
+proveniência -> sumário -> 12 seções`, URL oficial na nota não editorial, 12
+Markdown internos e zero `.md` externo. A repetição terminou `skipped`, com
+`downloaded=0`, `extracted=0`, `converted=0` e sem navegação específica da obra.

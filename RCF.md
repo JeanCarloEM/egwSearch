@@ -613,7 +613,7 @@ Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio p
 
 A origem local DEVE ser `./src/publications/` e a raiz publica DEVE ser `/publications/`.
 
-Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/[<categoria>/]<tipo>/<slug-titulo>/`, onde `<categoria>` é código URI curto em PT-BR da classificação editorial oficial, omitido somente quando igual ao autor, `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial. [297d5bc]
+Cada publicacao DEVE ocupar `/publications/[<categoria>/]<acronimo-autor>/<language>/<tipo>/<slug-titulo>/`, onde `<categoria>` é código URI curto em PT-BR da classificação editorial oficial e antecede o autor como agrupamento semântico, omitido somente quando igual ao autor, `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial. [27b8f8d]
 
 O rótulo original da categoria DEVE ser preservado nos metadados e seu código de path DEVE vir de mapeamento explícito, curto e URI-safe em PT-BR, inclusive para coleções inglesas; categoria NÃO PODE ser inferida do título ou autor, e ausência de autoridade classificatória DEVE bloquear aquisição material. [297d5bc]
 
@@ -983,18 +983,25 @@ somente o DOM final depois da rolagem NÃO comprova completude. [be82602]
 A execução DEVE registrar contagem observada, [be82602]
 identidades únicas e critério objetivo de término. [be82602]
 
-Cada publicação DEVE ser enriquecida pela sua página individual. [be82602]
+Cada publicação ainda ausente, incompleta, inválida ou sujeita a revalidação
+explícita DEVE ser enriquecida pela sua página individual. [d52b5eb]
 Todos os links habilitados de PDF e EPUB ali expostos DEVEM integrar o conjunto [be82602]
 obrigatório; link ausente no cartão, botão desabilitado ou `href="#"` NÃO [be82602]
 constitui ativo. [be82602]
 Falha em descobrir, baixar ou validar qualquer ativo habilitado impede
 `completed`. [be82602]
 
+Imediatamente depois de enumerar e normalizar o catálogo, mas antes de abrir a página individual, percorrer leitura, consultar capa ou acessar ativo, o coletor DEVE confrontar o identificador remoto com as publicações locais `completed`. [d52b5eb]
+A dispensa de rede específica da obra somente PODE ocorrer quando identidade, metadado, conjunto de fontes e derivados, tamanhos, assinaturas, hashes, segmentos reversíveis, EPUB e capa aplicável forem integralmente verificados; qualquer ausência, divergência, ambiguidade ou arquivo não canônico exige o fluxo remoto normal. [d52b5eb]
+Essa verificação DEVE abranger a publicação inteira, inclusive todos os PDF e EPUB registrados, `cover.png`, metadados e derivados, e registrar `skipped` sem alterar seus bytes. [d52b5eb]
+O catálogo da coleção PODE ser acessado uma vez para conhecer o conjunto vigente, mas uma publicação local válida NÃO DEVE provocar requisição de sua página, texto, capa, PDF ou EPUB, salvo opção humana explícita de revalidação. [d52b5eb]
+
 Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [be82602]
 URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
 término declarado. [be82602]
-A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [be82602]
-anterior/próximo coerentes e preservar todos os blocos editoriais identificados
+A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [495e8c4]
+anterior/próximo coerentes — considerando equivalentes a rota da página e a
+rota do primeiro bloco editorial comprovado da mesma página — e preservar todos os blocos editoriais identificados
 no contêiner de leitura, inclusive headings, parágrafos, listas, tabelas, notas,
 ênfases, links e quebras semanticamente materiais. [be82602]
 
@@ -1020,12 +1027,15 @@ sem autorizar coleta em massa. [be82602]
 
 Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da mesma obra, inclusive `og:image`, DEVE ser adquirida como fonte editorial e NÃO PODE ser substituída por imagem inferida por título, semelhança ou posição. [297d5bc]
 A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [297d5bc]
-Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [297d5bc]
+Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`, exceto quando o endpoint oficial responder conclusivamente `404` em documento estruturado com `detail="Cover not found"`. [d52b5eb]
+Somente nessa ausência oficial comprovada o coletor DEVE gerar `cover.png` técnico determinístico, identificá-lo visualmente como capa técnica não editorial, usar apenas identidade e título comprovados da própria obra e registrar URL, status, detalhe, instante de acesso e método da derivação; timeout, contenção, `403`, `5xx`, HTML, resposta vazia ou outro `404` NÃO autorizam o fallback. [d52b5eb]
+A capa técnica NÃO PODE reutilizar imagem de outra edição, inferir arte por semelhança nem integrar o texto editorial/indexável. [d52b5eb]
 A página de capa DEVE ser o primeiro e exclusivo item visual do EPUB, sem margens, faixas ou texto, preenchendo toda a viewport de borda a borda; diferença de proporção DEVE preservar a imagem por escala proporcional com recorte central, nunca por deformação. [297d5bc]
 
 O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [297d5bc]
 Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [297d5bc]
-Uma página final `colophon` DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [297d5bc]
+Uma página inicial de proveniência, imediatamente após a capa e antes do sumário, DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial clicável e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [f4b4563]
+Depois da proveniência e do sumário, cada seção de conteúdo DEVE declarar cabeçalho corrente contextual e rodapé com contador de página por caixas de margem paginada, fora do corpo XHTML indexável; a primeira página de capítulo, seção ou unidade equivalente DEVE suprimir o cabeçalho, mas preservar a numeração no rodapé. [f4b4563]
 
 ## 43. Indice global
 

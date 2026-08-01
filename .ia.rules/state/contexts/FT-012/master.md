@@ -5,7 +5,8 @@
 - FT: `FT-012`.
 - tipo: `implementacao_codigo` com correção normativa causal.
 - fonte: `.ia.rules/state/requests/FT-012/source.md`.
-- estado: reaberta para aprimoramento de capa editorial.
+- estado: reaberta em implementação autorizada do fallback técnico e do
+  preflight integral anterior ao enriquecimento remoto.
 - autorização: solicitação humana explícita para corrigir e concluir a
   funcionalidade real de `baixar.py`.
 
@@ -36,6 +37,8 @@ capa oficialmente declarada para a obra.
    proveniência inequivocamente não editorial em estilo ABNT.
 9. projetar a categoria editorial declarada pela coleção oficial como segmento
    URI adicional do diretório canônico, preservando também seu rótulo original.
+10. posicionar a proveniência ABNT antes do sumário e aplicar cabeçalhos
+    contextuais e rodapés numerados por paginação CSS fora do corpo editorial.
 
 ## Invariantes
 
@@ -60,9 +63,13 @@ capa oficialmente declarada para a obra.
 - categoria preserva o rótulo oficial configurado e usa código URI curto
   explícito em PT-BR (`egw`, `pioneiros`, `comentarios` etc.); ausência ou
   categoria inválida bloqueia a aquisição, sem inferência por título ou autor.
-- o segmento categórico é omitido somente quando repetir exatamente o
-  `author-key`, evitando `egw/.../egw/`; coleções inglesas usam os mesmos códigos
-  semânticos em PT-BR.
+- o segmento categórico antecede o `author-key` e é omitido somente quando o
+  repetir exatamente, evitando `egw/egw/...`; coleções inglesas usam os mesmos
+  códigos semânticos em PT-BR.
+- a ordem inicial é capa, proveniência ABNT com URL clicável, sumário e
+  conteúdo; somente as seções de conteúdo recebem caixas de margem paginada.
+- a primeira página de cada seção não tem cabeçalho; o rodapé numerado permanece
+  e nenhum cabeçalho/rodapé integra o corpo XHTML indexável.
 
 ## Aceite global
 
@@ -81,7 +88,7 @@ capa oficialmente declarada para a obra.
 - primeira página do EPUB contém exclusivamente a capa e preenche toda a área
   visível, comprovada no XHTML interno por layout sem margens e escala `slice`.
 - destino canônico segue
-  `<autor>/<idioma>/[<categoria>/]<tipo>/<slug-titulo>/`, omitindo a categoria
+  `[<categoria>/]<autor>/<idioma>/<tipo>/<slug-titulo>/`, omitindo a categoria
   apenas quando igual ao autor; metadados/índice sempre preservam rótulo e código.
 
 ## Resultado
@@ -107,7 +114,7 @@ capa oficialmente declarada para a obra.
   página EPUB exclusiva e borda a borda, 31 fontes Markdown reversíveis
   internas, zero `.md` externo e contracapa ABNT não editorial;
 - categorias de coleção preservam rótulo remoto e código curto em PT-BR;
-  pioneiros usam `pioneiros/`, enquanto `egw` não é duplicado após o autor;
+  pioneiros usam `pioneiros/<autor>/`, enquanto `egw` não é duplicado;
 - amostra pública `14389` revalidada no novo path com 13 obras enumeradas,
   31 unidades extraídas, zero falha/revisão e reexecução idempotente `skipped`;
 - 53 testes Python, três testes Node, compilação Python, bootstrap/check,
@@ -115,3 +122,28 @@ capa oficialmente declarada para a obra.
 - commits do aprimoramento material e da sincronização: `297d5bc` e `b933ecd`.
 - integração publicada em `main` pelo merge `186bc2b`, com `dev` convergida à
   mesma história e a publicação gerada preservada fora do Git.
+- refinamento estrutural `27b8f8d` move categorias diferentes do autor para o
+  primeiro segmento, adapta o migrador aos dois layouts e preserva rollback.
+- refinamento editorial `f4b4563` antecipa a proveniência, inclui o sumário no
+  spine e separa cabeçalhos/rodapés do texto por caixas de margem CSS paginada.
+- correção `486883c` reconhece como equivalentes a rota da página e a rota de
+  seu primeiro bloco editorial na validação anterior/próximo; a obra `14623`
+  concluiu 12 unidades na amostra pública.
+- decisão humana: o `404 Cover not found` estruturado autoriza exclusivamente
+  uma capa técnica determinística, explicitamente não editorial e sem imagem de
+  outra edição; demais falhas de capa continuam bloqueantes.
+- ajuste final: depois da listagem normalizada, publicação local `completed`
+  somente será ignorada se a unidade inteira — PDF/EPUB, capa, metadado,
+  derivados e fontes reversíveis — for íntegra e verificável, sem qualquer
+  acesso HTTP específico da obra; `--revalidate` força o fluxo remoto.
+- implementação material: `90dda8a168bfe30b16fdb301abdb529d4d52b5eb`;
+  o fallback aceita apenas `application/json` ou `application/problem+json`
+  com `detail="Cover not found"`, enquanto HTML e demais falhas continuam
+  bloqueados.
+- validação pública final: `14623` concluída com capa técnica inspecionada,
+  12 segmentos, EPUB válido, proveniência ABNT anterior ao sumário, 12 fontes
+  Markdown internas e zero `.md` externo; repetição registrou
+  `PUBLICATION_LOCAL_VALID` e `ITEM_SKIPPED`, sem acesso específico da obra.
+- suíte final: 58 testes Python, três testes Node, `py_compile` e
+  `publications:check` aprovados; arquivos gerados permanecem não rastreados.
+- estado: concluída e pronta para integração de `dev` em `main` e push.

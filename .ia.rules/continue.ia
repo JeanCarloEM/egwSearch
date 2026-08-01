@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-01T16:43:40-03:00`.
+Atualizado_em: `2026-08-01T20:57:32-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-012 concluída; integração `dev` → `main` autorizada.
+Escopo_atual: FT-012 concluída; integração de dev em main e push pendentes.
 Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
 Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -238,7 +238,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-008/source.txt`
 - escopo: Tecnico
 - prioridade: alta
-- status: concluída
+- status: concluída com refinamento estrutural
 - objetivo: adaptar e normatizar `scripts/publications/baixar.py` para reutilizar preferencialmente uma única guia visível com perfil persistente durante descoberta remota, aguardando intervenção humana legítima em desafios sem contorno.
 - dependencias: FT-006 e FT-007 concluídas.
 - nao_escopo: resolver CAPTCHA automaticamente, burlar controles, aumentar volume de coleta, executar coleta ampla ou resolver a decisão editorial da FT-004/03.
@@ -334,10 +334,24 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   31 fontes reversíveis internas, zero `.md` externo e categoria `pioneiros`;
   53 testes Python, três Node, compilação, bootstrap/check e RCF aprovados;
   `agent:verify` conserva o diagnóstico preexistente `TSCONFIG_AUSENTE`.
-- commits: `ca12610`, `36fa333`, `2ed0d43`, `279e2ef`, `297d5bc` e `b933ecd`.
-- pendencias: nenhuma na FT-012; publicação real permanece não rastreada e
-  runtime ignorado por determinação humana.
+- commits: `ca12610`, `36fa333`, `2ed0d43`, `279e2ef`, `297d5bc`, `b933ecd` e
+  `486883c`.
+- pendencias: integrar `dev` em `main` e publicar; publicações reais permanecem
+  não rastreadas e runtime ignorado por determinação humana.
 - decisao: a conversão Markdown gera somente EPUB; PDF é opcional e futuro.
 - integracao: `dev` incorporada em `main` pelo merge `186bc2b`; referências
   remotas publicadas e convergentes.
-- proximo_ponto: nenhuma pendência na FT-012.
+- refinamento_estrutura: commit material `27b8f8d`; categoria diferente do
+  autor antecede `author-key`, migrador aceita o layout anterior e o novo, e a
+  publicação real foi movida com hashes preservados sem entrar no Git.
+- refinamento_epub: commit material `f4b4563`; proveniência ABNT antecede o
+  sumário, e conteúdo usa cabeçalho contextual e rodapé numerado fora do corpo
+  XHTML, com cabeçalho suprimido na primeira página de cada unidade.
+- refinamento_final: commit material `90dda8a`; ausência oficial estruturada
+  gera capa técnica determinística e não editorial, e publicação local inteira
+  validada após o catálogo dispensa toda requisição específica da obra.
+- validacao_final: obra `14623` concluída com 12 segmentos e EPUB reversível;
+  repetição `skipped` sem página/texto/capa/ativos; 58 testes Python, três Node,
+  compilação e bootstrap aprovados.
+- proximo_ponto: após confirmação humana, manter bloqueio ou evoluir o RCF para
+  tratar o `404 Cover not found` como ausência comprovada sem inventar capa.

@@ -50,12 +50,16 @@ class PublicationContractTests(unittest.TestCase):
         )
         self.assertEqual(
             identity.relative_directory().as_posix(),
-            "egw/pt-br/geral/livros/atos-dos-apostolos-nova-edicao",
+            "geral/egw/pt-br/livros/atos-dos-apostolos-nova-edicao",
         )
         categorized = publication_identity(
             "egw", "pt-br", "comentarios", "Daniel", category="Comentários Bíblicos"
         )
         self.assertEqual(categorized.category, "comentarios-biblicos")
+        self.assertEqual(
+            categorized.relative_directory().as_posix(),
+            "comentarios-biblicos/egw/pt-br/comentarios/daniel",
+        )
         egw = publication_identity("egw", "en", "books", "Education", category="egw")
         self.assertEqual(egw.relative_directory().as_posix(), "egw/en/books/education")
         self.assertEqual(uri_slug('A: B/C?'), "a-bc")
