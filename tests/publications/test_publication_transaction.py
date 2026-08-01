@@ -104,9 +104,23 @@ class PublicationTransactionTests(unittest.TestCase):
             committed = set(
                 _git(root, "show", "--pretty=format:", "--name-only", commit).splitlines()
             )
-            self.assertEqual(committed, {path.as_posix() for path in allowlist})
+            self.assertEqual(
+                committed,
+                {
+                    *(path.as_posix() for path in allowlist),
+                    "src/publications/acquisition-index.json",
+                },
+            )
             self.assertIn("?? unrelated.txt", _git(root, "status", "--short"))
             self.assertEqual(ledger.get(item.stable_key())["commit"], commit)
+            index = json.loads(
+                (root / "src" / "publications" / "acquisition-index.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(index["publications"][0]["remote_id"], "42")
+            self.assertIsNone(publisher.commit(item, allowlist, ledger))
+            self.assertEqual(_git(root, "rev-list", "--count", "HEAD"), "2")
 
     def test_runtime_partial_blocks_completeness(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

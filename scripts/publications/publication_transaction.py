@@ -243,11 +243,103 @@ class GitPublicationPublisher:
         source_root: Path,
         lock_path: Path,
         branch: str = "dev",
+        index_path: Path | None = None,
     ) -> None:
         self.repository_root = repository_root.resolve()
         self.source_root = source_root.resolve()
         self.lock_path = lock_path.resolve()
         self.branch = branch
+        self.index_path = (
+            index_path.resolve()
+            if index_path is not None
+            else (self.source_root / "acquisition-index.json").resolve()
+        )
+        if not _inside(self.index_path, self.source_root):
+            raise PublicationTransactionError("índice de aquisição fora da fonte")
+
+    def _index_entry(self, item: CatalogItem, paths: list[Path]) -> dict:
+        directory = self.source_root / item.publication_identity().relative_directory()
+        metadata = _read_metadata(directory / item.publication_identity().metadata_name())
+        formats = []
+        for record in metadata["sources"] + metadata["derivations"]:
+            publication_format = record.get("format")
+            hashes = record.get("hashes") or {}
+            if publication_format not in {"pdf", "epub"}:
+                continue
+            if not re.fullmatch(r"[0-9a-f]{64}", str(hashes.get("sha256") or "")):
+                raise PublicationTransactionError("índice recebeu formato sem SHA-256")
+            formats.append(
+                {
+                    "format": publication_format,
+                    "sha256": hashes["sha256"],
+                }
+            )
+        formats = sorted(
+            {value["format"]: value for value in formats}.values(),
+            key=lambda value: ("pdf", "epub").index(value["format"]),
+        )
+        if not formats:
+            raise PublicationTransactionError("publicação sem formato indexável")
+        identity = metadata["identity"]
+        return {
+            "id": f"{identity['author_key']}:{identity['language_path']}:{identity['type']}:{identity['remote_id']}",
+            "remote_id": identity["remote_id"],
+            "title": identity["title_normalized"],
+            "author_key": identity["author_key"],
+            "language": identity["language"],
+            "type": identity["type"],
+            "path": directory.relative_to(self.repository_root).as_posix(),
+            "files": sorted(path.as_posix() for path in paths),
+            "formats": formats,
+        }
+
+    def _update_index(self, item: CatalogItem, paths: list[Path]) -> bytes | None:
+        previous = self.index_path.read_bytes() if self.index_path.is_file() else None
+        if previous is None:
+            document = {
+                "schema_version": "publication-acquisition-index/v1",
+                "generator": "egwSearch/publication_transaction.py/v1",
+                "publications": [],
+            }
+        else:
+            try:
+                document = json.loads(previous.decode("utf-8-sig"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as error:
+                raise PublicationTransactionError("índice de aquisição inválido") from error
+            if set(document) != {"schema_version", "generator", "publications"} or document[
+                "schema_version"
+            ] != "publication-acquisition-index/v1" or not isinstance(
+                document["publications"], list
+            ):
+                raise PublicationTransactionError("contrato do índice de aquisição divergente")
+        entry = self._index_entry(item, paths)
+        retained = [value for value in document["publications"] if value.get("id") != entry["id"]]
+        retained.append(entry)
+        document["publications"] = sorted(
+            retained,
+            key=lambda value: (
+                value["title"].casefold(),
+                value["author_key"],
+                value["language"],
+                value["type"],
+                value["remote_id"],
+            ),
+        )
+        payload = (json.dumps(document, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+        if payload != previous:
+            self.index_path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = self.lock_path.parent / f"acquisition-index.{os.getpid()}.tmp"
+            temporary.write_bytes(payload)
+            os.replace(temporary, self.index_path)
+        return previous
+
+    def _restore_index(self, previous: bytes | None) -> None:
+        if previous is None:
+            self.index_path.unlink(missing_ok=True)
+            return
+        temporary = self.lock_path.parent / f"acquisition-index-restore.{os.getpid()}.tmp"
+        temporary.write_bytes(previous)
+        os.replace(temporary, self.index_path)
 
     def _validate_repository(self) -> None:
         inside = _git(self.repository_root, ["rev-parse", "--is-inside-work-tree"]).stdout.strip()
@@ -280,27 +372,40 @@ class GitPublicationPublisher:
     ) -> str | None:
         self._validate_repository()
         allowed = {path.as_posix() for path in paths}
+        index_relative = self.index_path.relative_to(self.repository_root).as_posix()
+        allowed.add(index_relative)
         runtime_relative = self.lock_path.parent.parent.relative_to(self.repository_root).as_posix()
         if any(path == runtime_relative or path.startswith(f"{runtime_relative}/") for path in allowed):
             raise PublicationTransactionError("allowlist contém estado de runtime")
         directory = self.source_root / item.publication_identity().relative_directory()
         relative_directory = directory.relative_to(self.repository_root)
-        changed = _status_paths(self.repository_root, relative_directory)
-        if not changed:
-            return None
-        if not changed.issubset(allowed):
-            raise PublicationTransactionError(
-                f"alteração fora da allowlist: {', '.join(sorted(changed - allowed))}"
-            )
         key = item.stable_key()
         with _exclusive_lock(self.lock_path):
             created_commit: str | None = None
+            previous_index: bytes | None = None
+            index_updated = False
             try:
                 self._validate_repository()
-                locked_changed = _status_paths(self.repository_root, relative_directory)
-                if locked_changed != changed:
+                index_dirty = _status_paths(
+                    self.repository_root,
+                    self.index_path.relative_to(self.repository_root),
+                )
+                if index_dirty:
+                    raise PublicationTransactionError("índice de aquisição possui alteração alheia")
+                previous_index = self._update_index(item, paths)
+                index_updated = True
+                changed = _status_paths(self.repository_root, relative_directory)
+                changed.update(
+                    _status_paths(
+                        self.repository_root,
+                        self.index_path.relative_to(self.repository_root),
+                    )
+                )
+                if not changed:
+                    return None
+                if not changed.issubset(allowed):
                     raise PublicationTransactionError(
-                        "unidade mudou enquanto aguardava finalização Git"
+                        f"alteração fora da allowlist: {', '.join(sorted(changed - allowed))}"
                     )
                 _git(self.repository_root, ["add", "--", *sorted(changed)])
                 staged = set(
@@ -366,4 +471,6 @@ class GitPublicationPublisher:
                         check=False,
                     )
                     ledger.transition(key, "completed", git_state="commit_pending")
+                    if index_updated:
+                        self._restore_index(previous_index)
                 raise

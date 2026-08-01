@@ -1535,6 +1535,10 @@ def run(
             source_root,
             paths["locks"] / "publication-git.lock",
             branch=str(config.get("transaction", {}).get("branch", "dev")),
+            index_path=resolve_repository_path(
+                str(config["transaction"]["index_path"]),
+                REPOSITORY_ROOT,
+            ),
         )
     if needs_browser:
         if worker_count != 1:

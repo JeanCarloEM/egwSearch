@@ -250,26 +250,26 @@ desafio. [PENDENTE-CODIGO]
 
 ### 7.3 Publicação completa e efeito Git
 
-O coletor DEVE centralizar uma função que calcule e valide a unidade [d9e37be]
+O coletor DEVE centralizar uma função que calcule e valide a unidade [PENDENTE-CODIGO]
 `completa_e_pareada`: ativos, metadado, segmentos, derivados, referências e
 entradas de índice impactadas. [PENDENTE-CODIGO]
-O resultado DEVE expor allowlist relativa à raiz, [d9e37be]
+O resultado DEVE expor allowlist relativa à raiz, [PENDENTE-CODIGO]
 hashes e evidência de completude; item ambíguo ou incompleto não é elegível a
 Git. [PENDENTE-CODIGO]
 
-Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [d9e37be]
+Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [PENDENTE-CODIGO]
 CLI. [PENDENTE-CODIGO]
-Quando habilitado, a finalização DEVE adquirir lock global no runtime, [d9e37be]
+Quando habilitado, a finalização DEVE adquirir lock global no runtime, [PENDENTE-CODIGO]
 validar `dev`, worktree/índice, excluir estado não canônico, adicionar somente a
 allowlist com `git add -- <paths>`, validar o diff staged e criar exatamente um
 commit por publicação. [PENDENTE-CODIGO]
 Alteração staged preexistente ou conflito em path da
 unidade bloqueia sem modificar o índice. [PENDENTE-CODIGO]
 
-Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [d9e37be]
+Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [PENDENTE-CODIGO]
 preservar preparação no runtime para retomada. [PENDENTE-CODIGO]
-Commit confirmado DEVE ser [d9e37be]
-registrado no ledger e não pode ser repetido. [d9e37be]
+Commit confirmado DEVE ser [PENDENTE-CODIGO]
+registrado no ledger e não pode ser repetido. [PENDENTE-CODIGO]
 Push, se futuramente habilitado,
 é fase separada e nunca requisito implícito do download. [PENDENTE-CODIGO]
 
