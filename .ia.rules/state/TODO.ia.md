@@ -1969,3 +1969,8 @@
   O diretório categórico DEVE usar código curto em PT-BR também para coleções
   inglesas (`pioneiros`, `comentarios` etc.). Quando esse código for igual ao
   `author-key` — caso `egw` — sua duplicação no path DEVE ser omitida.
+
+  A proveniência ABNT com URL oficial clicável DEVE aparecer entre capa e
+  sumário. Após o sumário, conteúdo DEVE usar cabeçalho contextual e rodapé
+  numerado fora do corpo XHTML indexável; a primeira página de cada capítulo,
+  seção ou unidade equivalente NÃO DEVE exibir cabeçalho.

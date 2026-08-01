@@ -36,6 +36,8 @@ capa oficialmente declarada para a obra.
    proveniência inequivocamente não editorial em estilo ABNT.
 9. projetar a categoria editorial declarada pela coleção oficial como segmento
    URI adicional do diretório canônico, preservando também seu rótulo original.
+10. posicionar a proveniência ABNT antes do sumário e aplicar cabeçalhos
+    contextuais e rodapés numerados por paginação CSS fora do corpo editorial.
 
 ## Invariantes
 
@@ -63,6 +65,10 @@ capa oficialmente declarada para a obra.
 - o segmento categórico antecede o `author-key` e é omitido somente quando o
   repetir exatamente, evitando `egw/egw/...`; coleções inglesas usam os mesmos
   códigos semânticos em PT-BR.
+- a ordem inicial é capa, proveniência ABNT com URL clicável, sumário e
+  conteúdo; somente as seções de conteúdo recebem caixas de margem paginada.
+- a primeira página de cada seção não tem cabeçalho; o rodapé numerado permanece
+  e nenhum cabeçalho/rodapé integra o corpo XHTML indexável.
 
 ## Aceite global
 
@@ -117,3 +123,5 @@ capa oficialmente declarada para a obra.
   mesma história e a publicação gerada preservada fora do Git.
 - refinamento estrutural `27b8f8d` move categorias diferentes do autor para o
   primeiro segmento, adapta o migrador aos dois layouts e preserva rollback.
+- refinamento editorial `f4b4563` antecipa a proveniência, inclui o sumário no
+  spine e separa cabeçalhos/rodapés do texto por caixas de margem CSS paginada.

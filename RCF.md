@@ -1025,7 +1025,8 @@ A página de capa DEVE ser o primeiro e exclusivo item visual do EPUB, sem marge
 
 O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [297d5bc]
 Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [297d5bc]
-Uma página final `colophon` DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [297d5bc]
+Uma página inicial de proveniência, imediatamente após a capa e antes do sumário, DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial clicável e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [f4b4563]
+Depois da proveniência e do sumário, cada seção de conteúdo DEVE declarar cabeçalho corrente contextual e rodapé com contador de página por caixas de margem paginada, fora do corpo XHTML indexável; a primeira página de capítulo, seção ou unidade equivalente DEVE suprimir o cabeçalho, mas preservar a numeração no rodapé. [f4b4563]
 
 ## 43. Indice global
 

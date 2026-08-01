@@ -93,3 +93,16 @@ do tipo. A mesma tabela semântica valerá para coleções em inglês.
 A projeção canônica passa a ser
 `[<categoria>/]<autor>/<idioma>/<tipo>/<slug-titulo>/`. A omissão quando
 categoria e autor forem idênticos continua evitando a duplicação `egw/egw`.
+
+## Ajuste de 2026-08-01 — procedência e paginação editorial
+
+> A referência ABNT com link oficial deve aparecer no início, para permitir
+> validação imediata. Depois do sumário, páginas de conteúdo devem usar
+> cabeçalho contextual e rodapé numerado; a página de abertura de capítulo ou
+> equivalente não deve exibir cabeçalho.
+
+O EPUB refluível usará a ordem `capa -> proveniência -> sumário -> conteúdo`.
+Cabeçalhos e números serão conteúdo gerado em caixas de margem CSS paginada,
+fora do corpo XHTML, para não integrar o texto editorial consumido por parser,
+indexador, tokenizador ou LLM. A primeira página de cada unidade suprimirá o
+cabeçalho, preservando o contador no rodapé.
