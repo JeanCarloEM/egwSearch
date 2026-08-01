@@ -1930,3 +1930,17 @@
   ## Relatório final
 
   Registrar unidade transacional, critérios de completude e pareamento, arquivos por publicação, índices alterados, staging seletivo, convenção de commit, concorrência, rollback e retomada, testes, commits de validação, resultado de push e limitações remanescentes.
+
+- [ ] Corrigir a completude real do downloader e dos EPUBs derivados
+
+  A FT-012 DEVE corrigir a evidência funcional superveniente: o coletor DEVE
+  enumerar todas as obras do catálogo; consultar a página individual de cada
+  obra; adquirir todos os PDF e EPUB nativos habilitados; e somente quando
+  ambos estiverem ausentes percorrer integralmente a navegação editorial real,
+  preservar seu conteúdo e gerar um EPUB derivado fiel.
+
+  Fixture, mock, placeholder, resumo ou texto sintético NÃO DEVE ser
+  materializado em `src/publications`. Testes DEVEM usar raiz temporária
+  explícita. A conclusão exige comparação entre catálogo, ativos descobertos,
+  cadeia textual e artefatos finais, além de amostras públicas controladas de
+  uma obra nativa e uma obra somente textual.
