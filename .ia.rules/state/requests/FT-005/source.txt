@@ -1,0 +1,597 @@
+Leia integralmente o contexto, o estado real do repositório, o `RCF.md`, os RCFs especializados, o `AGENTS.md`, as FTs, os TODOs e o código atual antes de analisar ou alterar qualquer artefato.
+
+# Objetivo
+
+Inspecionar, corrigir, ampliar e normatizar o `baixar.py` para:
+
+1. impedir reprocessamento ou novo download de conteúdo já incorporado;
+2. ampliar a coleta, atualmente restrita às obras de Ellen G. White, para as coleções:
+   - `Biblioteca dos Pioneiros Adventistas`;
+   - `Adventist Pioneer Library`;
+3. importar publicações de seus diversos autores e tipos;
+4. aceitar somente:
+   - idiomas `pt-BR` e `en`;
+   - formatos nativos PDF e EPUB;
+   - conteúdo exclusivamente textual convertido de fonte legível on-line quando não houver PDF/EPUB disponível;
+5. operar de forma responsável, rastreável, incremental e resistente a bloqueios, sem simular ataque, sobrecarregar a origem ou contornar mecanismos de proteção;
+6. incorporar integralmente o comportamento resultante ao RCF aplicável.
+
+Origem principal:
+
+```text
+https://egwwritings.org
+```
+
+O objetivo NÃO é clonar o site, adulterar seu conteúdo, contornar controles de acesso ou reproduzir sua aplicação. O objetivo é incorporar ao repositório conteúdo editorial disponibilizado gratuitamente ao público, inclusive quando o site não oferece mecanismo automático de download.
+
+# Restrições fundamentais
+
+- NÃO remover, reduzir ou enfraquecer recursos já existentes no `baixar.py`.
+- NÃO presumir estrutura, API, framework, identificadores, rotas ou contratos sem inspeção.
+- NÃO baixar idiomas diferentes de `pt-BR` e `en`.
+- NÃO incorporar formatos distintos de PDF, EPUB ou conteúdo textual convertido conforme este prompt.
+- NÃO converter HTML bruto, interface, navegação ou componentes da aplicação em publicação.
+- NÃO incluir menus, cabeçalhos, rodapés, breadcrumbs, controles, anúncios, scripts, estilos, elementos de navegação, conteúdos correlatos ou qualquer material estranho ao corpo editorial.
+- NÃO burlar autenticação, CAPTCHA, rate limiting, bloqueios, paywalls, controles de acesso, `robots.txt`, termos aplicáveis ou medidas técnicas de proteção.
+- NÃO utilizar paralelismo agressivo, rotação de identidade, proxies evasivos ou qualquer mecanismo destinado a ocultar ou intensificar requisições.
+- NÃO alterar arquivos já incorporados quando não houver mudança material comprovada.
+- NÃO sobrescrever arquivos diferentes nem eliminar variantes legítimas.
+- NÃO iniciar downloads em massa antes de validar a descoberta, deduplicação, classificação e persistência com amostra controlada.
+
+# 1. Inspeção obrigatória
+
+Antes de implementar:
+
+1. localizar o `baixar.py` real e seus RCFs, configurações, índices, metadados, workflows, testes e estruturas de saída;
+2. identificar:
+   - como publicações são descobertas;
+   - quais identificadores remotos e locais são utilizados;
+   - como autor, coleção, idioma, tipo, título, formato, URL e hash são registrados;
+   - como downloads concluídos são reconhecidos;
+   - por que conteúdos já baixados podem ser reprocessados;
+   - como erros, retomadas e atualizações são tratados;
+3. mapear a estrutura atual do acervo;
+4. localizar e aplicar a norma canônica de caminhos, nomenclatura, agrupamento, metadados, hashes e indexação;
+5. inspecionar o comportamento público de `egwwritings.org`, suas chamadas de rede e os recursos carregados no cliente;
+6. verificar se há API pública, endpoint estruturado, manifesto, catálogo, JSON, GraphQL, serviço de conteúdo ou outro meio direto e estável de obtenção dos dados;
+7. registrar evidências suficientes para justificar a estratégia escolhida.
+
+A implementação DEVE preferir interfaces públicas estruturadas, estáveis e menos onerosas à origem. Extração de páginas renderizadas somente PODE ser utilizada quando não houver meio direto adequado.
+
+# 2. Processamento incremental e idempotente
+
+O `baixar.py` DEVE ser idempotente.
+
+Antes de descobrir novamente, solicitar, baixar, converter ou reprocessar uma publicação, DEVE verificar se ela já foi incorporada.
+
+A identificação DEVE combinar, conforme disponibilidade:
+
+- identificador remoto estável;
+- coleção;
+- autor;
+- idioma;
+- tipo;
+- título normalizado;
+- edição ou versão;
+- formato;
+- URL de origem;
+- hash remoto informado;
+- SHA-256 local;
+- metadado local;
+- caminho canônico;
+- estado registrado no indexador.
+
+## 2.1 Conteúdo já existente
+
+Se o conteúdo já estiver baixado, íntegro e corretamente indexado:
+
+- pular integralmente seu download;
+- pular conversão, extração e reprocessamento;
+- não alterar timestamp, nome, hash ou metadado sem necessidade;
+- registrar o resultado como `skipped` ou estado semanticamente equivalente;
+- continuar com o próximo item.
+
+A mera existência de um nome de arquivo NÃO é prova suficiente quando houver possibilidade de colisão, arquivo parcial, corrupção, variante ou metadado inconsistente.
+
+## 2.2 Verificação em níveis
+
+Aplicar verificação progressiva para minimizar I/O e tráfego:
+
+1. índice ou estado local;
+2. identificador remoto e metadados;
+3. existência e integridade do arquivo;
+4. tamanho, ETag, `Last-Modified` ou hash remoto, quando disponíveis;
+5. SHA-256 local somente quando necessário;
+6. requisição ou download apenas quando a condição anterior não for conclusiva.
+
+Utilizar requisições condicionais, como `If-None-Match` e `If-Modified-Since`, quando suportadas.
+
+## 2.3 Estados incompletos
+
+Distinguir, no mínimo:
+
+- não processado;
+- em processamento;
+- concluído;
+- pulado por já existir;
+- incompleto;
+- corrompido;
+- indisponível;
+- não elegível;
+- falha temporária;
+- falha permanente;
+- requer revisão.
+
+Downloads parciais NÃO DEVEM ser considerados concluídos. Arquivos temporários DEVEM ser segregados e promovidos atomicamente somente após validação.
+
+## 2.4 Atualizações reais
+
+Conteúdo já incorporado somente DEVE ser atualizado quando houver evidência de alteração remota material, como:
+
+- novo hash;
+- nova versão ou edição;
+- novo arquivo associado;
+- correção do conteúdo;
+- mudança relevante dos metadados;
+- arquivo local ausente ou inválido.
+
+A atualização DEVE preservar rastreabilidade entre versão anterior e nova conforme o RCF vigente.
+
+# 3. Ampliação das coleções
+
+Além das obras de Ellen G. White, descobrir e processar integralmente as coleções:
+
+```text
+Biblioteca dos Pioneiros Adventistas
+Adventist Pioneer Library
+```
+
+A implementação DEVE:
+
+- reconhecer que essas coleções contêm múltiplos autores;
+- descobrir autores, publicações, tipos, idiomas, formatos e relações reais;
+- não codificar lista arbitrária ou incompleta quando a origem fornecer catálogo estruturado;
+- preservar associação entre coleção, autor, publicação, idioma, tipo e origem;
+- impedir que obras homônimas de autores diferentes sejam fundidas;
+- permitir retomada incremental por coleção, autor ou publicação;
+- registrar itens elegíveis, não elegíveis, indisponíveis e falhos.
+
+# 4. Elegibilidade
+
+Somente incorporar publicações nos idiomas:
+
+```text
+pt-BR
+en
+```
+
+Normalizar aliases encontrados na origem sem alterar a semântica:
+
+```text
+pt, pt_BR, pt-BR, português brasileiro → pt-BR
+en, en_US, en-GB ou inglês sem variante material relevante → en
+```
+
+Variações linguísticas NÃO DEVEM ser fundidas quando representarem conteúdo efetivamente distinto sem regra normativa para isso.
+
+## 4.1 Formatos preferenciais
+
+Prioridade:
+
+1. EPUB nativo;
+2. PDF nativo;
+3. conteúdo textual oficial disponibilizado para leitura on-line.
+
+Quando PDF e EPUB existirem, ambos DEVEM ser preservados conforme a estrutura canônica.
+
+Formatos audiovisuais, imagens isoladas, áudio, vídeo ou artefatos não editoriais NÃO fazem parte deste escopo, salvo assets indispensáveis à publicação e já autorizados pelo RCF.
+
+# 5. Conteúdo sem PDF ou EPUB
+
+Livros, panfletos, artigos ou outras publicações podem estar disponíveis apenas para leitura dentro da aplicação, segmentados em capítulos, páginas, seções ou fragmentos.
+
+Nesses casos, a publicação PODE ser extraída somente quando:
+
+- o conteúdo for público e acessível sem contorno de controle;
+- sua identidade, ordem e completude puderem ser determinadas;
+- for possível distinguir deterministicamente o corpo editorial da interface;
+- a extração preservar integralmente o texto real;
+- não forem incluídos elementos estranhos à publicação;
+- a origem e cada segmento permanecerem rastreáveis;
+- a completude puder ser validada.
+
+## 5.1 Conteúdo editorial
+
+Extrair somente elementos pertencentes à publicação, como:
+
+- título;
+- subtítulo;
+- autoria;
+- prefácio;
+- introdução;
+- capítulos;
+- seções;
+- parágrafos;
+- notas editoriais;
+- notas de rodapé;
+- citações;
+- listas;
+- tabelas textuais;
+- epígrafes;
+- referências;
+- marcações semânticas necessárias;
+- demais conteúdo editorial legítimo.
+
+Excluir:
+
+- navegação;
+- menus;
+- cabeçalhos e rodapés da aplicação;
+- controles de leitura;
+- botões;
+- breadcrumbs;
+- recomendações;
+- resultados relacionados;
+- publicidade;
+- telemetria;
+- scripts;
+- CSS;
+- mensagens de interface;
+- conteúdo de outras publicações;
+- elementos duplicados pela renderização.
+
+## 5.2 Integridade e ordem
+
+A extração DEVE:
+
+- preservar a ordem oficial;
+- manter títulos, níveis hierárquicos e separação dos parágrafos;
+- preservar notas, referências e marcações semanticamente relevantes;
+- impedir duplicação ou omissão entre segmentos;
+- detectar lacunas na sequência;
+- registrar identificadores e URLs de origem;
+- validar primeiro e último segmento;
+- comparar quantidade declarada e obtida quando disponível;
+- falhar ou marcar revisão quando a completude não puder ser garantida.
+
+É PROIBIDO produzir publicação aparentemente completa quando houver segmentos ausentes ou ordem incerta.
+
+# 6. Saída de conteúdo extraído
+
+Quando não houver PDF ou EPUB nativo, adotar uma das seguintes saídas conforme o RCF e a estrutura real:
+
+## 6.1 EPUB gerado
+
+Gerar EPUB mecanicamente por script, preservando:
+
+- conteúdo textual integral;
+- estrutura hierárquica;
+- sumário;
+- metadados;
+- idioma;
+- autor;
+- título;
+- capítulos;
+- notas;
+- ordem;
+- origem;
+- rastreabilidade;
+- validação técnica do arquivo.
+
+O EPUB gerado DEVE ser identificado como conversão local derivada da edição on-line, jamais como arquivo original fornecido pela origem.
+
+## 6.2 Markdown estruturado
+
+Quando EPUB não for adequado ou ainda não puder ser produzido com segurança, armazenar a publicação em subdiretório próprio com múltiplos arquivos `.md`, devidamente:
+
+- ordenados;
+- numerados;
+- nomeados;
+- aninhados;
+- vinculados;
+- indexados;
+- rastreáveis.
+
+Exemplo meramente estrutural:
+
+```text
+<publicacao>/
+├── 000-metadata.json
+├── 001-prefacio.md
+├── 002-capitulo-01.md
+├── 003-capitulo-02.md
+└── ...
+```
+
+A numeração DEVE refletir a ordem editorial, não a ordem incidental de descoberta.
+
+## 6.3 Conversão posterior
+
+A arquitetura DEVE permitir:
+
+```text
+fonte estruturada → Markdown normalizado → EPUB validado
+```
+
+A conversão NÃO DEVE exigir nova coleta quando o conteúdo textual integral já estiver preservado localmente.
+
+# 7. Descoberta técnica e engenharia reversa limitada
+
+Como `egwwritings.org` aparenta operar como aplicação cliente sem recarga integral, inspecionar sua operação para identificar meios públicos e diretos de acesso aos dados.
+
+PODE:
+
+- analisar requisições de rede realizadas pelo navegador;
+- identificar endpoints públicos consumidos pela própria aplicação;
+- examinar JavaScript público entregue ao cliente;
+- baixar temporariamente bundles ou scripts públicos necessários à análise;
+- localizar rotas, schemas, parâmetros, identificadores e contratos utilizados pelo cliente;
+- reproduzir chamadas públicas legítimas de leitura;
+- documentar o contrato efetivamente observado.
+
+NÃO PODE:
+
+- contornar autenticação, autorização, CAPTCHA ou restrição;
+- explorar vulnerabilidade;
+- acessar endpoint privado ou não autorizado;
+- obter credenciais, tokens de terceiros ou dados não públicos;
+- modificar o serviço remoto;
+- ocultar identidade para evadir bloqueios;
+- executar varredura agressiva;
+- preservar código remoto desnecessariamente após a análise.
+
+Os scripts públicos baixados para inspeção DEVEM ser temporários, rastreáveis e removidos quando sua função se esgotar, salvo necessidade documental legítima e compatível com o RCF.
+
+A estratégia escolhida DEVE minimizar acoplamento a detalhes frágeis de bundles minificados. Priorizar contratos de dados observáveis e estáveis.
+
+# 8. Uso responsável da origem
+
+O script DEVE operar com política conservadora de acesso.
+
+Implementar, conforme aplicabilidade:
+
+- fila sequencial ou concorrência mínima;
+- limite explícito de requisições;
+- atraso configurável entre requisições;
+- jitter moderado;
+- backoff exponencial;
+- tratamento de `429`, `408` e erros `5xx`;
+- respeito a `Retry-After`;
+- timeout;
+- número máximo de tentativas;
+- cache local;
+- retomada;
+- deduplicação de requisições;
+- reutilização responsável de conexão;
+- identificação adequada por `User-Agent`;
+- logs de taxa, tentativas e bloqueios;
+- interrupção automática diante de sinais de contenção.
+
+Valores padrão DEVEM ser conservadores e configuráveis. A implementação NÃO DEVE buscar a maior velocidade possível.
+
+Diante de `403`, CAPTCHA, bloqueio, limitação persistente ou alteração inesperada:
+
+1. interromper a coleta afetada;
+2. não intensificar tentativas;
+3. registrar diagnóstico suficiente;
+4. preservar o progresso concluído;
+5. marcar a unidade para retomada ou revisão.
+
+# 9. Metadados e rastreabilidade
+
+Para cada publicação, registrar conforme o RCF:
+
+- coleção;
+- autor;
+- título;
+- título normalizado;
+- idioma;
+- tipo;
+- formato;
+- identificador remoto;
+- URL pública da publicação;
+- URL de origem de cada arquivo ou segmento;
+- data de coleta;
+- hash;
+- tamanho;
+- estado;
+- versão ou edição, quando disponível;
+- método de obtenção:
+  - download nativo;
+  - extração textual;
+  - conversão local;
+- relação entre fonte textual, Markdown e EPUB gerado;
+- quantidade e ordem dos segmentos;
+- falhas, lacunas ou ressalvas;
+- demais campos normatizados.
+
+Metadados originais DEVEM ser preservados separadamente de valores normalizados quando houver diferença.
+
+# 10. Segurança e fidelidade
+
+Todo conteúdo obtido DEVE ser tratado como dado não confiável.
+
+A implementação DEVE:
+
+- validar URLs e esquemas;
+- impedir path traversal;
+- limitar nomes e caminhos;
+- validar MIME e assinatura real;
+- não confiar apenas na extensão;
+- usar escrita temporária e promoção atômica;
+- calcular SHA-256;
+- impedir execução de conteúdo baixado;
+- sanitizar HTML sem alterar o texto editorial;
+- impedir injeção no Markdown, EPUB, logs ou índices;
+- preservar Unicode e caracteres próprios dos idiomas;
+- registrar transformação que possa afetar o conteúdo.
+
+É PROIBIDO “corrigir”, resumir, modernizar, traduzir ou reescrever automaticamente o texto da publicação durante a extração.
+
+# 11. Estrutura e compatibilidade
+
+Aplicar a estrutura canônica já normatizada para publicações, agrupando no mesmo diretório:
+
+- PDF;
+- EPUB;
+- Markdown;
+- metadados;
+- capas;
+- assets;
+- variantes legítimas;
+- artefatos derivados.
+
+Não criar estrutura paralela incompatível.
+
+Atualizar, conforme aplicabilidade:
+
+- `baixar.py`;
+- módulos auxiliares;
+- configuração;
+- índices;
+- metadados;
+- testes;
+- documentação;
+- workflows;
+- RCF especializado;
+- vínculo com o RCF global;
+- rastreabilidade por FT.
+
+# 12. Implementação modular
+
+Segregar responsabilidades sem fragmentação artificial, incluindo, conforme o estado real:
+
+- catálogo e descoberta;
+- normalização;
+- elegibilidade;
+- controle incremental;
+- cliente HTTP responsável;
+- identificação de formato;
+- download;
+- extração editorial;
+- ordenação de segmentos;
+- geração de Markdown;
+- geração de EPUB;
+- metadados;
+- integridade;
+- indexação;
+- retomada;
+- relatório.
+
+Funções de descoberta, coleta e persistência NÃO DEVEM depender de parsing visual quando houver dados estruturados equivalentes.
+
+# 13. Testes obrigatórios
+
+Criar ou atualizar testes para, no mínimo:
+
+- conteúdo já baixado é pulado sem nova requisição de arquivo;
+- arquivo incompleto não é considerado concluído;
+- conteúdo idêntico não é duplicado;
+- conteúdo distinto não é sobrescrito;
+- atualização remota real é detectada;
+- `pt-BR` e `en` são aceitos;
+- demais idiomas são rejeitados;
+- PDF e EPUB são reconhecidos por conteúdo;
+- múltiplos autores são preservados;
+- coleções novas são descobertas;
+- publicação sem download nativo é extraída em ordem;
+- navegação e interface não entram no conteúdo;
+- lacunas impedem marcação como concluído;
+- Markdown mantém hierarquia e ordem;
+- EPUB gerado é tecnicamente válido;
+- metadados distinguem original e derivado;
+- `429` respeita `Retry-After`;
+- backoff e limite de tentativas funcionam;
+- bloqueio interrompe a coleta sem evasão;
+- retomada não reprocessa itens concluídos;
+- caminhos e nomes resistem a entradas maliciosas;
+- índice permanece coerente.
+
+Executar inicialmente com fixture, mock ou amostra mínima controlada. Download amplo somente DEVE ocorrer após validação dos mecanismos de descoberta, elegibilidade, idempotência, fidelidade e contenção.
+
+# 14. Normatização
+
+Incorporar integralmente ao RCF aplicável:
+
+- escopo das coleções;
+- idiomas e formatos aceitos;
+- idempotência;
+- deduplicação;
+- atualização;
+- extração textual;
+- separação entre conteúdo editorial e interface;
+- Markdown;
+- EPUB derivado;
+- engenharia reversa limitada;
+- acesso responsável;
+- bloqueios;
+- metadados;
+- integridade;
+- rastreabilidade;
+- testes;
+- critérios de aceite.
+
+Criar ou atualizar RCF especializado do `baixar.py` em diretório adequado, devidamente nomeado e referenciado pelo RCF global, sem duplicar normas comuns nem contradizer precedências existentes.
+
+# 15. Ordem de execução
+
+1. Ler normas e fontes aplicáveis.
+2. Inspecionar o estado real.
+3. Diagnosticar o reprocessamento atual.
+4. Mapear coleções, autores, idiomas, formatos e meios públicos de acesso.
+5. Definir e normatizar os contratos.
+6. Criar ou atualizar FTs rastreáveis.
+7. Implementar idempotência e controle incremental.
+8. Implementar descoberta das novas coleções.
+9. Implementar filtragem por idioma e formato.
+10. Implementar política responsável de acesso.
+11. Implementar extração textual controlada.
+12. Implementar Markdown e EPUB derivado.
+13. Atualizar metadados e indexação.
+14. Executar testes locais e amostra controlada.
+15. Validar integridade, completude e ausência de reprocessamento.
+16. Somente então executar coleta ampliada, caso autorizada pela fase e FT aplicáveis.
+17. Atualizar documentação e emitir relatório final.
+
+# 16. Critérios de aceite
+
+- [ ] O `baixar.py` não baixa nem reprocessa conteúdo já concluído e íntegro.
+- [ ] Reexecuções equivalentes produzem estado final equivalente sem alterações desnecessárias.
+- [ ] Itens incompletos, corrompidos ou atualizados são tratados corretamente.
+- [ ] Ellen G. White continua integralmente suportada.
+- [ ] `Biblioteca dos Pioneiros Adventistas` é descoberta e processada.
+- [ ] `Adventist Pioneer Library` é descoberta e processada.
+- [ ] Múltiplos autores e tipos permanecem corretamente associados.
+- [ ] Apenas `pt-BR` e `en` são incorporados.
+- [ ] PDF e EPUB nativos são preservados.
+- [ ] Conteúdo sem download nativo pode ser extraído sem perda e sem elementos de interface.
+- [ ] A ordem e completude das publicações extraídas são verificadas.
+- [ ] Markdown é organizado, numerado, nomeado e rastreável.
+- [ ] EPUB derivado é válido e identificado como conversão local.
+- [ ] Nenhum conteúdo remoto é reescrito ou adulterado.
+- [ ] APIs ou endpoints públicos são preferidos quando adequados.
+- [ ] A análise do cliente não contorna controles nem acessa conteúdo privado.
+- [ ] A taxa de acesso é conservadora e configurável.
+- [ ] `429`, bloqueios e falhas persistentes interrompem ou retardam a coleta adequadamente.
+- [ ] Não há mecanismo de evasão de proteção.
+- [ ] Arquivos, metadados e índices seguem a estrutura canônica.
+- [ ] Todos os requisitos foram incorporados ao RCF.
+- [ ] Testes passam sem regressão.
+
+# 17. Relatório final
+
+Informar objetivamente:
+
+- causa do reprocessamento anterior;
+- mecanismo adotado para idempotência;
+- critérios usados para reconhecer conteúdo existente;
+- coleções, autores, tipos e idiomas descobertos;
+- meio técnico utilizado para obter catálogos e conteúdos;
+- endpoints públicos ou contratos identificados, sem expor credenciais;
+- formatos nativos e conteúdos convertidos;
+- publicações puladas, baixadas, atualizadas, extraídas, convertidas, rejeitadas ou falhas;
+- política de taxa, backoff e contenção;
+- bloqueios ou limitações encontrados;
+- arquivos e normas alterados;
+- testes executados e resultados;
+- pendências que não puderam ser resolvidas sem suposição ou violação de restrições.
