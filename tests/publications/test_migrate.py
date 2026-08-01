@@ -67,11 +67,11 @@ class MigrationTests(unittest.TestCase):
             self.assertEqual(first["summary"]["actions"], 2)
             targets = {action["target"] for action in first["actions"]}
             self.assertIn(
-                "egw/pt-br/geral/livros/atos-dos-apostolos/ada.pdf",
+                "geral/egw/pt-br/livros/atos-dos-apostolos/ada.pdf",
                 targets,
             )
             self.assertIn(
-                "egw/pt-br/geral/livros/atos-dos-apostolos/ada.source.json",
+                "geral/egw/pt-br/livros/atos-dos-apostolos/ada.source.json",
                 targets,
             )
 
@@ -88,9 +88,9 @@ class MigrationTests(unittest.TestCase):
             journal_path = migrate.apply_plan(plan_path, root / ".state")
             canonical = (
                 source_root
+                / "geral"
                 / "egw"
                 / "pt-br"
-                / "geral"
                 / "livros"
                 / "atos-dos-apostolos"
                 / "ada.pdf"
@@ -215,9 +215,9 @@ class MigrationTests(unittest.TestCase):
             journal_path = migrate.apply_plan(plan_path, root / ".state")
             slug_directory = (
                 source_root
+                / "geral"
                 / "egw"
                 / "pt-br"
-                / "geral"
                 / "devocionais"
                 / "a-maravilhosa-graca-de-deus"
             )
@@ -262,7 +262,7 @@ class MigrationTests(unittest.TestCase):
             migrate.write_json_atomic(plan_path, plan)
 
             journal_path = migrate.apply_plan(plan_path, root / ".state")
-            target_parent = source_root / "egw" / "en-us" / "geral" / "books"
+            target_parent = source_root / "geral" / "egw" / "en-us" / "books"
             names = {candidate.name for candidate in target_parent.iterdir()}
             self.assertNotIn("Education", names)
             self.assertIn("education", names)

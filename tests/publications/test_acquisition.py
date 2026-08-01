@@ -77,8 +77,8 @@ class IdentityAndCatalogTests(unittest.TestCase):
         identity = items[0].publication_identity()
         self.assertEqual(identity.category, "pioneiros")
         self.assertEqual(
-            identity.relative_directory().parts[2],
-            "pioneiros",
+            identity.relative_directory().as_posix(),
+            "pioneiros/alonzo-trevier-jones/pt-br/livros/estudos-sobre-a-fe",
         )
         metadata = build_source_v3(items[0], "completed", [{"format": "epub", "url": "https://example.test/a.epub"}])
         self.assertEqual(metadata["identity"]["category_original"], "Biblioteca dos Pioneiros Adventistas")
