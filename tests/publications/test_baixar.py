@@ -19,7 +19,7 @@ CONTRACT_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(CONTRACT_ROOT))
 
 import baixar  # noqa: E402
-from acquisition import CatalogAsset, CatalogItem, build_source_v3  # noqa: E402
+from acquisition import CatalogAsset, CatalogItem, CatalogSegment, build_source_v3  # noqa: E402
 from publication_contract import (  # noqa: E402
     hash_file,
     publication_identity,
@@ -204,6 +204,33 @@ class DownloaderTests(unittest.TestCase):
         self.assertEqual(
             baixar._book_id_from_url("https://text.egwwritings.org/read/14389.102"),
             "14389",
+        )
+
+    def test_previous_navigation_accepts_editorial_block_alias(self) -> None:
+        previous = CatalogSegment(
+            remote_id="14623.11",
+            url="https://text.egwwritings.org/read/14623.2",
+            order=1,
+            title="A vitória da esperança",
+            html="<p>Texto</p>",
+        )
+        self.assertTrue(
+            baixar._previous_segment_matches(
+                previous,
+                {"https://text.egwwritings.org/read/14623.11"},
+            )
+        )
+        self.assertTrue(
+            baixar._previous_segment_matches(
+                previous,
+                {"https://text.egwwritings.org/read/14623.2?origem=reader#top"},
+            )
+        )
+        self.assertFalse(
+            baixar._previous_segment_matches(
+                previous,
+                {"https://text.egwwritings.org/read/14623.30"},
+            )
         )
 
     def test_detail_page_discovers_every_enabled_native_asset(self) -> None:

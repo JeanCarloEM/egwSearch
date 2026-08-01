@@ -828,6 +828,32 @@ def _book_id_from_url(url: str) -> str:
     return match.group(1)
 
 
+def _reader_navigation_url(url: str) -> str:
+    """Remove somente variações não editoriais de uma URL de leitura."""
+
+    parsed = urlsplit(_lightweight_public_url(url))
+    return parsed._replace(query="", fragment="").geturl()
+
+
+def _previous_segment_matches(
+    segment: CatalogSegment,
+    previous_urls: set[str],
+) -> bool:
+    """Aceita a rota acessada ou o identificador do primeiro bloco da página."""
+
+    if not previous_urls:
+        return True
+    aliases = {_reader_navigation_url(segment.url)}
+    if re.fullmatch(
+        rf"{re.escape(_book_id_from_url(segment.url))}\.\d+",
+        segment.remote_id,
+    ):
+        parsed = urlsplit(_reader_navigation_url(segment.url))
+        aliases.add(parsed._replace(path=f"/read/{segment.remote_id}").geturl())
+    normalized_previous = {_reader_navigation_url(url) for url in previous_urls}
+    return bool(aliases.intersection(normalized_previous))
+
+
 def _clean_catalog_title(value: str) -> str:
     lines = [line.strip() for line in str(value or "").splitlines() if line.strip()]
     if not lines:
@@ -1082,7 +1108,6 @@ class BrowserSessionManager:
         by = self.runtime["By"]
         book_id = _book_id_from_url(initial_url)
         current = _lightweight_public_url(initial_url)
-        previous = ""
         visited: set[str] = set()
         segments: list[CatalogSegment] = []
         checkpoint_path = (
@@ -1108,7 +1133,6 @@ class BrowserSessionManager:
                     ]
                     visited = {segment.url for segment in segments}
                     current = str(checkpoint.get("next_url") or "")
-                    previous = segments[-1].url if segments else ""
                     if checkpoint.get("complete"):
                         return segments
                     print(
@@ -1164,7 +1188,9 @@ class BrowserSessionManager:
                 for link in prev_links
                 if link.get_attribute("disabled") is None and link.get_attribute("href")
             }
-            if previous and prev_urls and previous not in prev_urls:
+            if len(segments) > 1 and not _previous_segment_matches(
+                segments[-2], prev_urls
+            ):
                 raise ContractError("navegação editorial anterior/próximo divergente")
             next_links = driver.find_elements(by.CSS_SELECTOR, "#reader a[rel='next']")
             next_urls = {
@@ -1174,7 +1200,7 @@ class BrowserSessionManager:
             }
             if len(next_urls) > 1:
                 raise ContractError("página de leitura com próximos divergentes")
-            previous, current = normalized, (next(iter(next_urls)) if next_urls else "")
+            current = next(iter(next_urls)) if next_urls else ""
             write_json_atomic(
                 checkpoint_path,
                 {
