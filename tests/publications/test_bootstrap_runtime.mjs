@@ -17,7 +17,10 @@ test("o plano do bootstrap não cria ambiente nem executa a CLI", () => {
   const payload = JSON.parse(result.stdout);
   assert.equal(payload.status, "planned");
   assert.match(payload.requirements, /scripts[\\/]publications[\\/]requirements\.txt$/u);
-  assert.match(payload.environment, /constructor[\\/]\.state[\\/]publications-python$/u);
+  assert.match(
+    payload.environment,
+    /constructor[\\/]\.state[\\/]egwsearch[\\/]environments[\\/]python$/u,
+  );
 });
 
 test("argumento desconhecido falha com diagnóstico próprio", () => {

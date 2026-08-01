@@ -38,7 +38,7 @@ npm run publications:baixar -- --help
 ```
 
 `npm install` prepara o ambiente Python local em
-`constructor/.state/publications-python` usando os requisitos fixados do
+`constructor/.state/egwsearch/environments/python` usando os requisitos fixados do
 coletor, sem instalar pacotes globalmente nem executar a coleta. Para verificar
 ou reparar o ambiente manualmente, use `npm run publications:bootstrap`; para
 validá-lo sem instalar, use `npm run publications:check`. Para atualizar as

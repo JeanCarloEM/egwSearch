@@ -122,21 +122,73 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
         "collections",
         "download",
     }
+    required_v3 = {
+        "schema_version",
+        "source_root",
+        "public_root",
+        "runtime_state_root",
+        "authors",
+        "collections",
+        "download",
+        "transaction",
+    }
     if schema == 1 and set(data) != required_v1:
         raise ContractError("configuracao deve seguir publications-config/v1")
     if schema == 2 and set(data) != required_v2:
         raise ContractError("configuracao deve seguir publications-config/v2")
-    if schema not in {1, 2}:
+    if schema == 3 and set(data) != required_v3:
+        raise ContractError("configuracao deve seguir publications-config/v3")
+    if schema not in {1, 2, 3}:
         raise ContractError("schema de configuracao nao suportado")
     if not isinstance(data["authors"], dict) or not data["authors"]:
         raise ContractError("configuracao sem autores")
-    if schema == 2:
+    if schema in {2, 3}:
         if not isinstance(data["collections"], list) or not data["collections"]:
             raise ContractError("configuracao sem colecoes")
         ids = [item.get("id") for item in data["collections"] if isinstance(item, dict)]
         if len(ids) != len(data["collections"]) or len(ids) != len(set(ids)):
             raise ContractError("colecoes invalidas ou duplicadas")
+    if schema == 3:
+        transaction = data["transaction"]
+        if not isinstance(transaction, dict) or set(transaction) != {
+            "branch",
+            "commit_per_publication",
+        }:
+            raise ContractError("transacao Git invalida")
+        if transaction["branch"] != "dev" or not isinstance(
+            transaction["commit_per_publication"], bool
+        ):
+            raise ContractError("politica Git exige branch dev e opt-in booleano")
     return data
+
+
+def runtime_paths(config: dict, repository_root: Path = REPOSITORY_ROOT) -> dict[str, Path]:
+    """Resolve toda escrita local mutavel a partir de uma única raiz."""
+
+    root_value = config.get(
+        "runtime_state_root",
+        config.get("state_root", "constructor/.state/egwsearch"),
+    )
+    root = resolve_repository_path(str(root_value), repository_root)
+    browser_name = str(
+        config.get("download", {}).get("browser_profile_name", "egwwritings")
+    )
+    validate_slug(browser_name, "perfil de navegador")
+    paths = {
+        "root": root,
+        "acquisition": root / "acquisition",
+        "browser_profile": root / "profiles" / browser_name,
+        "python_environment": root / "environments" / "python",
+        "downloads": root / "tmp" / "downloads",
+        "locks": root / "locks",
+        "logs": root / "logs",
+    }
+    resolved_root = root.resolve()
+    for label, value in paths.items():
+        resolved = value.resolve()
+        if label != "root" and resolved_root not in resolved.parents:
+            raise ContractError(f"path de runtime fora da raiz: {label}")
+    return paths
 
 
 def resolve_repository_path(value: str, repository_root: Path = REPOSITORY_ROOT) -> Path:

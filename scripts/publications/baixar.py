@@ -18,7 +18,9 @@ import ipaddress
 import json
 import os
 from pathlib import Path
+import shutil
 import socket
+import subprocess
 import sys
 import tempfile
 import threading
@@ -56,9 +58,14 @@ from publication_contract import (
     publication_identity,
     read_source_records,
     resolve_repository_path,
+    runtime_paths,
     validate_file_signature,
     validate_source_url,
     write_json_atomic,
+)
+from publication_transaction import (
+    GitPublicationPublisher,
+    validate_complete_publication,
 )
 
 
@@ -272,10 +279,14 @@ def _stream_to_temporary(
             response.close()
             raise DownloadError("Content-Length invalido") from error
     destination_directory.mkdir(parents=True, exist_ok=True)
+    temporary_root = Path(
+        download_config.get("_download_tmp_dir", destination_directory)
+    )
+    temporary_root.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(
         prefix=".download-",
         suffix=f".{publication_format}.partial",
-        dir=destination_directory,
+        dir=temporary_root,
     )
     algorithms = {
         "sha1": hashlib.sha1(usedforsecurity=False),
@@ -641,20 +652,13 @@ def re_search_book_url(url: str) -> bool:
 class BrowserSessionManager:
     """Mantem uma unica sessao/guia Selenium visivel para descoberta remota."""
 
-    def __init__(self, runtime: dict, download_config: dict, state_root: Path) -> None:
+    def __init__(self, runtime: dict, download_config: dict, paths: dict[str, Path]) -> None:
         self.runtime = runtime
         self.config = dict(download_config)
-        self.state_root = Path(state_root)
-        self.profile_dir = resolve_repository_path(
-            str(
-                self.config.get(
-                    "browser_profile_dir",
-                    "constructor/.state/publications-browser-profile",
-                )
-            ),
-            REPOSITORY_ROOT,
-        )
+        self.state_root = Path(paths["root"])
+        self.profile_dir = Path(paths["browser_profile"])
         self.visible = bool(self.config.get("browser_visible", True))
+        self.handoff_enabled = bool(self.config.get("browser_handoff_enabled", True))
         self.wait_interval = max(
             1.0,
             float(self.config.get("browser_wait_interval_seconds", 5.0)),
@@ -674,6 +678,7 @@ class BrowserSessionManager:
         self._driver = None
         self._primary_handle = None
         self._recoveries = 0
+        self._handoffs = 0
 
     def close(self) -> None:
         if self._driver is None:
@@ -697,11 +702,11 @@ class BrowserSessionManager:
             f"profile={self._safe_profile_label()}"
         )
         driver.get(collection["catalog_url"])
-        self._wait_for_human_release(collection["id"])
+        driver = self._wait_for_human_release(collection["id"])
         self._accept_cookie_banner()
         self._scroll_until_stable()
         self._wait_for_catalog_grid(collection["id"])
-        self._wait_for_human_release(collection["id"])
+        driver = self._wait_for_human_release(collection["id"])
         books = driver.find_elements(self.runtime["By"].CLASS_NAME, "book-list-item")
         return [_catalog_item_from_element(book, collection, self.runtime) for book in books]
 
@@ -727,6 +732,7 @@ class BrowserSessionManager:
 
     def _launch_driver(self, action: str):
         self.profile_dir.mkdir(parents=True, exist_ok=True)
+        self._quarantine_stale_browser_markers()
         options = self.runtime["FirefoxOptions"]()
         if self.visible:
             options.add_argument("-profile")
@@ -754,6 +760,31 @@ class BrowserSessionManager:
             f"profile={self._safe_profile_label()} tabs=1"
         )
         return driver
+
+    def _quarantine_stale_browser_markers(self) -> None:
+        """Preserva resíduos renomeáveis e bloqueia perfil efetivamente ativo."""
+
+        names = ("parent.lock", ".parentlock", "lock", "MarionetteActivePort")
+        markers = [self.profile_dir / name for name in names]
+        markers = [path for path in markers if path.exists() or path.is_symlink()]
+        if not markers:
+            return
+        if os.name != "nt":
+            raise DownloadError("perfil possui marcador de uso; confirme Firefox encerrado")
+        quarantine = self.state_root / "tmp" / "obsolete-browser-markers"
+        quarantine.mkdir(parents=True, exist_ok=True)
+        moved: list[tuple[Path, Path]] = []
+        try:
+            for marker in markers:
+                target = quarantine / f"{marker.name}.{time.time_ns()}.stale"
+                marker.replace(target)
+                moved.append((marker, target))
+        except OSError as error:
+            for original, preserved in reversed(moved):
+                preserved.replace(original)
+            raise DownloadError(
+                "perfil do Firefox está em uso; encerre a sessão antes de continuar"
+            ) from error
 
     def _recover_driver(self, reason: str):
         if self._recoveries >= self.recovery_limit:
@@ -800,7 +831,7 @@ class BrowserSessionManager:
         last_height = driver.execute_script("return document.body.scrollHeight")
         stable = 0
         while stable < 3:
-            self._wait_for_human_release("scroll")
+            driver = self._wait_for_human_release("scroll")
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(float(self.config["delay_seconds"]))
             current_height = driver.execute_script("return document.body.scrollHeight")
@@ -810,7 +841,7 @@ class BrowserSessionManager:
     def _wait_for_catalog_grid(self, collection_id: str) -> None:
         while True:
             driver = self._usable_driver()
-            self._wait_for_human_release(collection_id)
+            driver = self._wait_for_human_release(collection_id)
             try:
                 wait = self.runtime["WebDriverWait"](
                     driver,
@@ -833,34 +864,111 @@ class BrowserSessionManager:
                     f"catalogo sem grade esperada: {collection_id}"
                 ) from error
 
-    def _wait_for_human_release(self, scope: str) -> None:
-        started = None
-        notified = False
+    def _wait_for_human_release(self, scope: str):
+        driver = self._usable_driver()
+        if not self._challenge_detected(driver):
+            return driver
+        self._handoff_to_human(scope, str(driver.current_url or ""))
+        resumed = self._launch_driver("resume")
+        resumed.get(self._handoff_url)
+        if self._challenge_detected(resumed):
+            raise OriginBlocked(
+                "sessão humana encerrada, mas o desafio permanece; estado preservado"
+            )
+        expected = urlsplit(self._handoff_url)
+        current = urlsplit(str(resumed.current_url or ""))
+        if current.scheme != expected.scheme or current.hostname != expected.hostname:
+            raise OriginBlocked(
+                "sessão humana retomou em origem divergente; estado preservado"
+            )
+        print(f"HUMAN_VERIFICATION_RELEASED scope={scope}")
+        return resumed
+
+    def _human_browser_binary(self) -> str:
+        configured = str(self.config.get("browser_human_binary", "")).strip()
+        candidates = [configured] if configured else []
+        discovered = shutil.which("firefox")
+        if discovered:
+            candidates.append(discovered)
+        if os.name == "nt":
+            for variable in ("ProgramFiles", "ProgramFiles(x86)"):
+                root = os.environ.get(variable)
+                if root:
+                    candidates.append(str(Path(root) / "Mozilla Firefox" / "firefox.exe"))
+        for candidate in candidates:
+            path = Path(candidate).expanduser()
+            if path.is_file():
+                return str(path.resolve())
+        raise OriginBlocked(
+            "Firefox normal não encontrado; configure browser_human_binary"
+        )
+
+    def _handoff_to_human(self, scope: str, url: str) -> None:
+        """Encerra o WebDriver antes de entregar o perfil ao navegador normal."""
+
+        if not self.visible or not self.handoff_enabled:
+            raise OriginBlocked("handoff humano desabilitado ou navegador não visível")
+        if self._handoffs >= self.recovery_limit + 1:
+            raise OriginBlocked("limite de handoffs humanos excedido")
+        self._handoffs += 1
+        self._handoff_url = url
+        started = time.monotonic()
+        self.close()
+        binary = self._human_browser_binary()
+        print(
+            f"HUMAN_HANDOFF_STARTED scope={scope} method=detached-browser",
+            file=sys.stderr,
+        )
+        print(
+            "A automação foi encerrada. Resolva a verificação no Firefox normal e "
+            "feche essa janela para validar a retomada; Ctrl+C cancela com segurança.",
+            file=sys.stderr,
+        )
+        process = subprocess.Popen(
+            [
+                binary,
+                "-no-remote",
+                "-profile",
+                str(self.profile_dir),
+                url,
+            ],
+            cwd=REPOSITORY_ROOT,
+        )
+        observed_profile_lock = False
+        launcher_finished_at: float | None = None
         while True:
-            driver = self._usable_driver()
-            if not self._challenge_detected(driver):
-                if started is not None:
-                    duration = int(time.monotonic() - started)
-                    print(f"HUMAN_VERIFICATION_RELEASED scope={scope} seconds={duration}")
-                return
-            if started is None:
-                started = time.monotonic()
-            if not notified:
-                print(
-                    "Verificação humana detectada. Conclua-a na guia aberta. "
-                    "O processamento permanecerá pausado e será retomado automaticamente.",
-                    file=sys.stderr,
-                )
-                print(f"HUMAN_VERIFICATION_WAIT scope={scope}", file=sys.stderr)
-                notified = True
-            if (
-                self.human_wait_limit
-                and time.monotonic() - started >= self.human_wait_limit
-            ):
+            return_code = process.poll()
+            profile_locked = any(
+                (self.profile_dir / name).exists()
+                or (self.profile_dir / name).is_symlink()
+                for name in ("parent.lock", ".parentlock", "lock")
+            )
+            observed_profile_lock = observed_profile_lock or profile_locked
+            if return_code is not None and launcher_finished_at is None:
+                launcher_finished_at = time.monotonic()
+            if return_code is not None and not profile_locked:
+                grace_elapsed = time.monotonic() - launcher_finished_at
+                if observed_profile_lock or grace_elapsed >= max(2.0, self.wait_interval * 2):
+                    break
+            if self.human_wait_limit and time.monotonic() - started >= self.human_wait_limit:
+                if return_code is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=10)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
                 raise OriginBlocked(
-                    "tempo configurado de espera humana excedido; estado preservado"
+                    "tempo de intervenção humana excedido; feche o Firefox normal"
                 )
             time.sleep(self.wait_interval)
+        if process.returncode not in {0, None}:
+            raise OriginBlocked(
+                f"navegador humano encerrou com código {process.returncode}"
+            )
+        print(
+            f"HUMAN_HANDOFF_FINISHED scope={scope} seconds={int(time.monotonic() - started)}",
+            file=sys.stderr,
+        )
 
     def _challenge_detected(self, driver) -> bool:
         try:
@@ -1170,6 +1278,7 @@ def _process_collection(
     shared_limiter: RateLimiter | None = None,
     revalidate: bool = False,
     browser_manager: BrowserSessionManager | None = None,
+    publisher: GitPublicationPublisher | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -1214,6 +1323,12 @@ def _process_collection(
         summary["discovered"] = len(items)
         for index, item in enumerate(items, 1):
             try:
+                if publisher is not None:
+                    previous = ledger.get(item.stable_key()) or {}
+                    publisher.preflight(
+                        item,
+                        resume=previous.get("git_state") == "commit_pending",
+                    )
                 result = _process_catalog_item(
                     item,
                     source_root,
@@ -1228,6 +1343,14 @@ def _process_collection(
                     summary[key] += result[key]
                 if result["state"] == "review_required":
                     summary["review_required"] += 1
+                if publisher is not None and result["state"] in {"completed", "skipped"}:
+                    allowlist = validate_complete_publication(item, source_root)
+                    commit = publisher.commit(item, allowlist, ledger)
+                    if commit:
+                        result["commit"] = commit
+                        print(
+                            f"PUBLICATION_COMMITTED remote_id={item.remote_id} commit={commit}"
+                        )
                 print(
                     f"ITEM_{result['state'].upper()} collection={collection['id']} "
                     f"item={index} remote_id={item.remote_id} "
@@ -1271,7 +1394,7 @@ class _NullProgress:
 
 
 def _selected_collections(config: dict, selected: set[str] | None) -> list[dict]:
-    if config["schema_version"] == 2:
+    if config["schema_version"] in {2, 3}:
         collections = list(config["collections"])
     else:
         collections = [
@@ -1311,13 +1434,14 @@ def run(
     fixture_path: Path | None = None,
     no_network: bool = False,
     revalidate: bool = False,
+    commit_per_publication: bool = False,
 ) -> int:
     config = load_config(config_path)
     source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
-    state_root = resolve_repository_path(
-        config.get("state_root", "constructor/.state/publications-acquisition"),
-        REPOSITORY_ROOT,
-    )
+    paths = runtime_paths(config, REPOSITORY_ROOT)
+    state_root = paths["acquisition"]
+    state_root.mkdir(parents=True, exist_ok=True)
+    config["download"]["_download_tmp_dir"] = str(paths["downloads"])
     fixture = None
     if fixture_path is not None:
         try:
@@ -1339,12 +1463,26 @@ def run(
     shared_limiter = RateLimiter(_rate_policy(config["download"]))
     needs_browser = fixture is None and not no_network
     browser_manager = None
+    transaction_enabled = bool(
+        commit_per_publication
+        or config.get("transaction", {}).get("commit_per_publication", False)
+    )
+    publisher = None
+    if transaction_enabled:
+        if worker_count != 1:
+            raise ContractError("commit por publicação exige workers=1")
+        publisher = GitPublicationPublisher(
+            REPOSITORY_ROOT,
+            source_root,
+            paths["locks"] / "publication-git.lock",
+            branch=str(config.get("transaction", {}).get("branch", "dev")),
+        )
     if needs_browser:
         if worker_count != 1:
             raise ContractError(
                 "descoberta com navegador persistente exige workers=1"
             )
-        browser_manager = BrowserSessionManager(runtime, config["download"], state_root)
+        browser_manager = BrowserSessionManager(runtime, config["download"], paths)
     try:
         if worker_count == 1:
             for collection in collections:
@@ -1365,6 +1503,7 @@ def run(
                         shared_limiter=shared_limiter,
                         revalidate=revalidate,
                         browser_manager=browser_manager,
+                        publisher=publisher,
                     )
                 )
         else:
@@ -1386,6 +1525,7 @@ def run(
                         ),
                         shared_limiter=shared_limiter,
                         revalidate=revalidate,
+                        publisher=publisher,
                     ): collection["id"]
                     for collection in collections
                 }
@@ -1431,6 +1571,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Usa ETag/Last-Modified persistidos para revalidacao condicional.",
     )
+    parser.add_argument(
+        "--commit",
+        action="store_true",
+        help="Cria um commit isolado por publicação completa; exige branch dev limpa no índice.",
+    )
     return parser
 
 
@@ -1445,6 +1590,7 @@ def main(argv: list[str] | None = None) -> int:
             fixture_path=arguments.fixture.resolve() if arguments.fixture else None,
             no_network=arguments.no_network,
             revalidate=arguments.revalidate,
+            commit_per_publication=arguments.commit,
         )
     except ContractError as error:
         print(f"ERRO_CONTRATO: {error}", file=sys.stderr)

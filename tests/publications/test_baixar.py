@@ -96,6 +96,18 @@ class _FakeDriver:
         self.quit_count += 1
 
 
+class _FakeProcess:
+    def __init__(self) -> None:
+        self.returncode = None
+        self.poll_count = 0
+
+    def poll(self):
+        self.poll_count += 1
+        if self.poll_count >= 2:
+            self.returncode = 0
+        return self.returncode
+
+
 class _FakeActionChains:
     def __init__(self, _driver) -> None:
         pass
@@ -145,6 +157,13 @@ def _runtime(driver_factory):
 
 
 class DownloaderTests(unittest.TestCase):
+    @staticmethod
+    def _runtime_paths(root: Path) -> dict[str, Path]:
+        return {
+            "root": root,
+            "browser_profile": root / "profiles" / "egwwritings",
+        }
+
     def test_private_dns_is_blocked(self) -> None:
         with patch.object(
             baixar.socket,
@@ -423,10 +442,9 @@ class DownloaderTests(unittest.TestCase):
                 {
                     "delay_seconds": 2.0,
                     "browser_visible": True,
-                    "browser_profile_dir": profile,
                     "browser_wait_interval_seconds": 1.0,
                 },
-                Path(temporary),
+                self._runtime_paths(Path(temporary)),
             )
             collection_a = {
                 "id": "a",
@@ -451,32 +469,70 @@ class DownloaderTests(unittest.TestCase):
             manager.close()
             self.assertEqual(driver.quit_count, 1)
 
-    def test_browser_challenge_waits_without_busy_loop_and_resumes(self) -> None:
+    def test_browser_challenge_detaches_for_human_and_resumes(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
-            driver = _FakeDriver(
-                [
-                    "<html><title>Checking your browser</title><div>captcha</div></html>",
-                    "<html><div class='book-list-item'></div></html>",
-                ]
+            challenged = _FakeDriver(
+                ["<html><title>Checking your browser</title><div>captcha</div></html>"]
             )
-            runtime = _runtime(Mock(return_value=driver))
+            resumed = _FakeDriver(["<html><div class='book-list-item'></div></html>"])
+            firefox = Mock(side_effect=[challenged, resumed])
+            runtime = _runtime(firefox)
             manager = baixar.BrowserSessionManager(
                 runtime,
                 {
                     "delay_seconds": 2.0,
                     "browser_visible": True,
-                    "browser_profile_dir": "constructor/.state/test-browser-profile",
+                    "browser_handoff_enabled": True,
                     "browser_wait_interval_seconds": 1.0,
                     "browser_human_wait_seconds": 5.0,
                 },
-                Path(temporary),
+                self._runtime_paths(Path(temporary)),
             )
-            with patch.object(baixar.time, "sleep") as sleep_mock:
-                with patch.object(
-                    baixar,
-                    "_catalog_item_from_element",
-                    return_value=Mock(),
-                ):
+            process = _FakeProcess()
+
+            def detached_process(*_args, **_kwargs):
+                self.assertEqual(challenged.quit_count, 1)
+                self.assertIsNone(manager._driver)
+                return process
+
+            with patch.object(manager, "_human_browser_binary", return_value="firefox"):
+                with patch.object(baixar.subprocess, "Popen", side_effect=detached_process):
+                    with patch.object(baixar.time, "sleep") as sleep_mock:
+                        with patch.object(
+                            baixar,
+                            "_catalog_item_from_element",
+                            return_value=Mock(),
+                        ):
+                            manager.discover_catalog_items(
+                                {
+                                    "id": "a",
+                                    "catalog_url": "https://egwwritings.org/allCollection/pt/245",
+                                },
+                                Mock(before_request=Mock()),
+                            )
+            sleep_mock.assert_any_call(1.0)
+            self.assertEqual(firefox.call_count, 2)
+            self.assertEqual(challenged.quit_count, 1)
+            self.assertEqual(resumed.visited, ["https://egwwritings.org/allCollection/pt/245"])
+            manager.close()
+
+    def test_browser_handoff_disabled_stops_without_polling(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            driver = _FakeDriver(
+                ["<html><title>Checking your browser</title><div>captcha</div></html>"]
+            )
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock(return_value=driver)),
+                {
+                    "delay_seconds": 2.0,
+                    "browser_visible": True,
+                    "browser_handoff_enabled": False,
+                    "browser_wait_interval_seconds": 1.0,
+                },
+                self._runtime_paths(Path(temporary)),
+            )
+            with patch.object(baixar.subprocess, "Popen") as popen:
+                with self.assertRaises(baixar.OriginBlocked):
                     manager.discover_catalog_items(
                         {
                             "id": "a",
@@ -484,7 +540,76 @@ class DownloaderTests(unittest.TestCase):
                         },
                         Mock(before_request=Mock()),
                     )
-            sleep_mock.assert_any_call(1.0)
+            popen.assert_not_called()
+            manager.close()
+
+    def test_browser_handoff_waits_for_delegated_profile_lock(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock()),
+                {
+                    "delay_seconds": 2.0,
+                    "browser_visible": True,
+                    "browser_handoff_enabled": True,
+                    "browser_wait_interval_seconds": 1.0,
+                    "browser_human_wait_seconds": 10.0,
+                },
+                self._runtime_paths(root),
+            )
+            manager.profile_dir.mkdir(parents=True, exist_ok=True)
+            profile_lock = manager.profile_dir / "parent.lock"
+            profile_lock.write_bytes(b"")
+            process = _FakeProcess()
+            sleeps = 0
+
+            def release_lock(_seconds: float) -> None:
+                nonlocal sleeps
+                sleeps += 1
+                if sleeps == 3:
+                    profile_lock.unlink()
+
+            with patch.object(manager, "_human_browser_binary", return_value="firefox"):
+                with patch.object(baixar.subprocess, "Popen", return_value=process):
+                    with patch.object(baixar.time, "sleep", side_effect=release_lock):
+                        manager._handoff_to_human(
+                            "a",
+                            "https://egwwritings.org/allCollection/pt/245",
+                        )
+
+            self.assertGreaterEqual(sleeps, 3)
+            self.assertFalse(profile_lock.exists())
+
+    def test_browser_rejects_challenge_reappearing_after_handoff(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            challenged = _FakeDriver(
+                ["<html><title>Checking your browser</title><div>captcha</div></html>"]
+            )
+            resumed = _FakeDriver(
+                ["<html><title>Checking your browser</title><div>captcha</div></html>"]
+            )
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock(side_effect=[challenged, resumed])),
+                {
+                    "delay_seconds": 2.0,
+                    "browser_visible": True,
+                    "browser_handoff_enabled": True,
+                    "browser_wait_interval_seconds": 1.0,
+                    "browser_human_wait_seconds": 5.0,
+                },
+                self._runtime_paths(Path(temporary)),
+            )
+            with patch.object(manager, "_human_browser_binary", return_value="firefox"):
+                with patch.object(baixar.subprocess, "Popen", return_value=_FakeProcess()):
+                    with patch.object(baixar.time, "sleep"):
+                        with self.assertRaises(baixar.OriginBlocked):
+                            manager.discover_catalog_items(
+                                {
+                                    "id": "a",
+                                    "catalog_url": "https://egwwritings.org/allCollection/pt/245",
+                                },
+                                Mock(before_request=Mock()),
+                            )
             manager.close()
 
 
