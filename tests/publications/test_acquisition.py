@@ -173,9 +173,15 @@ class TextAndEpubTests(unittest.TestCase):
             "<footer>Rodapé</footer>"
         )
         self.assertIn("## Título", markdown)
-        self.assertIn("Corpo real.", markdown)
+        self.assertIn("Corpo **real**.", markdown)
         self.assertNotIn("Anterior", markdown)
         self.assertNotIn("Rodapé", markdown)
+
+    def test_reader_heading_classes_and_emphasis_are_preserved(self) -> None:
+        markdown = editorial_html_to_markdown(
+            '<p class="h3" id="14389.102">2 - Estudos <em>sobre</em> a Fé</p>'
+        )
+        self.assertEqual(markdown, "### 2 - Estudos *sobre* a Fé\n")
 
     def test_gap_or_duplicate_blocks_completion(self) -> None:
         segments = [

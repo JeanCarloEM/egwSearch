@@ -182,6 +182,86 @@ class DownloaderTests(unittest.TestCase):
             with self.assertRaises(baixar.DownloadError):
                 baixar._validate_public_dns("media2.egwwritings.org")
 
+    def test_fixture_output_is_always_segregated_from_canonical_source(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            canonical = root / "src" / "publications"
+            runtime = root / "constructor" / ".state" / "egwsearch"
+            resolved = baixar._fixture_source_root(canonical, runtime, None)
+            self.assertEqual(resolved, (runtime / "tmp" / "fixture-output").resolve())
+            with self.assertRaises(baixar.ContractError):
+                baixar._fixture_source_root(canonical, runtime, canonical)
+            with self.assertRaises(baixar.ContractError):
+                baixar._fixture_source_root(canonical, runtime, root)
+
+    def test_lightweight_public_projection_preserves_path_and_book_id(self) -> None:
+        projected = baixar._lightweight_public_url(
+            "https://egwwritings.org/book/b14389"
+        )
+        self.assertEqual(projected, "https://text.egwwritings.org/book/b14389")
+        self.assertEqual(baixar._book_id_from_url(projected), "14389")
+        self.assertEqual(
+            baixar._book_id_from_url("https://text.egwwritings.org/read/14389.102"),
+            "14389",
+        )
+
+    def test_detail_page_discovers_every_enabled_native_asset(self) -> None:
+        def element(text: str = "", href: str | None = None, disabled: bool = False):
+            value = Mock(text=text)
+            value.get_attribute.side_effect = lambda name: (
+                href
+                if name == "href"
+                else ("true" if name == "disabled" and disabled else None)
+            )
+            return value
+
+        title = element("Atos dos Apóstolos")
+        author = element("By Ellen G. White")
+        links = [
+            element(href="https://media2.egwwritings.org/pdf/pt_AA(AA).pdf"),
+            element(href="https://media2.egwwritings.org/epub/pt_AA(AA).epub"),
+            element(href="https://media2.egwwritings.org/epub/disabled.epub", disabled=True),
+            element(href="https://text.egwwritings.org/read/1806.2"),
+        ]
+        driver = _FakeDriver()
+
+        def find_elements(by, selector):
+            if by == _FakeBy.TAG_NAME and selector == "a":
+                return links
+            if selector == ".breadcrumbs-header-title":
+                return [title]
+            if selector == ".book-info-content__subtitle__author":
+                return [author]
+            return []
+
+        driver.find_elements = Mock(side_effect=find_elements)
+        with tempfile.TemporaryDirectory() as temporary:
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock(return_value=driver)),
+                {"delay_seconds": 2.0, "browser_visible": True},
+                self._runtime_paths(Path(temporary)),
+            )
+            manager._driver = driver
+            manager._primary_handle = "main"
+            with patch.object(manager, "_wait_for_human_release", return_value=driver):
+                item = manager._enrich_book(
+                    {
+                        "id": "pt-br-livros",
+                        "name": "Livros",
+                        "language": "pt-BR",
+                        "type": "livros",
+                        "default_author_key": "egw",
+                        "default_author_name": "Ellen G. White",
+                    },
+                    "https://text.egwwritings.org/book/b1806",
+                    "Atos",
+                    "",
+                    Mock(before_request=Mock()),
+                )
+        self.assertEqual([asset.format for asset in item.assets], ["epub", "pdf"])
+        self.assertEqual(len(item.assets), 2)
+        self.assertEqual(item.author_name, "Ellen G. White")
+
     def test_asset_install_is_atomic_and_repetition_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             source_root = Path(temporary)
@@ -474,7 +554,13 @@ class DownloaderTests(unittest.TestCase):
             options = firefox.call_args.kwargs["options"]
             self.assertIn("-profile", options.arguments)
             self.assertNotIn("--headless", options.arguments)
-            self.assertEqual(driver.visited, [collection_a["catalog_url"], collection_b["catalog_url"]])
+            self.assertEqual(
+                driver.visited,
+                [
+                    "https://text.egwwritings.org/allCollection/pt/245",
+                    "https://text.egwwritings.org/allCollection/en/4",
+                ],
+            )
             manager.close()
             self.assertEqual(driver.quit_count, 1)
 
@@ -522,7 +608,10 @@ class DownloaderTests(unittest.TestCase):
             sleep_mock.assert_any_call(1.0)
             self.assertEqual(firefox.call_count, 2)
             self.assertEqual(challenged.quit_count, 1)
-            self.assertEqual(resumed.visited, ["https://egwwritings.org/allCollection/pt/245"])
+            self.assertEqual(
+                resumed.visited,
+                ["https://text.egwwritings.org/allCollection/pt/245"],
+            )
             manager.close()
 
     def test_browser_handoff_disabled_stops_without_polling(self) -> None:

@@ -26,6 +26,7 @@ import tempfile
 import threading
 import time
 from urllib.parse import urljoin, urlsplit
+import re
 
 from acquisition import (
     AcquisitionLedger,
@@ -651,6 +652,29 @@ def re_search_book_url(url: str) -> bool:
     return "/book/" in path or "/read/" in path
 
 
+def _lightweight_public_url(url: str) -> str:
+    """Projeta a aplicação pública para a interface textual oficial equivalente."""
+
+    parsed = urlsplit(url)
+    if parsed.hostname in {"egwwritings.org", "www.egwwritings.org"}:
+        return parsed._replace(netloc="text.egwwritings.org").geturl()
+    return url
+
+
+def _book_id_from_url(url: str) -> str:
+    match = re.search(r"/(?:book/b|read/)(\d+)(?:[./]|$)", urlsplit(url).path)
+    if not match:
+        raise ContractError(f"URL sem identificador de obra: {url}")
+    return match.group(1)
+
+
+def _clean_catalog_title(value: str) -> str:
+    lines = [line.strip() for line in str(value or "").splitlines() if line.strip()]
+    if not lines:
+        return ""
+    return lines[0]
+
+
 class BrowserSessionManager:
     """Mantem uma unica sessao/guia Selenium visivel para descoberta remota."""
 
@@ -697,21 +721,320 @@ class BrowserSessionManager:
         self,
         collection: dict,
         limiter: RateLimiter,
+        limit: int | None = None,
+        publication_query: str | None = None,
     ) -> list[CatalogItem]:
+        """Enumera todas as obras e as enriquece pela página individual."""
+
         driver = self._usable_driver()
         limiter.before_request()
         print(
             f"BROWSER_TAB_REUSE collection={collection['id']} "
             f"profile={self._safe_profile_label()}"
         )
-        driver.get(collection["catalog_url"])
+        catalog_url = _lightweight_public_url(collection["catalog_url"])
+        driver.get(catalog_url)
         driver = self._wait_for_human_release(collection["id"])
-        self._accept_cookie_banner()
-        self._scroll_until_stable()
+        if urlsplit(catalog_url).hostname != "text.egwwritings.org":
+            self._accept_cookie_banner()
+        links = self._discover_catalog_links(collection, limiter)
+        if links:
+            print(
+                f"CATALOG_DISCOVERED collection={collection['id']} "
+                f"publications={len(links)} source=lightweight-public"
+            )
+            ordered = sorted(links.values(), key=lambda value: value[0].casefold())
+            if publication_query:
+                query = publication_query.casefold().strip()
+                ordered = [
+                    value
+                    for value in ordered
+                    if query in value[0].casefold()
+                    or query in value[1].casefold()
+                    or query == _book_id_from_url(value[1])
+                ]
+                if not ordered:
+                    raise ContractError(
+                        f"publicação não encontrada na coleção: {publication_query}"
+                    )
+            if limit is not None:
+                ordered = ordered[:limit]
+            return [
+                self._enrich_book(collection, url, title, author, limiter)
+                for title, url, author in ordered
+            ]
+
+        # Compatibilidade com a aplicação completa e com fixtures Selenium
+        # antigas: a colheita ocorre durante a rolagem para não perder cartões
+        # virtualizados que deixam o DOM.
+        items: dict[str, CatalogItem] = {}
+        self._harvest_virtualized_cards(collection, items)
+        self._scroll_until_stable(
+            on_step=lambda: self._harvest_virtualized_cards(collection, items)
+        )
         self._wait_for_catalog_grid(collection["id"])
-        driver = self._wait_for_human_release(collection["id"])
-        books = driver.find_elements(self.runtime["By"].CLASS_NAME, "book-list-item")
-        return [_catalog_item_from_element(book, collection, self.runtime) for book in books]
+        self._harvest_virtualized_cards(collection, items)
+        values = sorted(items.values(), key=lambda item: item.title_normalized.casefold())
+        return values[:limit] if limit is not None else values
+
+    def _discover_catalog_links(
+        self,
+        collection: dict,
+        limiter: RateLimiter,
+    ) -> dict[str, tuple[str, str, str]]:
+        """Coleta links estáticos de obra e, nas pioneiras, catálogos autorais."""
+
+        driver = self._usable_driver()
+        by = self.runtime["By"]
+        result: dict[str, tuple[str, str, str]] = {}
+
+        def harvest(author: str = "") -> None:
+            for link in driver.find_elements(by.CSS_SELECTOR, "a[href*='/book/']"):
+                href = str(link.get_attribute("href") or "").strip()
+                title = _clean_catalog_title(link.text)
+                if not href or not title:
+                    continue
+                absolute = _lightweight_public_url(urljoin(str(driver.current_url), href))
+                result.setdefault(absolute, (title, absolute, author))
+
+        harvest(str(collection.get("default_author_name") or "").strip())
+        if result or not collection.get("discover_authors"):
+            return result
+
+        language_code = "pt" if canonical_language(collection["language"])[0] == "pt-BR" else "en"
+        author_links: dict[str, str] = {}
+        selector = f"a[href*='/allCollection/{language_code}/']"
+        for link in driver.find_elements(by.CSS_SELECTOR, selector):
+            href = str(link.get_attribute("href") or "").strip()
+            author = _clean_catalog_title(link.text)
+            absolute = _lightweight_public_url(urljoin(str(driver.current_url), href))
+            path = urlsplit(absolute).path.rstrip("/")
+            if not author or not re.fullmatch(rf"/allCollection/{language_code}/\d+", path):
+                continue
+            if absolute != _lightweight_public_url(collection["catalog_url"]):
+                author_links[absolute] = author
+        for author_url, author in sorted(author_links.items()):
+            limiter.before_request()
+            driver.get(author_url)
+            self._wait_for_human_release(f"{collection['id']}:{author}")
+            harvest(author)
+        return result
+
+    def _enrich_book(
+        self,
+        collection: dict,
+        public_url: str,
+        title_candidate: str,
+        author_candidate: str,
+        limiter: RateLimiter,
+    ) -> CatalogItem:
+        """Usa a página da obra como autoridade de identidade, ativos e leitura."""
+
+        driver = self._usable_driver()
+        limiter.before_request()
+        driver.get(_lightweight_public_url(public_url))
+        self._wait_for_human_release(f"book:{_book_id_from_url(public_url)}")
+        title = _first_element_text(
+            driver,
+            self.runtime,
+            [".breadcrumbs-header-title", ".book-info h1", "main h1"],
+        ) or title_candidate
+        author = _first_element_text(
+            driver,
+            self.runtime,
+            [".book-info-content__subtitle__author", "[class*='author']"],
+        ) or author_candidate or str(collection.get("default_author_name") or "")
+        author = re.sub(r"^\s*By[\s\u00a0]+", "", author, flags=re.IGNORECASE).strip()
+        if not title or not author:
+            raise ContractError("página individual sem título ou autor comprovado")
+        assets: dict[tuple[str, str], CatalogAsset] = {}
+        read_url = ""
+        for link in driver.find_elements(self.runtime["By"].TAG_NAME, "a"):
+            href = str(link.get_attribute("href") or "").strip()
+            disabled = link.get_attribute("disabled") is not None
+            if not href or href == "#" or disabled:
+                continue
+            absolute = urljoin(str(driver.current_url), href)
+            try:
+                publication_format = format_from_url(absolute)
+            except ContractError:
+                if "/read/" in urlsplit(absolute).path and not read_url:
+                    read_url = _lightweight_public_url(absolute)
+                continue
+            assets[(publication_format, absolute)] = CatalogAsset(
+                format=publication_format,
+                url=absolute,
+            )
+        language, language_path = canonical_language(collection["language"])
+        segments: tuple[CatalogSegment, ...] = ()
+        if not assets:
+            if not read_url:
+                raise ContractError("obra sem ativo nativo e sem URL Read Online")
+            segments = tuple(self._discover_text_segments(read_url, limiter))
+        canonical_url = _lightweight_public_url(public_url)
+        return CatalogItem(
+            remote_id=remote_id_from_url(canonical_url),
+            collection_id=collection["id"],
+            collection_name=collection["name"],
+            author_name=author,
+            author_key=collection.get("default_author_key") or canonical_author_key(author),
+            language_original=collection["language"],
+            language=language,
+            language_path=language_path,
+            publication_type=canonical_publication_type(
+                collection.get("type", ""), collection["language"]
+            ),
+            title_original=title,
+            title_normalized=title,
+            public_url=canonical_url,
+            assets=tuple(sorted(assets.values(), key=lambda item: (item.format != "epub", item.url))),
+            segments=segments,
+        )
+
+    def _discover_text_segments(
+        self,
+        initial_url: str,
+        limiter: RateLimiter,
+    ) -> list[CatalogSegment]:
+        """Percorre a cadeia editorial real `rel=next` sem saltar páginas."""
+
+        driver = self._usable_driver()
+        by = self.runtime["By"]
+        book_id = _book_id_from_url(initial_url)
+        current = _lightweight_public_url(initial_url)
+        previous = ""
+        visited: set[str] = set()
+        segments: list[CatalogSegment] = []
+        checkpoint_path = (
+            self.state_root / "acquisition" / "text" / f"{book_id}.json"
+        )
+        if checkpoint_path.is_file():
+            try:
+                checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+                if (
+                    checkpoint.get("schema_version") == "publication-text-checkpoint/v1"
+                    and checkpoint.get("initial_url") == current
+                    and isinstance(checkpoint.get("segments"), list)
+                ):
+                    segments = [
+                        CatalogSegment(
+                            remote_id=str(value["remote_id"]),
+                            url=str(value["url"]),
+                            order=int(value["order"]),
+                            title=str(value["title"]),
+                            html=str(value["html"]),
+                        )
+                        for value in checkpoint["segments"]
+                    ]
+                    visited = {segment.url for segment in segments}
+                    current = str(checkpoint.get("next_url") or "")
+                    previous = segments[-1].url if segments else ""
+                    if checkpoint.get("complete"):
+                        return segments
+                    print(
+                        f"TEXT_DISCOVERY_RESUME book={book_id} units={len(segments)}"
+                    )
+            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                checkpoint_path.rename(
+                    checkpoint_path.with_suffix(f".corrupt-{int(time.time())}.json")
+                )
+        while current:
+            if len(segments) >= 10000:
+                raise ContractError("cadeia editorial excedeu o limite seguro")
+            normalized = current.split("#", 1)[0]
+            if normalized in visited:
+                raise ContractError("ciclo na navegação editorial")
+            if _book_id_from_url(normalized) != book_id:
+                raise ContractError("navegação editorial mudou de obra")
+            visited.add(normalized)
+            limiter.before_request()
+            driver.get(normalized)
+            self._wait_for_human_release(f"read:{book_id}:{len(segments) + 1}")
+            containers = driver.find_elements(by.CSS_SELECTOR, "#r-pl")
+            if len(containers) != 1:
+                raise ContractError("página de leitura sem contêiner editorial único")
+            payload = driver.execute_script(
+                """
+                const source = document.querySelector('#r-pl');
+                if (!source) return null;
+                const copy = source.cloneNode(true);
+                copy.querySelectorAll('.refCode,.anchor-link,script,style,button,nav,aside').forEach((e) => e.remove());
+                const first = copy.querySelector('[id]');
+                const heading = copy.querySelector('h1,h2,h3,h4,h5,h6,.h1,.h2,.h3,.h4,.h5,.h6');
+                return {html: copy.innerHTML, firstId: first ? first.id : '', title: heading ? heading.textContent.trim() : ''};
+                """
+            )
+            if not isinstance(payload, dict) or not str(payload.get("html") or "").strip():
+                raise ContractError("página de leitura sem conteúdo editorial real")
+            first_id = str(payload.get("firstId") or "").strip()
+            segment_id = first_id or urlsplit(normalized).path.rsplit("/", 1)[-1]
+            title = str(payload.get("title") or "").strip() or f"Unidade {len(segments) + 1}"
+            segments.append(
+                CatalogSegment(
+                    remote_id=segment_id,
+                    url=normalized,
+                    order=len(segments) + 1,
+                    title=title,
+                    html=f'<section data-source-id="{segment_id}">{payload["html"]}</section>',
+                )
+            )
+            prev_links = driver.find_elements(by.CSS_SELECTOR, "#reader a[rel='prev']")
+            prev_urls = {
+                urljoin(normalized, str(link.get_attribute("href") or "")).split("#", 1)[0]
+                for link in prev_links
+                if link.get_attribute("disabled") is None and link.get_attribute("href")
+            }
+            if previous and prev_urls and previous not in prev_urls:
+                raise ContractError("navegação editorial anterior/próximo divergente")
+            next_links = driver.find_elements(by.CSS_SELECTOR, "#reader a[rel='next']")
+            next_urls = {
+                urljoin(normalized, str(link.get_attribute("href") or "")).split("#", 1)[0]
+                for link in next_links
+                if link.get_attribute("disabled") is None and link.get_attribute("href") not in {None, "", "#"}
+            }
+            if len(next_urls) > 1:
+                raise ContractError("página de leitura com próximos divergentes")
+            previous, current = normalized, (next(iter(next_urls)) if next_urls else "")
+            write_json_atomic(
+                checkpoint_path,
+                {
+                    "schema_version": "publication-text-checkpoint/v1",
+                    "initial_url": _lightweight_public_url(initial_url),
+                    "next_url": current,
+                    "complete": not bool(current),
+                    "segments": [
+                        {
+                            "remote_id": segment.remote_id,
+                            "url": segment.url,
+                            "order": segment.order,
+                            "title": segment.title,
+                            "html": segment.html,
+                        }
+                        for segment in segments
+                    ],
+                },
+            )
+            if len(segments) == 1 or len(segments) % 10 == 0 or not current:
+                print(
+                    f"TEXT_DISCOVERY_PROGRESS book={book_id} "
+                    f"units={len(segments)} complete={str(not bool(current)).lower()}"
+                )
+        if not segments:
+            raise ContractError("obra textual sem segmentos")
+        return segments
+
+    def _harvest_virtualized_cards(
+        self,
+        collection: dict,
+        items: dict[str, CatalogItem],
+    ) -> None:
+        driver = self._usable_driver()
+        for book in driver.find_elements(self.runtime["By"].CLASS_NAME, "book-list-item"):
+            try:
+                item = _catalog_item_from_element(book, collection, self.runtime)
+            except ContractError:
+                continue
+            items.setdefault(item.stable_key(), item)
 
     def _safe_profile_label(self) -> str:
         try:
@@ -862,17 +1185,21 @@ class BrowserSessionManager:
         except Exception:
             pass
 
-    def _scroll_until_stable(self) -> None:
+    def _scroll_until_stable(self, on_step=None) -> None:
         driver = self._usable_driver()
         last_height = driver.execute_script("return document.body.scrollHeight")
         stable = 0
         while stable < 3:
             driver = self._wait_for_human_release("scroll")
+            if on_step is not None:
+                on_step()
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
             time.sleep(float(self.config["delay_seconds"]))
             current_height = driver.execute_script("return document.body.scrollHeight")
             stable = stable + 1 if current_height == last_height else 0
             last_height = current_height
+        if on_step is not None:
+            on_step()
 
     def _wait_for_catalog_grid(self, collection_id: str) -> None:
         while True:
@@ -1225,7 +1552,7 @@ def _process_catalog_item(
                 }
         elif item.segments:
             existing_text = preflight_existing_text(item, source_root)
-            if existing_text is not None:
+            if existing_text is not None and not revalidate:
                 ledger.transition(
                     key,
                     "skipped",
@@ -1275,7 +1602,7 @@ def _process_catalog_item(
                         "format": "epub",
                         "method": "local-conversion",
                         "path": epub_path.relative_to(directory).as_posix(),
-                        "generator": "egwSearch/FT-006",
+                        "generator": "egwSearch/FT-012",
                         "source": "text/0000-metadata.json",
                         "hashes": epub_hashes.as_dict(),
                         "size": epub_hashes.size,
@@ -1338,6 +1665,7 @@ def _process_collection(
     revalidate: bool = False,
     browser_manager: BrowserSessionManager | None = None,
     publisher: GitPublicationPublisher | None = None,
+    publication_query: str | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -1376,7 +1704,25 @@ def _process_collection(
                 raise ContractError("fixture obrigatoria com --no-network")
             if browser_manager is None:
                 raise ContractError("gerenciador de navegador ausente")
-            items = browser_manager.discover_catalog_items(collection, limiter)
+            items = browser_manager.discover_catalog_items(
+                collection,
+                limiter,
+                limit=limit,
+                publication_query=publication_query,
+            )
+        if publication_query and fixture_payload is not None:
+            query = publication_query.casefold().strip()
+            items = [
+                item
+                for item in items
+                if query in item.title_original.casefold()
+                or query in item.public_url.casefold()
+                or query == item.remote_id.casefold()
+            ]
+            if not items:
+                raise ContractError(
+                    f"publicação não encontrada na coleção: {publication_query}"
+                )
         if limit is not None:
             items = items[:limit]
         summary["discovered"] = len(items)
@@ -1484,6 +1830,28 @@ def _fixture_for_collection(fixture: object, collection_id: str) -> object:
     return fixture
 
 
+def _fixture_source_root(
+    canonical_source_root: Path,
+    runtime_root: Path,
+    output_root: Path | None,
+) -> Path:
+    """Resolve saída sintética segregada e rejeita sobreposição canônica."""
+
+    candidate = (
+        Path(output_root).resolve()
+        if output_root is not None
+        else (Path(runtime_root) / "tmp" / "fixture-output").resolve()
+    )
+    canonical = Path(canonical_source_root).resolve()
+    if (
+        candidate == canonical
+        or canonical in candidate.parents
+        or candidate in canonical.parents
+    ):
+        raise ContractError("fixture não pode gravar na raiz canônica de publicações")
+    return candidate
+
+
 def run(
     config_path: Path,
     selected: set[str] | None,
@@ -1491,13 +1859,25 @@ def run(
     *,
     limit: int | None = None,
     fixture_path: Path | None = None,
+    output_root: Path | None = None,
     no_network: bool = False,
     revalidate: bool = False,
     commit_per_publication: bool = False,
+    publication_query: str | None = None,
 ) -> int:
     config = load_config(config_path)
-    source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
+    canonical_source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
     paths = runtime_paths(config, REPOSITORY_ROOT)
+    if fixture_path is not None:
+        source_root = _fixture_source_root(
+            canonical_source_root,
+            paths["root"],
+            output_root,
+        )
+    else:
+        if output_root is not None:
+            raise ContractError("--output-root é exclusivo de --fixture")
+        source_root = canonical_source_root
     state_root = paths["acquisition"]
     state_root.mkdir(parents=True, exist_ok=True)
     config["download"]["_download_tmp_dir"] = str(paths["downloads"])
@@ -1567,6 +1947,7 @@ def run(
                         revalidate=revalidate,
                         browser_manager=browser_manager,
                         publisher=publisher,
+                        publication_query=publication_query,
                     )
                 )
         else:
@@ -1589,6 +1970,7 @@ def run(
                         shared_limiter=shared_limiter,
                         revalidate=revalidate,
                         publisher=publisher,
+                        publication_query=publication_query,
                     ): collection["id"]
                     for collection in collections
                 }
@@ -1635,6 +2017,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="Usa ETag/Last-Modified persistidos para revalidacao condicional.",
     )
     parser.add_argument(
+        "--publication",
+        help="ID remoto, URL ou trecho de título para uma publicação específica.",
+    )
+    parser.add_argument(
+        "--output-root",
+        type=Path,
+        help="Raiz segregada para artefatos de fixture; nunca pode ser src/publications.",
+    )
+    parser.add_argument(
         "--commit",
         action="store_true",
         help="Cria um commit isolado por publicação completa; exige branch dev limpa no índice.",
@@ -1651,9 +2042,11 @@ def main(argv: list[str] | None = None) -> int:
             arguments.workers,
             limit=arguments.limit,
             fixture_path=arguments.fixture.resolve() if arguments.fixture else None,
+            output_root=arguments.output_root.resolve() if arguments.output_root else None,
             no_network=arguments.no_network,
             revalidate=arguments.revalidate,
             commit_per_publication=arguments.commit,
+            publication_query=arguments.publication,
         )
     except ContractError as error:
         print(f"ERRO_CONTRATO: {error}", file=sys.stderr)

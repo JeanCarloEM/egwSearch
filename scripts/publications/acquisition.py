@@ -490,12 +490,20 @@ class _MarkdownParser(HTMLParser):
             return
         if self.ignore_depth:
             return
+        attributes = dict(attrs)
+        class_tokens = set(str(attributes.get("class") or "").split())
+        semantic_heading = next(
+            (int(token[1]) for token in class_tokens if re.fullmatch(r"h[1-6]", token)),
+            None,
+        )
         if re.fullmatch(r"h[1-6]", tag):
             self._flush()
             self.heading = int(tag[1])
         elif tag in {"p", "blockquote", "table", "tr", "pre"}:
             self._flush()
             self.in_pre = tag == "pre"
+            if semantic_heading is not None:
+                self.heading = semantic_heading
         elif tag in {"ul", "ol"}:
             self.list_depth += 1
         elif tag == "li":
@@ -503,6 +511,10 @@ class _MarkdownParser(HTMLParser):
             self.buffer.append("  " * max(0, self.list_depth - 1) + "- ")
         elif tag == "br":
             self._flush()
+        elif tag in {"strong", "b"}:
+            self.buffer.append("\x00STRONG_OPEN\x00")
+        elif tag in {"em", "i"}:
+            self.buffer.append("\x00EM_OPEN\x00")
 
     def handle_endtag(self, tag: str) -> None:
         if tag in self.ignored:
@@ -517,8 +529,14 @@ class _MarkdownParser(HTMLParser):
         elif tag in {"p", "blockquote", "li", "tr", "pre"}:
             self._flush()
             self.in_pre = False
+            if tag == "p":
+                self.heading = None
         elif tag in {"ul", "ol"}:
             self.list_depth = max(0, self.list_depth - 1)
+        elif tag in {"strong", "b"}:
+            self.buffer.append("\x00STRONG_CLOSE\x00")
+        elif tag in {"em", "i"}:
+            self.buffer.append("\x00EM_CLOSE\x00")
 
     def handle_data(self, data: str) -> None:
         if self.ignore_depth:
@@ -534,6 +552,10 @@ class _MarkdownParser(HTMLParser):
             return
         value = re.sub(r"\s+([,.;:!?%)\]])", r"\1", value)
         value = re.sub(r"([(\[])\s+", r"\1", value)
+        value = value.replace("\x00STRONG_OPEN\x00 ", "**")
+        value = value.replace(" \x00STRONG_CLOSE\x00", "**")
+        value = value.replace("\x00EM_OPEN\x00 ", "*")
+        value = value.replace(" \x00EM_CLOSE\x00", "*")
         if self.heading:
             value = f"{'#' * self.heading} {value}"
         self.lines.append(value)
@@ -628,15 +650,20 @@ def write_markdown_publication(
 
 
 def _xhtml(title: str, body: str, language: str) -> str:
+    def inline(value: str) -> str:
+        escaped = escape(value)
+        escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
+        return re.sub(r"\*([^*]+)\*", r"<em>\1</em>", escaped)
+
     paragraphs = []
     for block in re.split(r"\n{2,}", body.strip()):
         if block.startswith("#"):
             match = re.match(r"^(#{1,6})\s+(.*)$", block, re.S)
             if match:
                 level = len(match.group(1))
-                paragraphs.append(f"<h{level}>{escape(match.group(2))}</h{level}>")
+                paragraphs.append(f"<h{level}>{inline(match.group(2))}</h{level}>")
                 continue
-        paragraphs.append(f"<p>{escape(block)}</p>")
+        paragraphs.append(f"<p>{inline(block)}</p>")
     return (
         '<?xml version="1.0" encoding="utf-8"?>\n'
         '<!DOCTYPE html>\n'
