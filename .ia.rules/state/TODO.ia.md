@@ -1413,7 +1413,7 @@
     - métricas de precisão, fidelidade, cobertura, latência e custo disponíveis;
     - limitações, pendências e riscos remanescentes.
 
-- [ ] Corrigir o tratamento de desafios anti-bot com intervenção humana real
+- [x] Corrigir o tratamento de desafios anti-bot com intervenção humana real
 
   ## Objetivo e limites
 
@@ -1574,7 +1574,7 @@
 
   Registrar causa raiz, tecnologias e fluxos inspecionados, estado da automação antes e depois, estratégia de handoff, preservação ou descarte do estado, integrações oficiais, diferenças por domínio, arquivos e submódulos alterados, testes e resultados, limitações externas e comprovação de inexistência de evasão.
 
-- [ ] Centralizar e excluir do Git caches, sessões e arquivos temporários
+- [x] Centralizar e excluir do Git caches, sessões e arquivos temporários
 
   ## Objetivo
 
@@ -1760,7 +1760,7 @@
 
   Registrar itens encontrados e classificação, rastreamento anterior, dados sensíveis e providências, raiz central, exceções, configuração, produtores e consumidores migrados, regras de ignore, remoções do índice, retenção, limpeza, validações, testes, compatibilidades transitórias, riscos e limitações remanescentes.
 
-- [ ] Criar commit atômico por publicação integralmente baixada e pareada
+- [x] Criar commit atômico por publicação integralmente baixada e pareada
 
   ## Objetivo
 
