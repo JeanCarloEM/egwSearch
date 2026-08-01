@@ -91,6 +91,7 @@ def _runtime_dependencies() -> dict:
     """Carrega integracoes opcionais sem contaminar importacao do contrato."""
 
     try:
+        import psutil
         import requests
         from tqdm import tqdm
         from selenium import webdriver
@@ -104,6 +105,7 @@ def _runtime_dependencies() -> dict:
             "dependencias ausentes; instalar Requests, tqdm e Selenium no ambiente da CLI"
         ) from error
     return {
+        "psutil": psutil,
         "requests": requests,
         "tqdm": tqdm,
         "webdriver": webdriver,
@@ -679,6 +681,7 @@ class BrowserSessionManager:
         self._primary_handle = None
         self._recoveries = 0
         self._handoffs = 0
+        self._profile_resets = 0
 
     def close(self) -> None:
         if self._driver is None:
@@ -741,7 +744,15 @@ class BrowserSessionManager:
             options.add_argument("--headless")
             options.add_argument("-profile")
             options.add_argument(str(self.profile_dir))
-        driver = self.runtime["webdriver"].Firefox(options=options)
+        try:
+            driver = self.runtime["webdriver"].Firefox(options=options)
+        except Exception as error:
+            if action != "create" or self._profile_resets >= 1:
+                raise DownloadError(
+                    f"Firefox não iniciou sessão controlada: {type(error).__name__}"
+                ) from error
+            self._quarantine_corrupted_profile(type(error).__name__)
+            return self._launch_driver(action)
         try:
             driver.set_window_size(
                 int(self.config.get("browser_window_width", 1920)),
@@ -760,6 +771,31 @@ class BrowserSessionManager:
             f"profile={self._safe_profile_label()} tabs=1"
         )
         return driver
+
+    def _quarantine_corrupted_profile(self, reason: str) -> None:
+        """Preserva perfil inutilizável e permite uma única recriação limpa."""
+
+        binary = self._human_browser_binary()
+        if self._browser_process_ids(binary):
+            raise DownloadError(
+                "perfil não pode ser recuperado enquanto houver Firefox ativo"
+            )
+        self._profile_resets += 1
+        if self.profile_dir.exists():
+            quarantine = self.state_root / "profiles-quarantine"
+            quarantine.mkdir(parents=True, exist_ok=True)
+            target = quarantine / (
+                f"{self.profile_dir.name}.{time.time_ns()}.corrupted"
+            )
+            try:
+                self.profile_dir.replace(target)
+            except OSError as error:
+                raise DownloadError("falha ao preservar perfil corrompido") from error
+        self.profile_dir.mkdir(parents=True, exist_ok=True)
+        print(
+            f"BROWSER_PROFILE_RESET reason={json.dumps(reason)} preserved=true",
+            file=sys.stderr,
+        )
 
     def _quarantine_stale_browser_markers(self) -> None:
         """Preserva resíduos renomeáveis e bloqueia perfil efetivamente ativo."""
@@ -915,6 +951,7 @@ class BrowserSessionManager:
         started = time.monotonic()
         self.close()
         binary = self._human_browser_binary()
+        baseline_pids = self._browser_process_ids(binary)
         print(
             f"HUMAN_HANDOFF_STARTED scope={scope} method=detached-browser",
             file=sys.stderr,
@@ -934,29 +971,22 @@ class BrowserSessionManager:
             ],
             cwd=REPOSITORY_ROOT,
         )
-        observed_profile_lock = False
+        observed_browser_process = False
         launcher_finished_at: float | None = None
         while True:
             return_code = process.poll()
-            profile_locked = any(
-                (self.profile_dir / name).exists()
-                or (self.profile_dir / name).is_symlink()
-                for name in ("parent.lock", ".parentlock", "lock")
-            )
-            observed_profile_lock = observed_profile_lock or profile_locked
+            active_pids = self._browser_process_ids(binary) - baseline_pids
+            observed_browser_process = observed_browser_process or bool(active_pids)
             if return_code is not None and launcher_finished_at is None:
                 launcher_finished_at = time.monotonic()
-            if return_code is not None and not profile_locked:
+            if return_code is not None and not active_pids:
                 grace_elapsed = time.monotonic() - launcher_finished_at
-                if observed_profile_lock or grace_elapsed >= max(2.0, self.wait_interval * 2):
+                if observed_browser_process or grace_elapsed >= max(2.0, self.wait_interval * 2):
                     break
             if self.human_wait_limit and time.monotonic() - started >= self.human_wait_limit:
+                self._terminate_browser_processes(active_pids)
                 if return_code is None:
                     process.terminate()
-                    try:
-                        process.wait(timeout=10)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
                 raise OriginBlocked(
                     "tempo de intervenção humana excedido; feche o Firefox normal"
                 )
@@ -969,6 +999,35 @@ class BrowserSessionManager:
             f"HUMAN_HANDOFF_FINISHED scope={scope} seconds={int(time.monotonic() - started)}",
             file=sys.stderr,
         )
+
+    def _browser_process_ids(self, binary: str) -> set[int]:
+        expected = Path(binary).resolve()
+        result: set[int] = set()
+        for process in self.runtime["psutil"].process_iter(["pid", "exe"]):
+            try:
+                executable = process.info.get("exe")
+                if executable and Path(executable).resolve() == expected:
+                    result.add(int(process.info["pid"]))
+            except (OSError, self.runtime["psutil"].Error):
+                continue
+        return result
+
+    def _terminate_browser_processes(self, process_ids: set[int]) -> None:
+        processes = []
+        for process_id in sorted(process_ids, reverse=True):
+            try:
+                process = self.runtime["psutil"].Process(process_id)
+                process.terminate()
+                processes.append(process)
+            except self.runtime["psutil"].Error:
+                continue
+        if processes:
+            _gone, alive = self.runtime["psutil"].wait_procs(processes, timeout=10)
+            for process in alive:
+                try:
+                    process.kill()
+                except self.runtime["psutil"].Error:
+                    pass
 
     def _challenge_detected(self, driver) -> bool:
         try:

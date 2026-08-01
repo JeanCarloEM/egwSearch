@@ -143,8 +143,17 @@ class _FakeBy:
     TAG_NAME = "tag name"
 
 
+class _FakePsutil:
+    Error = RuntimeError
+
+    @staticmethod
+    def process_iter(_attributes):
+        return []
+
+
 def _runtime(driver_factory):
     return {
+        "psutil": _FakePsutil,
         "requests": Mock(Session=Mock(return_value=Mock(headers={}, close=Mock()))),
         "tqdm": lambda **_kwargs: _Progress(),
         "webdriver": Mock(Firefox=driver_factory),
