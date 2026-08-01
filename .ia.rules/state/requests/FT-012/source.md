@@ -84,3 +84,12 @@ O rótulo remoto continuará preservado como evidência, mas o path usará códi
 curto explícito em português. Quando categoria e autor forem ambos `egw`, o
 segmento não será duplicado; para autores pioneiros haverá `pioneiros/` antes
 do tipo. A mesma tabela semântica valerá para coleções em inglês.
+
+## Ajuste de 2026-08-01 — categoria antes do autor
+
+> Os diretórios `pioneiros` e equivalentes devem anteceder o nome do autor na
+> estrutura e no slug, como subcategoria organizacional.
+
+A projeção canônica passa a ser
+`[<categoria>/]<autor>/<idioma>/<tipo>/<slug-titulo>/`. A omissão quando
+categoria e autor forem idênticos continua evitando a duplicação `egw/egw`.

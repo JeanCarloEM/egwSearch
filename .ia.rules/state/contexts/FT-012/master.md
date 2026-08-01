@@ -60,9 +60,9 @@ capa oficialmente declarada para a obra.
 - categoria preserva o rótulo oficial configurado e usa código URI curto
   explícito em PT-BR (`egw`, `pioneiros`, `comentarios` etc.); ausência ou
   categoria inválida bloqueia a aquisição, sem inferência por título ou autor.
-- o segmento categórico é omitido somente quando repetir exatamente o
-  `author-key`, evitando `egw/.../egw/`; coleções inglesas usam os mesmos códigos
-  semânticos em PT-BR.
+- o segmento categórico antecede o `author-key` e é omitido somente quando o
+  repetir exatamente, evitando `egw/egw/...`; coleções inglesas usam os mesmos
+  códigos semânticos em PT-BR.
 
 ## Aceite global
 
@@ -81,7 +81,7 @@ capa oficialmente declarada para a obra.
 - primeira página do EPUB contém exclusivamente a capa e preenche toda a área
   visível, comprovada no XHTML interno por layout sem margens e escala `slice`.
 - destino canônico segue
-  `<autor>/<idioma>/[<categoria>/]<tipo>/<slug-titulo>/`, omitindo a categoria
+  `[<categoria>/]<autor>/<idioma>/<tipo>/<slug-titulo>/`, omitindo a categoria
   apenas quando igual ao autor; metadados/índice sempre preservam rótulo e código.
 
 ## Resultado
@@ -107,7 +107,7 @@ capa oficialmente declarada para a obra.
   página EPUB exclusiva e borda a borda, 31 fontes Markdown reversíveis
   internas, zero `.md` externo e contracapa ABNT não editorial;
 - categorias de coleção preservam rótulo remoto e código curto em PT-BR;
-  pioneiros usam `pioneiros/`, enquanto `egw` não é duplicado após o autor;
+  pioneiros usam `pioneiros/<autor>/`, enquanto `egw` não é duplicado;
 - amostra pública `14389` revalidada no novo path com 13 obras enumeradas,
   31 unidades extraídas, zero falha/revisão e reexecução idempotente `skipped`;
 - 53 testes Python, três testes Node, compilação Python, bootstrap/check,
@@ -115,3 +115,5 @@ capa oficialmente declarada para a obra.
 - commits do aprimoramento material e da sincronização: `297d5bc` e `b933ecd`.
 - integração publicada em `main` pelo merge `186bc2b`, com `dev` convergida à
   mesma história e a publicação gerada preservada fora do Git.
+- refinamento estrutural `27b8f8d` move categorias diferentes do autor para o
+  primeiro segmento, adapta o migrador aos dois layouts e preserva rollback.

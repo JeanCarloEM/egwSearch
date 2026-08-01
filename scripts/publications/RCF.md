@@ -35,7 +35,7 @@ O acronimo do titulo DEVE derivar apenas de suas palavras normalizadas: titulo d
 
 ## 2. Paths e colisoes
 
-A raiz local é `src/publications/`; cada grupo DEVE ocupar `<author-key>/<language-path>/[<category>/]<type>/<slug-titulo>/`; `category` DEVE ser código curto explícito em PT-BR e URI-safe, aplicável também à coleção inglesa, e o segmento DEVE ser omitido somente quando igual a `author-key`. [3c94152]
+A raiz local é `src/publications/`; cada grupo DEVE ocupar `[<category>/]<author-key>/<language-path>/<type>/<slug-titulo>/`; `category` DEVE anteceder o autor como agrupamento semântico, usar código curto explícito em PT-BR e URI-safe também na coleção inglesa, e ser omitida somente quando igual a `author-key`. [961ffd0]
 O rótulo remoto original e o código da categoria DEVEM integrar metadado e identidade estável; ausência, categoria arbitrária ou inferência por título/autor DEVEM bloquear aquisição. [3c94152]
 Para Ellen G. White,
 `author-key` permanece `egw`; autores pioneiros NÃO DEVEM ser gravados sob [3301a97]
