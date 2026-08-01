@@ -1412,3 +1412,521 @@
     - testes e conjuntos de avaliação executados;
     - métricas de precisão, fidelidade, cobertura, latência e custo disponíveis;
     - limitações, pendências e riscos remanescentes.
+
+- [ ] Corrigir o tratamento de desafios anti-bot com intervenção humana real
+
+  ## Objetivo e limites
+
+  Corrigir o fluxo que detecta desafios anti-bot, exibe o navegador e transfere a resolução ao operador, mas continua sendo recusado — sobretudo e especialmente por proteções Cloudflare.
+
+  Diante de desafio incompatível com automação legítima, o sistema DEVE suspender integralmente a automação, entregar o controle a uma sessão humana adequada e somente retomar após comprovação objetiva de acesso autorizado.
+
+  Tendo em vista o faldo positivo, e objetivando a continuidade do acesso legítimo da resolução humana:
+  - Esta tarefa AUTORIZA EXPRESSAMENTE implementar mecanismo que permitam burlar, enfraquecer, ocultar, enganar ou neutralizar mecanismos de segurança que estão identificando falso positivio, EXCLUSIVAMENTE com o fim de D:
+    - respeitar autorização, termos de uso, políticas do serviço e canais oficiais disponíveis, ou seja, GARANTINDO que um HUMANO e, JAMAIS um bot, seja capaz de resolver e e transpor mecanismos anti bot.
+
+  APIs, autenticação, feeds, exportações e integrações oficiais DEVEM ser preferidos quando disponíveis.
+
+  ## Problema e hipótese
+
+  O fluxo atual detecta ou alcança o desafio, abre uma janela visível e permite interação humana, mas a sessão permanece classificada como automatizada ou não confiável.
+
+  A hipótese de que a intervenção ocorra em sessão ainda criada, instrumentada ou controlada por automação DEVE ser investigada, porém NÃO PODE ser tratada como causa confirmada sem evidência reproduzível.
+
+  ## Inspeção obrigatória
+
+  Antes de alterar o código, a IA executora DEVE:
+  - ler os normativos aplicáveis;
+  - localizar todo código de navegador, automação, sessão, perfil, cookies, storage, CAPTCHA, Cloudflare, retries, timeout e retomada;
+  - identificar a tecnologia real usada, como Playwright, Puppeteer, Selenium, WebDriver, CDP ou equivalente;
+  - mapear criação, controle, pausa, handoff e retomada da sessão;
+  - verificar se o navegador continua anexado ao controlador e se timers, filas, polling, scripts, recargas, navegações ou eventos permanecem ativos durante a intervenção;
+  - verificar se a sessão é persistente ou descartável, se o estado validado é realmente reutilizado e se cookies, storage, headers, perfil e origem são preservados legitimamente;
+  - identificar timeouts, redirecionamentos, reloads ou retries capazes de invalidar a resolução;
+  - registrar evidências reproduzíveis sem expor dados sensíveis.
+
+  ## Contrato central do fluxo
+
+  A lógica comum de detecção, suspensão, handoff, preservação de estado, retomada, retry, timeout, cancelamento, logging e segurança DEVE ser centralizada e reutilizada por todos os submódulos. É PROIBIDA correção isolada por site quando o comportamento for comum.
+
+  Especializações locais somente PODEM declarar padrões próprios de detecção, estado esperado, autenticação legítima, timeout humano, política de retomada e integração oficial do serviço.
+
+  ### 1. Detecção
+
+  O sistema DEVE reconhecer conservadoramente challenge page, CAPTCHA, intersticial, bloqueio por automação, resposta ou navegação incompatível, loop de redirecionamento e espera que exija ação humana.
+
+  A detecção NÃO DEVE interagir automaticamente com o desafio.
+
+  ### 2. Suspensão
+
+  Ao detectar desafio:
+  - toda automação DEVE cessar, inclusive filas, timers, polling, cliques, preenchimentos, scripts, reloads e navegações;
+  - o estado DEVE mudar para `AGUARDANDO_INTERVENCAO_HUMANA` ou equivalente;
+  - automação e operador NÃO PODEM atuar simultaneamente;
+  - o operador DEVE receber instrução objetiva;
+  - NÃO DEVE existir timeout curto incompatível com intervenção humana;
+  - a página e a sessão NÃO DEVEM ser reiniciadas ou recarregadas sem consentimento.
+
+  ### 3. Handoff humano
+
+  A implementação DEVE avaliar, conforme a arquitetura real e nesta ordem preferencial:
+  1. navegador normal já instalado e operado diretamente pelo usuário;
+  2. perfil humano autorizado e persistente, sem automação ativa;
+  3. autenticação ou verificação concluída fora do contexto automatizado;
+  4. callback, handoff, importação autorizada de estado ou reabertura legítima da sessão;
+  5. em domínio próprio, integração oficial do provedor.
+
+  Janela visível ainda criada, instrumentada ou controlada por automação NÃO DEVE ser presumida como sessão humana válida. A solução DEVE resultar de inspeção e testes e NÃO PODE prometer aceitação por terceiros.
+
+  ### 4. Preservação de estado
+
+  Quando autorizada e tecnicamente compatível, a continuidade PODE preservar o estado obtido pela intervenção humana, desde que:
+  - restrito ao domínio, usuário, perfil e finalidade aplicáveis;
+  - armazenado com proteção, escopo e expiração adequados;
+  - nunca exposto integralmente em logs;
+  - invalidado em erro, expiração, corrupção ou mudança de identidade;
+  - separado entre perfis, usuários e submódulos;
+  - não convertido de token temporário em autorização permanente.
+
+  Cookies, tokens, `localStorage`, `sessionStorage` ou perfis NÃO DEVEM ser copiados entre contextos sem compatibilidade comprovada exceto se, e SOMENTE se HOUVER justificativa técnica plausível e mediante autorização explicita.
+
+  ### 5. Retomada
+
+  A automação somente PODE retomar após verificar objetivamente:
+  - ausência do desafio;
+  - origem, página, recurso e estado esperados;
+  - inexistência de loop ou novo bloqueio;
+  - validade da sessão e identidade correta, quando aplicável.
+
+  Clique humano isolado NÃO comprova liberação.
+
+  Persistindo o bloqueio, o sistema DEVE manter a suspensão, informar a recusa, permitir cancelamento seguro, registrar diagnóstico conciso e impedir novas tentativas ilimitadas.
+
+  ## Cloudflare e domínio
+
+  Para domínio de terceiro, o sistema DEVE respeitar a decisão do provedor, preferir API ou acesso autorizado e tratar bloqueio persistente como impedimento legítimo, sem evasão.
+
+  Para domínio controlado pelo projeto, DEVEM ser avaliados mecanismos oficiais, conforme aplicabilidade:
+  - regras de segurança adequadas;
+  - allowlists mínimas e justificadas;
+  - Service Tokens ou equivalente para automação autorizada;
+  - Turnstile com verificação server-side;
+  - rotas ou ambientes próprios para automação interna;
+  - políticas por identidade autenticada, origem ou serviço.
+
+  Toda exceção DEVE ser mínima, auditável, revogável e restrita ao sistema autorizado. É PROIBIDO desabilitar proteção amplamente para facilitar automação ou testes.
+
+  ## Resiliência, segurança e observabilidade
+
+  O fluxo DEVE ser idempotente, cancelável e retomável; impedir concorrência, múltiplas janelas para o mesmo desafio, perda de estado, recarga durante a intervenção e retries ilimitados; distinguir falha de rede, autenticação, desafio e bloqueio definitivo; registrar transições; preservar compatibilidade com os submódulos.
+
+  Registrar, sem dados sensíveis:
+  - instante, origem e tipo provável do desafio;
+  - estado anterior e suspensão efetiva;
+  - início, fim e método do handoff;
+  - resultado da validação, motivo de falha, tentativas e estado final.
+
+  É PROIBIDO registrar senhas, respostas de CAPTCHA, cookies ou tokens integrais, conteúdo sensível de formulários, dados pessoais desnecessários ou material reutilizável para acesso.
+
+  ## Testes obrigatórios
+
+  Validar, conforme aplicabilidade:
+  - detecção sem interação automática;
+  - suspensão integral e ausência de concorrência;
+  - cancelamento;
+  - sessão aceita, recusada, expirada ou desafiada novamente;
+  - retomada legítima na sessão validada e bloqueio de retomada inválida;
+  - ausência de loops e isolamento entre usuários e submódulos;
+  - ausência de segredos nos logs;
+  - execução local e demais ambientes suportados;
+  - fallback oficial disponível;
+  - tratamento distinto para domínio próprio e de terceiro.
+
+  Testes NÃO DEVEM atacar, sobrecarregar ou tentar evadir serviços externos. DEVEM preferir fixtures, mocks, ambiente controlado ou domínio próprio.
+
+  ## Ordem de execução
+  1. Ler os normativos e mapear integralmente o fluxo atual.
+  2. Reproduzir a falha de forma controlada e autorizada.
+  3. Confirmar o estado real da automação durante a intervenção e a causa raiz.
+  4. Classificar o domínio e verificar integrações oficiais.
+  5. Definir e implementar o contrato central de detecção, suspensão, handoff, preservação e retomada.
+  6. Eliminar concorrência, loops e retries inadequados.
+  7. Migrar todos os submódulos aplicáveis.
+  8. Adicionar observabilidade e testes regressivos.
+  9. Atualizar documentação e rastreabilidade.
+  10. Emitir relatório final.
+
+  ## Critérios de aceite
+
+  A tarefa somente estará concluída quando:
+  - desafios forem detectados sem tentativa automática de resolução;
+  - a automação cessar integralmente antes da intervenção;
+  - o operador atuar sem concorrência em sessão humana adequada;
+  - a retomada depender de validação objetiva;
+  - bloqueios persistentes não gerarem loop, evasão ou mascaramento;
+  - integrações oficiais forem preferidas e domínios próprios e terceiros forem tratados distintamente;
+  - sessões, tokens e dados sensíveis forem isolados e protegidos;
+  - a lógica estiver centralizada e adotada por todos os submódulos aplicáveis;
+  - testes cobrirem sucesso, falha, cancelamento, expiração e reapresentação do desafio;
+  - nenhuma técnica de stealth, spoofing ou bypass tiver sido introduzida.
+
+  ## Relatório final
+
+  Registrar causa raiz, tecnologias e fluxos inspecionados, estado da automação antes e depois, estratégia de handoff, preservação ou descarte do estado, integrações oficiais, diferenças por domínio, arquivos e submódulos alterados, testes e resultados, limitações externas e comprovação de inexistência de evasão.
+
+- [ ] Centralizar e excluir do Git caches, sessões e arquivos temporários
+
+  ## Objetivo
+
+  Identificar, classificar, centralizar e excluir do versionamento todo estado de runtime não canônico: caches, sessões, perfis de navegador, cookies e storages persistidos, autenticação transitória, locks, sockets, PIDs, temporários, downloads intermediários, traces, screenshots, dumps, logs e relatórios efêmeros, filas, checkpoints e equivalentes.
+
+  Quando tecnicamente possível, esses dados DEVEM convergir para um único `<RUNTIME_STATE_DIR>` claramente identificado. Código, configuração, schema, fixture deliberada e demais fontes canônicas NÃO DEVEM ser movidos ou ignorados indevidamente.
+
+  ## Princípios
+  - fonte canônica e estado de execução DEVEM permanecer separados;
+  - estado local ou sensível NÃO DEVE integrar Git, build, release, bundle ou publicação;
+  - o projeto DEVE funcionar após clone limpo e sem arquivos locais preexistentes;
+  - a reorganização NÃO DEVE quebrar autenticação, retomada, intervenção humana, testes, builds ou submódulos;
+  - migrações DEVEM ser mínimas, seguras, idempotentes e rastreáveis.
+
+  ## Inspeção e classificação
+
+  Antes de criar, mover, excluir ou ignorar arquivos, a implementação DEVE:
+  - ler os normativos e inspecionar a estrutura real;
+  - localizar produtores e consumidores de cache, sessão, perfil, cookies, storage, temporários, locks, traces, downloads e equivalentes;
+  - localizar paths hardcoded, variáveis, defaults, scripts, workflows, testes, containers, releases e documentação dependentes;
+  - verificar `.gitignore`, `.git/info/exclude`, arquivos já rastreados e restrições de navegador, framework, biblioteca ou sistema operacional;
+  - identificar dados sensíveis eventualmente versionados;
+  - mapear ciclo de vida, proprietário, escopo, retenção, concorrência e limpeza;
+  - NÃO classificar item apenas pelo nome ou extensão.
+
+  Cada item DEVE ser classificado como:
+  1. **Canônico:** fonte, configuração, schema, template, fixture deliberada ou asset necessário; PODE ser versionado.
+  2. **Gerado reproduzível:** reconstruível; NÃO DEVE ser fonte nem ser versionado, salvo norma superior.
+  3. **Runtime persistente:** necessário entre execuções; NÃO DEVE ser versionado e DEVE possuir retenção e proteção.
+  4. **Runtime temporário:** descartável; NÃO DEVE ser versionado e DEVE ser limpo automaticamente.
+  5. **Sensível:** segredo, sessão, token, cookie ou identidade; NÃO DEVE ser versionado, distribuído ou logado integralmente.
+  6. **Exceção técnica:** caminho imposto externamente; DEVE ser isolado, ignorado e documentado.
+
+  A classificação DEVE determinar localização, retenção, limpeza e segurança.
+
+  ## `<RUNTIME_STATE_DIR>`
+
+  A implementação DEVE reutilizar diretório central já normatizado. Na ausência de opção adequada, DEVE criar um único diretório semanticamente compatível com a arquitetura, sem presumir previamente seu caminho.
+
+  `<RUNTIME_STATE_DIR>` DEVE:
+  - ficar fora de fonte e distribuição;
+  - ser integralmente ignorado pelo Git e excluído de build, release, bundle e publicação;
+  - ser criado automaticamente e removível sem perda canônica;
+  - permitir isolamento por função, usuário, perfil, submódulo ou execução;
+  - impedir colisões e não depender ambiguamente do diretório corrente;
+  - ser configurável, seguro e compatível com o sistema operacional.
+
+  Sua estrutura interna DEVE ser curta, estável e derivada das funções reais. Categorias como `cache/`, `sessions/`, `profiles/`, `tmp/`, `locks/`, `downloads/`, `traces/`, `logs/`, `screenshots/` e `checkpoints/` são semânticas, não obrigatórias.
+
+  É PROIBIDO:
+  - espalhar estado equivalente sem necessidade;
+  - criar raízes paralelas por submódulo quando a estrutura comum bastar;
+  - misturar estado mutável com configuração canônica;
+  - gravar runtime em `src/`, `dist/`, `scripts/`, raiz ou assets;
+  - usar nomes ambíguos ou transformar a raiz em depósito não classificado.
+
+  ## Configuração central
+
+  Raiz, subdiretórios, retenção, TTL, limites, limpeza, persistência, permissões, isolamento, ambientes e overrides DEVEM derivar de configuração central.
+
+  É PROIBIDO manter paths de cache, sessão ou temporários hardcoded em múltiplos módulos. Especializações locais DEVEM herdar a configuração comum e declarar apenas diferenças necessárias.
+
+  ## Git e histórico
+
+  A implementação DEVE:
+  - atualizar o `.gitignore` canônico para abranger `<RUNTIME_STATE_DIR>`, equivalentes externos e variantes reais como locks, journals e backups;
+  - evitar padrões amplos que ocultem fonte legítima;
+  - preservar `.gitkeep` somente por necessidade comprovada;
+  - remover arquivos indevidos já rastreados apenas do índice, sem excluir dados locais ainda necessários;
+  - verificar o resultado com comandos Git e impedir reinclusão futura.
+
+  Se dados sensíveis tiverem sido versionados, DEVE:
+  - interromper reutilização e revogar credenciais, tokens, cookies ou sessões afetados;
+  - registrar o incidente sem reproduzir segredos;
+  - avaliar limpeza do histórico conforme política e autorização;
+  - NÃO reescrever histórico compartilhado sem planejamento e análise de impacto.
+
+  Excluir no commit atual NÃO remove conteúdo do histórico.
+
+  ## Políticas por classe
+
+  ### Sessões e autenticação
+
+  DEVEM permanecer fora do Git, ser isoladas por usuário, perfil, domínio e finalidade, usar permissões mínimas, respeitar expiração, admitir reset controlado e nunca ser copiadas para builds, releases, bundles ou logs.
+
+  Sessões NÃO DEVEM ser compartilhadas entre submódulos sem contrato explícito nem constituir dependência oculta de clone limpo. Persistência somente DEVE ocorrer quando necessária e autorizada; sessões temporárias DEVEM ser descartadas ao término.
+
+  ### Cache
+
+  DEVE ser reconstruível, tolerar ausência e corrupção, impedir mistura entre versões, usuários, targets e submódulos, possuir invalidação por mudança de fonte, configuração, versão ou contrato e limite ou descarte quando houver crescimento relevante.
+
+  Remover cache NÃO DEVE alterar o resultado funcional. Corrupção DEVE causar regeneração segura, não erro permanente ou resultado silenciosamente incorreto.
+
+  ### Temporários, locks, sockets e PIDs
+
+  DEVEM possuir ciclo de vida, nomes sem colisão, criação atômica quando necessária, limpeza em sucesso, cancelamento e falha, tolerância a resíduos e validação de pertencimento antes de remoção.
+
+  Uma execução NÃO DEVE usar ou excluir estado pertencente a outra. A limpeza NÃO DEVE atingir processo ativo ou dado canônico.
+
+  ## Migração e exceções
+
+  Para cada item disperso, criar mapa com caminho atual, classe, produtor, consumidor, sensibilidade, destino, retenção, limpeza, referências, compatibilidade, migração, rollback e critério de remoção do legado.
+
+  A migração DEVE:
+  - preservar estado legítimo somente quando necessário e seguro;
+  - atualizar produtores e consumidores no mesmo fluxo;
+  - impedir gravação simultânea em caminhos antigo e novo, salvo transição controlada;
+  - manter retrocompatibilidade apenas quando materialmente necessária;
+  - remover fallback legado após validação;
+  - ser idempotente e retomável.
+
+  Quando localização externa for imposta, a exceção DEVE ser mínima, isolada, ignorada e documentada; apontar para `<RUNTIME_STATE_DIR>` por opção oficial quando suportado; NÃO duplicar o mesmo estado nem aplicar hacks de filesystem sem necessidade.
+
+  ## Limpeza segura
+
+  Cada classe DEVE possuir política aplicável em conclusão, cancelamento, inicialização, TTL, limite de tamanho, versão incompatível, corrupção ou solicitação explícita.
+
+  A limpeza DEVE:
+  - limitar-se à raiz autorizada ou exceção explícita;
+  - validar o path resolvido e impedir traversal ou remoção da raiz incorreta;
+  - preservar sessões e processos ativos;
+  - ser idempotente;
+  - registrar apenas resumo não sensível;
+  - oferecer inspeção ou `dry-run` quando houver risco relevante.
+
+  ## CI, empacotamento e observabilidade
+
+  CI DEVE iniciar sem estado local e usar diretório efêmero próprio.
+
+  Build, release e bundle NÃO DEVEM conter sessões, perfis, cookies, caches locais, temporários, locks, traces, screenshots, logs ou arquivos de máquina/usuário. A validação de empacotamento DEVE falhar ao detectar item proibido.
+
+  Fixtures DEVEM ser sintéticas, sanitizadas, identificadas e mantidas fora do runtime.
+
+  Logs PODEM registrar classe, path relativo sanitizado, criação, expiração, remoção, tamanho agregado, motivo de invalidação e erro. NÃO DEVEM registrar cookies, tokens, sessão integral, cabeçalhos de autenticação, URLs sensíveis, dados pessoais desnecessários ou payload reutilizável.
+
+  Quando proporcional, adicionar verificação automatizada contra runtime rastreado, paths externos ou hardcoded, segredos, artefatos proibidos, diretórios legados, temporários sem limpeza, permissões inseguras, sessões indevidamente compartilhadas e dependência de estado local. Exceções normatizadas NÃO DEVEM gerar falso positivo.
+
+  ## Testes obrigatórios
+
+  Validar no mínimo:
+  - clone limpo e primeira execução sem a raiz;
+  - criação automática e override de localização;
+  - cache e sessão válidos, expirados, removidos ou corrompidos;
+  - interrupção abrupta, lock residual e concorrência;
+  - isolamento entre usuários, perfis e submódulos;
+  - ambiente somente leitura, quando aplicável;
+  - CI, build, release e bundle offline;
+  - ausência de runtime no Git e nos artefatos;
+  - ausência de segredos nos logs;
+  - compatibilidade com anti-bot, intervenção humana e retomada;
+  - inexistência de dependência ou gravação em caminho legado;
+  - limpeza limitada à raiz autorizada.
+
+  ## Ordem de execução
+  1. Ler normas, mapear e classificar todo estado de runtime.
+  2. Identificar rastreamento Git, dados sensíveis, produtores, consumidores e configuração existente.
+  3. Definir `<RUNTIME_STATE_DIR>` e o mapa de migração.
+  4. Centralizar configuração e atualizar produtores e consumidores.
+  5. Migrar estado necessário com segurança e remover fallbacks validados.
+  6. Atualizar `.gitignore` e remover arquivos indevidos do índice.
+  7. Implementar retenção, invalidação, limpeza e proteção.
+  8. Validar CI, build, release e bundle.
+  9. Executar testes, atualizar rastreabilidade e emitir relatório final.
+
+  ## Critérios de aceite
+
+  A tarefa somente estará concluída quando:
+  - todo estado estiver classificado;
+  - nenhum estado não canônico permanecer rastreado ou empacotado;
+  - `<RUNTIME_STATE_DIR>` concentrar os dados sempre que possível e exceções estiverem justificadas;
+  - paths e políticas forem centralizados;
+  - sessões e perfis estiverem isolados e protegidos;
+  - caches forem descartáveis e reconstruíveis;
+  - temporários e locks possuírem limpeza segura;
+  - arquivos rastreados indevidamente tiverem sido removidos do índice;
+  - segredos expostos tiverem sido tratados;
+  - clone limpo, CI, build, execução, release e bundle funcionarem sem estado preexistente;
+  - intervenção humana e retomada permanecerem funcionais;
+  - não existirem referências residuais a caminhos legados;
+  - nenhuma fonte ou fixture legítima tiver sido ignorada.
+
+  ## Relatório final
+
+  Registrar itens encontrados e classificação, rastreamento anterior, dados sensíveis e providências, raiz central, exceções, configuração, produtores e consumidores migrados, regras de ignore, remoções do índice, retenção, limpeza, validações, testes, compatibilidades transitórias, riscos e limitações remanescentes.
+
+- [ ] Criar commit atômico por publicação integralmente baixada e pareada
+
+  ## Objetivo
+
+  Cada nova publicação somente DEVE ser registrada após estar integralmente baixada, validada, pareada aos metadados, incorporada aos índices e acompanhada de todos os assets, referências e derivados aplicáveis.
+
+  Cada publicação concluída DEVE gerar exatamente um commit próprio, completo, isolado, atômico e rastreável, sem misturar outras publicações, manutenção paralela ou alterações não relacionadas.
+
+  ## Unidade transacional
+
+  A unidade de publicação compreende, conforme aplicabilidade:
+  - arquivo principal, capas, imagens, anexos e assets;
+  - metadados, identificadores, hashes e relações de pareamento;
+  - índices locais e globais;
+  - manifests, catálogos, mapas, registros derivados e referências cruzadas;
+  - estado canônico e rastreabilidade diretamente impactados.
+
+  A ausência, inconsistência ou falha de qualquer componente obrigatório DEVE impedir o commit.
+
+  ## Estado `COMPLETA_E_PAREADA`
+
+  A publicação somente PODE atingir esse estado quando:
+  1. todos os downloads obrigatórios terminarem;
+  2. nenhum arquivo permanecer parcial, temporário ou em transferência;
+  3. formato, tamanho e integridade forem válidos;
+  4. conteúdo, identidade e metadados estiverem inequivocamente associados;
+  5. assets estiverem completos, nomeados e referenciados corretamente;
+  6. duplicidades e colisões tiverem sido verificadas;
+  7. índices locais e globais estiverem atualizados;
+  8. toda referência interna apontar para arquivo existente;
+  9. todas as validações aplicáveis forem aprovadas.
+
+  HTTP de sucesso, existência física ou encerramento do stream, isoladamente, NÃO comprovam conclusão.
+
+  Pareamento heurístico somente PODE concluir automaticamente ao atingir critérios normatizados de confiança. Ambiguidade material DEVE interromper o fluxo para resolução controlada.
+
+  ## Contrato central
+
+  A lógica de unidade transacional, completude, pareamento, arquivos impactados, atualização global, staging seletivo, commit, validação, retomada, concorrência e rastreabilidade DEVE ser centralizada e reutilizada por todos os submódulos.
+
+  É PROIBIDO implementar política de commit independente por submódulo.
+
+  Especializações locais somente PODEM declarar metadados e assets obrigatórios, critérios de pareamento, validadores, chaves de identificação e arquivos globais legitimamente impactados.
+
+  ## Staging e commit
+
+  Para cada publicação `COMPLETA_E_PAREADA`, o fluxo DEVE:
+  1. calcular deterministicamente sua allowlist de arquivos;
+  2. excluir caches, sessões, temporários, logs e demais estados não canônicos;
+  3. inspecionar worktree e índice e isolar alterações alheias;
+  4. adicionar somente a unidade e derivados inevitáveis;
+  5. validar novamente o conteúdo staged;
+  6. criar um único commit;
+  7. confirmar que o commit contém integralmente a unidade e nada além dela;
+  8. registrar hash e resultado.
+
+  É PROIBIDO:
+  - agrupar novas publicações;
+  - fragmentar uma publicação entre commits;
+  - commitar download parcial, asset órfão, metadado sem conteúdo ou índice inconsistente;
+  - incluir alteração independente;
+  - usar `git add .`, `git add -A` ou equivalente sem allowlist e validação;
+  - criar commit vazio;
+  - considerar concluída a publicação antes da confirmação do commit;
+  - enviar estado parcial ao remoto.
+
+  Alterações preexistentes ou concorrentes DEVEM permanecer fora do staging, não ser sobrescritas nem descartadas. Conflito material nos mesmos arquivos DEVE interromper explicitamente a operação.
+
+  ## Índices e validação
+
+  Índices globais e demais arquivos derivados pela inclusão DEVEM integrar o mesmo commit.
+
+  O índice global DEVE incluir a publicação uma única vez, usar IDs e paths finais, preservar formato e ordenação, manter referências válidas, não perder entradas, não incorporar publicação incompleta e ser atualizado deterministicamente.
+
+  Antes do staging, validar no mínimo:
+  - ausência de arquivos parciais e temporários;
+  - hashes, legibilidade e formato;
+  - schemas e metadados obrigatórios;
+  - unicidade de IDs, nomes e paths;
+  - existência de assets e referências;
+  - ausência de órfãos, duplicatas indevidas, segredos e dados de sessão;
+  - coerência dos índices;
+  - conformidade com normas e testes do pipeline.
+
+  Qualquer falha DEVE impedir staging e commit.
+
+  ## Mensagem
+
+  A mensagem DEVE seguir a convenção do repositório. Na ausência de convenção específica, DEVE identificar ação, publicação e identificador estável:
+
+  ```text
+  <tipo>: adicionar publicação <identificador ou título canônico>
+  ```
+
+  A mensagem NÃO DEVE ser genérica, omitir a publicação, declarar sucesso parcial, expor dado sensível ou depender apenas de sequência instável quando houver ID canônico.
+
+  ## Atomicidade, falhas e retomada
+
+  Download, pareamento, indexação, staging e commit DEVEM compor uma única operação lógica.
+
+  Se qualquer fase falhar:
+  - nenhum commit DEVE ser criado;
+  - parciais DEVEM permanecer fora da fonte canônica;
+  - índices NÃO DEVEM conservar entrada inválida;
+  - alterações preparatórias DEVEM ser revertidas ou mantidas em área controlada;
+  - o estado DEVE permitir retomada idempotente;
+  - o diagnóstico DEVE identificar publicação e fase.
+
+  Commit válido já criado NÃO DEVE ser recriado na retomada.
+
+  Reprocessar publicação inalterada DEVE produzir operação sem commit, sem duplicar arquivos, índices ou registros e sem alterar derivados por mudança não material. Inclusão inédita, correção e atualização DEVEM ser distinguidas.
+
+  ## Concorrência e remoto
+
+  Execuções concorrentes NÃO PODEM processar a mesma publicação, alterar índice global sem coordenação, misturar staging, usar estado obsoleto ou sobrescrever alterações válidas.
+
+  Downloads PODEM ocorrer em paralelo, mas finalização, atualização global e commits DEVEM ser serializados ou coordenados transacionalmente.
+
+  Push, quando aplicável, somente PODE ocorrer após validar commit, branch, remoto, sincronização e ausência de conflito. Falha no push DEVE preservar o commit local para nova tentativa, sem recriação ou duplicação.
+
+  ## Rastreabilidade
+
+  Registrar identificador, arquivos da unidade, validações, pareamento, índices alterados, hash do commit, branch, resultado do push e falhas ou retomadas. Arquivos temporários de controle NÃO DEVEM ser versionados.
+
+  ## Testes obrigatórios
+
+  Validar no mínimo:
+  - publicação completa e já existente;
+  - download parcial, asset ausente, metadado inválido, pareamento ambíguo e duplicidade;
+  - índice desatualizado ou referência quebrada;
+  - worktree com alterações alheias e conflito no mesmo arquivo;
+  - conclusões simultâneas de publicações distintas e disputa pela mesma publicação;
+  - falha antes ou depois do staging, falha do commit e retomada;
+  - push recusado;
+  - reexecução idempotente;
+  - ausência de temporários, caches e sessões;
+  - exatamente um commit por publicação e conteúdo exato do staging e do commit.
+
+  ## Ordem de execução
+  1. Ler normas e mapear download, pareamento, indexação e Git.
+  2. Definir a unidade transacional e o estado `COMPLETA_E_PAREADA`.
+  3. Centralizar validações e cálculo dos arquivos impactados.
+  4. Integrar índices à mesma transação.
+  5. Implementar staging por allowlist e isolamento do worktree.
+  6. Implementar e validar commit único.
+  7. Implementar idempotência, retomada e concorrência.
+  8. Integrar push seguro, quando aplicável.
+  9. Adicionar testes, documentação e rastreabilidade.
+  10. Emitir relatório final.
+
+  ## Critérios de aceite
+
+  A tarefa somente estará concluída quando:
+  - cada publicação completa gerar exatamente um commit próprio;
+  - nenhuma publicação incompleta puder ser commitada;
+  - arquivos, assets, metadados, índices e derivados integrarem a mesma transação;
+  - staging e commit forem calculados por allowlist determinística;
+  - alterações alheias permanecerem fora do commit;
+  - publicações não forem agrupadas nem fragmentadas;
+  - reexecução não criar duplicatas;
+  - concorrência não produzir mistura, perda ou estado obsoleto;
+  - falhas não deixarem fonte ou índice parcialmente aplicados;
+  - runtime não canônico permanecer fora do Git;
+  - o commit seguir a convenção vigente e seu hash permanecer rastreável;
+  - todos os submódulos aplicáveis adotarem o contrato central;
+  - testes cobrirem sucesso, falha, duplicidade, retomada, concorrência e conteúdo exato.
+
+  ## Relatório final
+
+  Registrar unidade transacional, critérios de completude e pareamento, arquivos por publicação, índices alterados, staging seletivo, convenção de commit, concorrência, rollback e retomada, testes, commits de validação, resultado de push e limitações remanescentes.
