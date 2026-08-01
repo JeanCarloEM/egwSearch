@@ -34,6 +34,8 @@ capa oficialmente declarada para a obra.
 8. empacotar no EPUB uma fonte Markdown reversível com manifesto/hash, remover
    os `.md` externos somente após validação e acrescentar contracapa de
    proveniência inequivocamente não editorial em estilo ABNT.
+9. projetar a categoria editorial declarada pela coleção oficial como segmento
+   URI adicional do diretório canônico, preservando também seu rótulo original.
 
 ## Invariantes
 
@@ -55,6 +57,9 @@ capa oficialmente declarada para a obra.
 - a capa é o único conteúdo da primeira página do EPUB e ocupa a viewport
   inteira, borda a borda, sem margens ou faixas; diferença de proporção usa
   preenchimento com recorte central, sem deformar a imagem.
+- categoria de path deriva exclusivamente do rótulo oficial configurado para a
+  coleção e usa o normalizador URI comum; ausência ou categoria inválida bloqueia
+  a aquisição, sem inferência por título ou autor.
 
 ## Aceite global
 
@@ -72,6 +77,9 @@ capa oficialmente declarada para a obra.
   sua persistência externa.
 - primeira página do EPUB contém exclusivamente a capa e preenche toda a área
   visível, comprovada no XHTML interno por layout sem margens e escala `slice`.
+- destino canônico segue
+  `<autor>/<idioma>/<categoria>/<tipo>/<slug-titulo>/`, e metadados/índice
+  preservam rótulo e slug de categoria.
 
 ## Resultado
 

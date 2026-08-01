@@ -1960,3 +1960,8 @@
   inteira, borda a borda, sem margem, faixa ou texto visível. Divergência de
   proporção DEVE usar recorte central mínimo, preservando a proporção e sem
   deformar a imagem.
+
+  O path canônico DEVE incorporar um diretório adicional de categoria entre
+  idioma e tipo. A categoria DEVE vir da classificação editorial da coleção no
+  site de origem, preservar seu rótulo em metadados e projetá-lo pelo slug URI
+  comum; NÃO PODE ser inferida por título ou autoria.

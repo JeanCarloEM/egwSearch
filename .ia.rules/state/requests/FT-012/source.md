@@ -62,3 +62,14 @@ equivalente rasterizado.
 A página de capa do EPUB será exclusiva, sem margens, faixas ou texto visível.
 A imagem preencherá toda a viewport e preservará sua proporção por recorte
 central mínimo quando a proporção do dispositivo diferir da capa.
+
+## Ajuste de 2026-08-01 — categoria no path
+
+> Ajustar a slug para incorporar um diretório adicional que informe a
+> categoria, como pioneiro ou comentário, seguindo a categorização do site de
+> origem e normalizando-a para URI.
+
+A coleção oficial será a autoridade da categoria. Seu rótulo editorial será
+preservado em metadados e uma projeção ASCII RFC 3986 formará o segmento
+adicional entre idioma e tipo; título ou autoria não serão usados para inferir
+categoria ausente.
