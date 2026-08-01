@@ -1,14 +1,14 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-07-27T16:24:00-03:00`.
+Atualizado_em: `2026-08-01T16:01:18-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-008 concluída; coleta ampla e a decisão editorial da FT-004/03 permanecem fora de escopo.
-Fonte_local: `.ia.rules/state/requests/FT-008/source.txt`.
-Fonte_original: `attachment:pasted-text.txt@3b4d3c5f-dbbe-4137-9f10-ba302e94b4b5`.
-Fonte_original_sha256: `3D811F33720D0B6F794420323ABC9A7A752542EC969E9B3E9E74216BB95BA582`.
-Fonte_atual_sha256: `3D811F33720D0B6F794420323ABC9A7A752542EC969E9B3E9E74216BB95BA582`.
-Contexto_mestre: `.ia.rules/state/contexts/FT-008/master.md`.
+Escopo_atual: FT-010 normativa e FT-011 técnica conciliam o delta integrado de `main` para concluir o downloader sem versionar estado de runtime.
+Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
+Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
+Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
+Fonte_atual_sha256: `nao_aplicavel; fonte local Git integral`.
+Contexto_mestre: `.ia.rules/state/contexts/FT-010/master.md`.
 Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 ## FT-001 - Inicializacao normativa do projeto
@@ -265,3 +265,39 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - autorização: prompt humano de `2026-07-27` solicitou que `npm install` e o equivalente a update instalem dependências de outras linguagens, quando necessárias, por subscripts se adequado.
 - fase_normativa: concluída; RCF global/especializado validados e duas sentenças implementáveis aguardam commit causal de código.
 - próximo_ponto: interromper e aguardar autorização humana explícita para implementar o bootstrap, os hooks npm, o invocador do coletor e os testes.
+
+## FT-010 - Normatização conclusiva do downloader e estado de runtime
+
+- tipo: `implementacao_normativa`
+- criado_em: `2026-08-01T16:01:19-03:00`
+- origem: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`
+- escopo: Técnico
+- prioridade: alta
+- status: em andamento
+- fase_global: 1 de 2 desta evolução da cadeia pública
+- objetivo: consolidar no RCF o handoff humano sem evasão, a raiz única de runtime e a unidade transacional completa por publicação, conciliando FT-004, FT-008 e FT-009.
+- dependencias: FT-003, FT-006, FT-007 e FT-008 concluídas; merge `8998fe1` concluído.
+- nao_escopo: modificar código, executar coleta ou versionar estado local nesta FT.
+- decisoes:
+  - a menção a burlar proteção conflita com a proibição expressa de stealth, spoofing e bypass e com o tratamento de domínio de terceiro; prevalece handoff humano legítimo, automação integralmente suspensa e ausência de evasão.
+  - `constructor/.state/` é a raiz local preexistente apta a evoluir para raiz única de runtime do produto, sem integrar fonte, build ou release.
+  - commits automáticos pertencem ao produto somente por autorização explícita da execução, allowlist determinística e validação integral; nunca incluem cache, sessão, perfil, temporário ou alteração alheia.
+- contexto_mestre: `.ia.rules/state/contexts/FT-010/master.md`
+- aceite: origem integral absorvida no RCF global e especializado, sem contradição, duplicação ou antecipação técnica; validação normativa e commit exclusivo.
+- proximo_ponto: concluir os três subcontextos normativos e entregar à FT-011.
+
+## FT-011 - Conclusão funcional do downloader
+
+- tipo: `implementacao_codigo`
+- criado_em: `2026-08-01T16:01:20-03:00`
+- origem: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577`, `.ia.rules/state/TODO.ia.md:1763` e contrato normativo da FT-009
+- escopo: Técnico
+- prioridade: alta
+- status: pendente da FT-010
+- fase_global: 2 de 2 desta evolução da cadeia pública
+- objetivo: concluir `scripts/publications/baixar.py`, o bootstrap multi-runtime, o handoff humano real, o estado local central, a validação transacional e o commit atômico opcional por publicação.
+- dependencias: FT-010 concluída; código parcial da FT-009 auditado; autorização humana explícita do prompt de `2026-08-01` para implementar todas as fases de `baixar.py` até funcionalidade efetiva.
+- nao_escopo: evasão de proteção de terceiro, coleta em massa sem limites, inclusão de runtime no Git, alteração da Norma gerenciada ou implementação da busca da FT-002.
+- contexto_mestre: `.ia.rules/state/contexts/FT-011/master.md`
+- aceite: testes sem rede, bootstrap validado, clone limpo sem estado prévio, runtime ignorado, handoff/cancelamento/retomada comprovados, transação Git isolada e amostra pública legítima quando a origem permitir.
+- proximo_ponto: aguardar conclusão e commit normativo da FT-010.
