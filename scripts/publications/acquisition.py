@@ -189,6 +189,7 @@ class CatalogItem:
     edition: str = ""
     assets: tuple[CatalogAsset, ...] = ()
     segments: tuple[CatalogSegment, ...] = ()
+    local_complete: bool = False
 
     def publication_identity(self) -> PublicationIdentity:
         return publication_identity(

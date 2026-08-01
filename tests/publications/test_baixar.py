@@ -12,6 +12,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
+import zipfile
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -371,6 +372,185 @@ class DownloaderTests(unittest.TestCase):
             self.assertEqual(source_record["url"], item.cover_url)
             self.assertEqual(derivation["path"], "cover.png")
             self.assertEqual(derivation["hashes"]["sha256"], hash_file(path).sha256)
+
+    def test_structured_missing_cover_generates_deterministic_technical_cover(self) -> None:
+        problem = b'{"title":"Not Found","status":404,"detail":"Cover not found"}'
+
+        def response():
+            value = Mock(
+                status_code=404,
+                headers={"content-type": "application/problem+json"},
+            )
+            value.iter_content.return_value = [problem]
+            return value
+
+        session = Mock()
+        session.get.side_effect = [response(), response()]
+        item = CatalogItem(
+            remote_id="14623",
+            collection_id="pt-br-livros",
+            collection_name="Escritos de Ellen White - Livros",
+            author_name="Ellen G. White",
+            author_key="egw",
+            language_original="pt-BR",
+            language="pt-BR",
+            language_path="pt-br",
+            publication_type="livros",
+            title_original="A Vitória da Esperança",
+            title_normalized="A Vitória da Esperança",
+            public_url="https://text.egwwritings.org/book/b14623",
+            category_name="Escritos de Ellen White",
+            category_path="egw",
+            cover_url="https://a.egwwritings.org/covers/14623?type=large",
+        )
+        config = {
+            "allowed_asset_hosts": ["a.egwwritings.org"],
+            "max_redirects": 1,
+            "max_attempts": 1,
+            "connect_timeout_seconds": 1,
+            "read_timeout_seconds": 1,
+            "chunk_bytes": 262144,
+            "cover_max_dimension": 800,
+            "_rate_limiter": Mock(before_request=Mock()),
+        }
+        with tempfile.TemporaryDirectory() as temporary, patch.object(
+            baixar, "_validate_public_dns", return_value=None
+        ):
+            first, source, derivation = baixar.download_cover(
+                session, item, Path(temporary), config
+            )
+            first_hash = hash_file(first).sha256
+            second, _, second_derivation = baixar.download_cover(
+                session, item, Path(temporary), config
+            )
+            self.assertEqual(first_hash, hash_file(second).sha256)
+            self.assertEqual(source["status"], 404)
+            self.assertEqual(source["method"], "official-cover-unavailable")
+            self.assertEqual(derivation["method"], "deterministic-technical-cover")
+            self.assertEqual(
+                derivation["hashes"]["sha256"],
+                second_derivation["hashes"]["sha256"],
+            )
+
+    def test_unstructured_404_does_not_generate_technical_cover(self) -> None:
+        response = Mock(status_code=404, headers={"content-type": "text/html"})
+        response.iter_content.return_value = [b"<html>not found</html>"]
+        session = Mock(get=Mock(return_value=response))
+        with patch.object(baixar, "_validate_public_dns", return_value=None):
+            with self.assertRaisesRegex(baixar.DownloadError, "não comprova"):
+                baixar._request_cover(
+                    session,
+                    "https://a.egwwritings.org/covers/14623?type=large",
+                    {
+                        "allowed_asset_hosts": ["a.egwwritings.org"],
+                        "max_redirects": 1,
+                        "max_attempts": 1,
+                        "connect_timeout_seconds": 1,
+                        "read_timeout_seconds": 1,
+                        "_rate_limiter": Mock(before_request=Mock()),
+                    },
+                )
+
+    def test_complete_local_publication_skips_detail_and_assets(self) -> None:
+        item = CatalogItem(
+            remote_id="1806",
+            collection_id="pt-br-livros",
+            collection_name="Escritos de Ellen White - Livros",
+            author_name="Ellen G. White",
+            author_key="egw",
+            language_original="pt-BR",
+            language="pt-BR",
+            language_path="pt-br",
+            publication_type="livros",
+            title_original="Atos dos Apóstolos",
+            title_normalized="Atos dos Apóstolos",
+            public_url="https://text.egwwritings.org/book/b1806",
+            category_name="Escritos de Ellen White",
+            category_path="egw",
+            local_complete=True,
+        )
+        driver = _FakeDriver()
+        with tempfile.TemporaryDirectory() as temporary:
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock(return_value=driver)),
+                {"delay_seconds": 0, "browser_visible": True},
+                self._runtime_paths(Path(temporary)),
+            )
+            manager._driver = driver
+            manager._primary_handle = "main"
+            with patch.object(manager, "_wait_for_human_release", return_value=driver), patch.object(
+                manager,
+                "_discover_catalog_links",
+                return_value={item.public_url: (item.title_original, item.public_url, item.author_name)},
+            ), patch.object(manager, "_enrich_book") as enrich:
+                discovered = manager.discover_catalog_items(
+                    {
+                        "id": "pt-br-livros",
+                        "catalog_url": "https://egwwritings.org/allCollection/pt/4",
+                    },
+                    Mock(before_request=Mock()),
+                    local_preflight=lambda remote_id: item if remote_id == "1806" else None,
+                )
+            self.assertEqual(discovered, [item])
+            enrich.assert_not_called()
+            self.assertEqual(
+                driver.visited,
+                ["https://text.egwwritings.org/allCollection/pt/4"],
+            )
+
+    def test_local_preflight_validates_whole_native_publication(self) -> None:
+        collection = {
+            "id": "pt-br-livros",
+            "name": "Escritos de Ellen White - Livros",
+        }
+        item = CatalogItem(
+            remote_id="1806",
+            collection_id=collection["id"],
+            collection_name=collection["name"],
+            author_name="Ellen G. White",
+            author_key="egw",
+            language_original="pt-BR",
+            language="pt-BR",
+            language_path="pt-br",
+            publication_type="livros",
+            title_original="Atos dos Apóstolos",
+            title_normalized="Atos dos Apóstolos",
+            public_url="https://text.egwwritings.org/book/b1806",
+            category_name="Escritos de Ellen White",
+            category_path="egw",
+        )
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            source_root = Path(temporary)
+            identity = item.publication_identity()
+            directory = source_root / identity.relative_directory()
+            directory.mkdir(parents=True)
+            epub = directory / identity.asset_name("epub")
+            with zipfile.ZipFile(epub, "w") as archive:
+                archive.writestr(
+                    "mimetype",
+                    b"application/epub+zip",
+                    compress_type=zipfile.ZIP_STORED,
+                )
+            evidence = hash_file(epub)
+            url = "https://media2.egwwritings.org/epub/pt_AA.epub"
+            document = build_source_v3(
+                item,
+                "completed",
+                [{"format": "epub", "url": url, "size": evidence.size, "hashes": evidence.as_dict()}],
+            )
+            write_json_atomic(directory / identity.metadata_name(), document)
+            index = baixar.build_local_publication_index(source_root)
+            complete = baixar.preflight_local_publication(
+                "1806", collection, source_root, index, {"cover_max_dimension": 800}
+            )
+            self.assertIsNotNone(complete)
+            self.assertTrue(complete.local_complete)
+            epub.write_bytes(b"corrompido")
+            self.assertIsNone(
+                baixar.preflight_local_publication(
+                    "1806", collection, source_root, index, {"cover_max_dimension": 800}
+                )
+            )
 
     def test_asset_install_is_atomic_and_repetition_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

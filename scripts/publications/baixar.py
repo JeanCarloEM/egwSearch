@@ -26,6 +26,7 @@ import sys
 import tempfile
 import threading
 import time
+import unicodedata
 from urllib.parse import urljoin, urlsplit
 import re
 
@@ -69,6 +70,7 @@ from publication_contract import (
 )
 from publication_transaction import (
     GitPublicationPublisher,
+    PublicationTransactionError,
     validate_complete_publication,
 )
 
@@ -79,6 +81,16 @@ class DownloadError(RuntimeError):
 
 class NotModified(DownloadError):
     """Resposta condicional confirmou que o ativo remoto não mudou."""
+
+
+class OfficialCoverMissing(DownloadError):
+    """O endpoint oficial comprovou que a capa declarada não existe."""
+
+    def __init__(self, url: str, detail: str, mime: str) -> None:
+        super().__init__(f"HTTP 404 em capa oficial: {detail}")
+        self.url = url
+        self.detail = detail
+        self.mime = mime
 
 
 _metadata_locks: dict[str, threading.Lock] = {}
@@ -221,6 +233,32 @@ def _request_cover(session, initial_url: str, download_config: dict):
                 raise DownloadError("redirecionamento de capa ausente ou acima do limite")
             current = urljoin(current, location)
             continue
+        if response.status_code == 404:
+            mime = str(response.headers.get("content-type") or "")
+            raw = bytearray()
+            try:
+                for chunk in response.iter_content(chunk_size=4096):
+                    if not chunk:
+                        continue
+                    raw.extend(chunk)
+                    if len(raw) > 16384:
+                        break
+            finally:
+                response.close()
+            detail = ""
+            if len(raw) <= 16384 and mime.casefold().split(";", 1)[0] in {
+                "application/json",
+                "application/problem+json",
+            }:
+                try:
+                    problem = json.loads(raw.decode("utf-8"))
+                    if isinstance(problem, dict):
+                        detail = str(problem.get("detail") or "").strip()
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    detail = ""
+            if detail == "Cover not found":
+                raise OfficialCoverMissing(current, detail, mime)
+            raise DownloadError("HTTP 404 não comprova ausência de capa oficial")
         if response.status_code < 200 or response.status_code >= 300:
             response.close()
             raise DownloadError(f"HTTP {response.status_code} em aquisicao de capa")
@@ -407,6 +445,110 @@ def validate_cover_png(path: Path, download_config: dict) -> tuple[int, int]:
         raise DownloadError("cover.png invalido ou indecodificavel") from error
 
 
+def _wrap_cover_text(draw, value: str, font, maximum_width: int) -> list[str]:
+    """Quebra texto por largura renderizada, preservando resultado determinístico."""
+
+    lines: list[str] = []
+    current = ""
+    for word in value.split():
+        candidate = f"{current} {word}".strip()
+        if not current or draw.textbbox((0, 0), candidate, font=font)[2] <= maximum_width:
+            current = candidate
+            continue
+        lines.append(current)
+        current = word
+    if current:
+        lines.append(current)
+    return lines or [value]
+
+
+def _technical_cover_text(value: str) -> str:
+    """Projeta texto rasterizado para o conjunto seguro da fonte embarcada."""
+
+    return unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
+
+
+def generate_technical_cover(
+    item: CatalogItem,
+    source_root: Path,
+    download_config: dict,
+    missing: OfficialCoverMissing,
+) -> tuple[Path, dict, dict]:
+    """Gera capa não editorial apenas para ausência oficial conclusiva."""
+
+    from PIL import Image, ImageDraw, ImageFont
+
+    maximum = int(download_config.get("cover_max_dimension", 800))
+    height = maximum
+    width = max(1, round(maximum * 2 / 3))
+    seed = hashlib.sha256(f"egwSearch-cover\0{item.remote_id}".encode("utf-8")).digest()
+    background = tuple(24 + (value % 48) for value in seed[:3])
+    accent = tuple(150 + (value % 80) for value in seed[3:6])
+    image = Image.new("RGB", (width, height), background)
+    draw = ImageDraw.Draw(image)
+    margin = max(24, width // 12)
+    title_font = ImageFont.load_default(size=max(28, width // 14))
+    author_font = ImageFont.load_default(size=max(18, width // 24))
+    label_font = ImageFont.load_default(size=max(14, width // 32))
+    draw.rectangle((0, 0, width, max(12, height // 50)), fill=accent)
+    label = "CAPA TECNICA NAO EDITORIAL"
+    draw.text((margin, height // 9), label, font=label_font, fill=accent)
+    y = height // 4
+    for line in _wrap_cover_text(
+        draw, _technical_cover_text(item.title_normalized), title_font, width - 2 * margin
+    ):
+        draw.text((margin, y), line, font=title_font, fill=(250, 250, 246))
+        y += draw.textbbox((0, 0), line, font=title_font)[3] + max(8, height // 100)
+    y = min(max(y + height // 16, height * 2 // 3), height - height // 5)
+    for line in _wrap_cover_text(
+        draw, _technical_cover_text(item.author_name), author_font, width - 2 * margin
+    ):
+        draw.text((margin, y), line, font=author_font, fill=(225, 225, 218))
+        y += draw.textbbox((0, 0), line, font=author_font)[3] + 6
+    footer = f"Capa oficial indisponivel - obra {item.remote_id}"
+    draw.text((margin, height - margin * 2), footer, font=label_font, fill=accent)
+
+    directory = source_root / item.publication_identity().relative_directory()
+    directory.mkdir(parents=True, exist_ok=True)
+    temporary_directory = Path(download_config.get("_download_tmp_dir", directory))
+    temporary_directory.mkdir(parents=True, exist_ok=True)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=".cover-technical-", suffix=".png.partial", dir=temporary_directory
+    )
+    os.close(descriptor)
+    temporary = Path(temporary_name)
+    try:
+        image.save(temporary, format="PNG", optimize=True, compress_level=9)
+        validate_cover_png(temporary, download_config)
+        target = directory / "cover.png"
+        temporary.replace(target)
+    except Exception:
+        temporary.unlink(missing_ok=True)
+        raise
+    evidence = hash_file(target)
+    accessed_at = datetime.now(timezone.utc).isoformat()
+    source_record = {
+        "format": "cover",
+        "url": item.cover_url,
+        "resolved_url": missing.url,
+        "method": "official-cover-unavailable",
+        "accessed_at": accessed_at,
+        "status": 404,
+        "detail": missing.detail,
+        "mime": missing.mime,
+    }
+    derivation_record = {
+        "format": "cover",
+        "method": "deterministic-technical-cover",
+        "path": "cover.png",
+        "generator": "egwSearch/FT-012",
+        "source": item.cover_url,
+        "size": evidence.size,
+        "hashes": evidence.as_dict(),
+    }
+    return target, source_record, derivation_record
+
+
 def download_cover(
     session,
     item: CatalogItem,
@@ -417,7 +559,10 @@ def download_cover(
 
     if not item.cover_url:
         raise ContractError("obra sem URL de capa declarada")
-    response, final_url = _request_cover(session, item.cover_url, download_config)
+    try:
+        response, final_url = _request_cover(session, item.cover_url, download_config)
+    except OfficialCoverMissing as missing:
+        return generate_technical_cover(item, source_root, download_config, missing)
     maximum_bytes = int(download_config.get("max_cover_bytes", 20 * 1024 * 1024))
     declared_size = response.headers.get("content-length")
     if declared_size:
@@ -909,6 +1054,7 @@ class BrowserSessionManager:
         limiter: RateLimiter,
         limit: int | None = None,
         publication_query: str | None = None,
+        local_preflight=None,
     ) -> list[CatalogItem]:
         """Enumera todas as obras e as enriquece pela página individual."""
 
@@ -945,10 +1091,19 @@ class BrowserSessionManager:
                     )
             if limit is not None:
                 ordered = ordered[:limit]
-            return [
-                self._enrich_book(collection, url, title, author, limiter)
-                for title, url, author in ordered
-            ]
+            items: list[CatalogItem] = []
+            for title, url, author in ordered:
+                remote_id = _book_id_from_url(url)
+                local = local_preflight(remote_id) if local_preflight else None
+                if local is not None:
+                    items.append(local)
+                    print(
+                        f"PUBLICATION_LOCAL_VALID remote_id={remote_id} "
+                        "network=skipped"
+                    )
+                    continue
+                items.append(self._enrich_book(collection, url, title, author, limiter))
+            return items
 
         # Compatibilidade com a aplicação completa e com fixtures Selenium
         # antigas: a colheita ocorre durante a rolagem para não perder cartões
@@ -1646,11 +1801,19 @@ def preflight_existing_text(
             record
             for record in derivations
             if record.get("format") == "cover"
-            and record.get("method") == "normalized-official-cover"
+            and record.get("method")
+            in {"normalized-official-cover", "deterministic-technical-cover"}
         ]
         if len(cover_sources) != 1 or len(cover_derivations) != 1:
             return None
+        cover_source = cover_sources[0]
         cover_record = cover_derivations[0]
+        expected_pair = {
+            "normalized-official-cover": "official-book-cover",
+            "deterministic-technical-cover": "official-cover-unavailable",
+        }
+        if expected_pair.get(cover_record.get("method")) != cover_source.get("method"):
+            return None
         cover_path = (directory / str(cover_record.get("path", ""))).resolve()
         cover_hash = (cover_record.get("hashes") or {}).get("sha256", "")
         try:
@@ -1714,6 +1877,132 @@ def preflight_existing_text(
     return epub_path, cover_path
 
 
+def build_local_publication_index(source_root: Path) -> dict[str, list[Path]]:
+    """Indexa metadados locais por ID remoto sem confiar neles antes da validação."""
+
+    indexed: dict[str, list[Path]] = {}
+    if not source_root.is_dir():
+        return indexed
+    for metadata_path in source_root.rglob("*.source.json"):
+        try:
+            document = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+            remote_id = str((document.get("identity") or {}).get("remote_id") or "")
+        except (OSError, json.JSONDecodeError, AttributeError):
+            continue
+        if document.get("schema_version") != "publication-source/v3" or not remote_id:
+            continue
+        indexed.setdefault(remote_id, []).append(metadata_path)
+    return indexed
+
+
+def _local_item_from_metadata(
+    metadata_path: Path,
+    collection: dict,
+    remote_id: str,
+) -> CatalogItem:
+    document = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+    identity = document.get("identity") or {}
+    recorded_collection = document.get("collection") or {}
+    if (
+        document.get("schema_version") != "publication-source/v3"
+        or document.get("state") != "completed"
+        or str(identity.get("remote_id") or "") != remote_id
+        or recorded_collection.get("id") != collection["id"]
+    ):
+        raise PublicationTransactionError("metadado local não pertence à entrada do catálogo")
+    sources = document.get("sources")
+    segments = document.get("segments")
+    derivations = document.get("derivations")
+    if (
+        not isinstance(sources, list)
+        or not isinstance(segments, list)
+        or not isinstance(derivations, list)
+    ):
+        raise PublicationTransactionError("metadado local incompleto")
+    cover_urls = [
+        str(record.get("url") or "")
+        for record in sources
+        if record.get("format") == "cover" and record.get("url")
+    ]
+    cover_derivations = [
+        record for record in derivations if record.get("format") == "cover"
+    ]
+    if len(cover_urls) > 1 or bool(cover_urls) != bool(cover_derivations):
+        raise PublicationTransactionError("pareamento local de capa ambíguo")
+    if any(
+        record.get("format") in {"pdf", "epub"} and not record.get("url")
+        for record in sources
+    ):
+        raise PublicationTransactionError("fonte nativa local sem URL")
+    assets = tuple(
+        CatalogAsset(
+            format=str(record["format"]),
+            url=str(record["url"]),
+            etag=str(record.get("etag") or ""),
+            last_modified=str(record.get("last_modified") or ""),
+            size=record.get("size") if isinstance(record.get("size"), int) else None,
+            remote_hash=str((record.get("hashes") or {}).get("sha256") or ""),
+        )
+        for record in sources
+        if record.get("format") in {"pdf", "epub"} and record.get("url")
+    )
+    local_segments = tuple(
+        CatalogSegment(
+            remote_id=str(record.get("remote_id") or ""),
+            url=str(record.get("url") or ""),
+            order=int(record.get("order") or 0),
+            title=str(record.get("title") or ""),
+            html="",
+        )
+        for record in segments
+    )
+    return CatalogItem(
+        remote_id=remote_id,
+        collection_id=str(recorded_collection.get("id") or ""),
+        collection_name=str(recorded_collection.get("name") or collection.get("name") or ""),
+        author_name=str(identity.get("author_original") or ""),
+        author_key=str(identity.get("author_key") or ""),
+        language_original=str(identity.get("language_original") or ""),
+        language=str(identity.get("language") or ""),
+        language_path=str(identity.get("language_path") or ""),
+        publication_type=str(identity.get("type") or ""),
+        title_original=str(identity.get("title_original") or ""),
+        title_normalized=str(identity.get("title_normalized") or ""),
+        public_url=str(identity.get("public_url") or ""),
+        category_name=str(identity.get("category_original") or ""),
+        category_path=str(identity.get("category") or ""),
+        cover_url=cover_urls[0] if len(cover_urls) == 1 else "",
+        edition=str(identity.get("edition") or ""),
+        assets=assets,
+        segments=local_segments,
+        local_complete=True,
+    )
+
+
+def preflight_local_publication(
+    remote_id: str,
+    collection: dict,
+    source_root: Path,
+    local_index: dict[str, list[Path]],
+    download_config: dict,
+) -> CatalogItem | None:
+    """Comprova uma unidade inteira antes de dispensar todo acesso da obra."""
+
+    valid: list[CatalogItem] = []
+    for metadata_path in local_index.get(remote_id, []):
+        try:
+            item = _local_item_from_metadata(metadata_path, collection, remote_id)
+            validate_complete_publication(item, source_root)
+            if item.segments and preflight_existing_text(item, source_root, download_config) is None:
+                continue
+            if not item.assets and not item.segments:
+                continue
+            valid.append(item)
+        except (OSError, ValueError, ContractError, PublicationTransactionError):
+            continue
+    return valid[0] if len(valid) == 1 else None
+
+
 def _process_catalog_item(
     item: CatalogItem,
     source_root: Path,
@@ -1739,6 +2028,19 @@ def _process_catalog_item(
     records: list[dict] = []
     skipped = downloaded = extracted = converted = 0
     try:
+        if item.local_complete and not revalidate:
+            ledger.transition(
+                key,
+                "skipped",
+                reason="complete-publication-validated-before-detail",
+            )
+            return {
+                "state": "skipped",
+                "downloaded": 0,
+                "skipped": 1,
+                "extracted": 0,
+                "converted": 0,
+            }
         if item.assets:
             for asset in item.assets:
                 existing = preflight_existing_asset(
@@ -1973,6 +2275,7 @@ def _process_collection(
     browser_manager: BrowserSessionManager | None = None,
     publisher: GitPublicationPublisher | None = None,
     publication_query: str | None = None,
+    local_index: dict[str, list[Path]] | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -2016,6 +2319,17 @@ def _process_collection(
                 limiter,
                 limit=limit,
                 publication_query=publication_query,
+                local_preflight=(
+                    None
+                    if revalidate
+                    else lambda remote_id: preflight_local_publication(
+                        remote_id,
+                        collection,
+                        source_root,
+                        local_index or {},
+                        download_config,
+                    )
+                ),
             )
         if publication_query and fixture_payload is not None:
             query = publication_query.casefold().strip()
@@ -2206,6 +2520,7 @@ def run(
     if limit is not None and limit < 1:
         raise ContractError("limit deve ser positivo")
     results = []
+    local_index = build_local_publication_index(source_root)
     shared_limiter = RateLimiter(_rate_policy(config["download"]))
     needs_browser = fixture is None and not no_network
     browser_manager = None
@@ -2255,6 +2570,7 @@ def run(
                         browser_manager=browser_manager,
                         publisher=publisher,
                         publication_query=publication_query,
+                        local_index=local_index,
                     )
                 )
         else:
@@ -2278,6 +2594,7 @@ def run(
                         revalidate=revalidate,
                         publisher=publisher,
                         publication_query=publication_query,
+                        local_index=local_index,
                     ): collection["id"]
                     for collection in collections
                 }
