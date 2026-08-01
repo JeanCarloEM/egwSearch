@@ -113,3 +113,5 @@ capa oficialmente declarada para a obra.
 - 53 testes Python, três testes Node, compilação Python, bootstrap/check,
   rastreabilidade RCF e `git diff --check` aprovados;
 - commits do aprimoramento material e da sincronização: `297d5bc` e `b933ecd`.
+- integração publicada em `main` pelo merge `186bc2b`, com `dev` convergida à
+  mesma história e a publicação gerada preservada fora do Git.
