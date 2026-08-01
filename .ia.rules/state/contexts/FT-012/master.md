@@ -57,9 +57,12 @@ capa oficialmente declarada para a obra.
 - a capa é o único conteúdo da primeira página do EPUB e ocupa a viewport
   inteira, borda a borda, sem margens ou faixas; diferença de proporção usa
   preenchimento com recorte central, sem deformar a imagem.
-- categoria de path deriva exclusivamente do rótulo oficial configurado para a
-  coleção e usa o normalizador URI comum; ausência ou categoria inválida bloqueia
-  a aquisição, sem inferência por título ou autor.
+- categoria preserva o rótulo oficial configurado e usa código URI curto
+  explícito em PT-BR (`egw`, `pioneiros`, `comentarios` etc.); ausência ou
+  categoria inválida bloqueia a aquisição, sem inferência por título ou autor.
+- o segmento categórico é omitido somente quando repetir exatamente o
+  `author-key`, evitando `egw/.../egw/`; coleções inglesas usam os mesmos códigos
+  semânticos em PT-BR.
 
 ## Aceite global
 
@@ -78,8 +81,8 @@ capa oficialmente declarada para a obra.
 - primeira página do EPUB contém exclusivamente a capa e preenche toda a área
   visível, comprovada no XHTML interno por layout sem margens e escala `slice`.
 - destino canônico segue
-  `<autor>/<idioma>/<categoria>/<tipo>/<slug-titulo>/`, e metadados/índice
-  preservam rótulo e slug de categoria.
+  `<autor>/<idioma>/[<categoria>/]<tipo>/<slug-titulo>/`, omitindo a categoria
+  apenas quando igual ao autor; metadados/índice sempre preservam rótulo e código.
 
 ## Resultado
 

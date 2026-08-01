@@ -73,3 +73,14 @@ A coleção oficial será a autoridade da categoria. Seu rótulo editorial será
 preservado em metadados e uma projeção ASCII RFC 3986 formará o segmento
 adicional entre idioma e tipo; título ou autoria não serão usados para inferir
 categoria ausente.
+
+## Esclarecimento de 2026-08-01 — códigos curtos em PT-BR
+
+> Simplifique os nomes: Ellen White deve ir diretamente para o autor `egw` e
+> “Biblioteca dos Pioneiros” deve usar `pioneiros`; aplique às categorias
+> inglesas o equivalente em PT-BR.
+
+O rótulo remoto continuará preservado como evidência, mas o path usará código
+curto explícito em português. Quando categoria e autor forem ambos `egw`, o
+segmento não será duplicado; para autores pioneiros haverá `pioneiros/` antes
+do tipo. A mesma tabela semântica valerá para coleções em inglês.

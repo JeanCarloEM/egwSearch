@@ -613,9 +613,9 @@ Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio p
 
 A origem local DEVE ser `./src/publications/` e a raiz publica DEVE ser `/publications/`.
 
-Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/<categoria>/<tipo>/<slug-titulo>/`, onde `<categoria>` projeta a classificação editorial oficial da coleção, `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial. [PENDENTE-CODIGO]
+Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/[<categoria>/]<tipo>/<slug-titulo>/`, onde `<categoria>` é código URI curto em PT-BR da classificação editorial oficial, omitido somente quando igual ao autor, `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial. [PENDENTE-CODIGO]
 
-O rótulo original da categoria DEVE ser preservado nos metadados e sua projeção de path DEVE usar o normalizador URI comum; categoria NÃO PODE ser inferida do título ou autor, e ausência de autoridade classificatória DEVE bloquear aquisição material. [PENDENTE-CODIGO]
+O rótulo original da categoria DEVE ser preservado nos metadados e seu código de path DEVE vir de mapeamento explícito, curto e URI-safe em PT-BR, inclusive para coleções inglesas; categoria NÃO PODE ser inferida do título ou autor, e ausência de autoridade classificatória DEVE bloquear aquisição material. [PENDENTE-CODIGO]
 
 O slug de rota DEVE usar somente `[a-z0-9]+(?:-[a-z0-9]+)*`: converter o titulo para minusculas, decompor Unicode, remover acentos, diacriticos e caracteres especiais, substituir espacos por hifens, colapsar hifens repetidos e remover hifens nas extremidades. Caractere sem transliteracao ASCII e titulo cujo resultado fique vazio DEVEM receber fallback causal deterministico; limite de portabilidade DEVE truncar com sufixo de hash, sem colisao silenciosa.
 

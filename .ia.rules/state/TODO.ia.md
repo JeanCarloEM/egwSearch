@@ -1965,3 +1965,7 @@
   idioma e tipo. A categoria DEVE vir da classificação editorial da coleção no
   site de origem, preservar seu rótulo em metadados e projetá-lo pelo slug URI
   comum; NÃO PODE ser inferida por título ou autoria.
+
+  O diretório categórico DEVE usar código curto em PT-BR também para coleções
+  inglesas (`pioneiros`, `comentarios` etc.). Quando esse código for igual ao
+  `author-key` — caso `egw` — sua duplicação no path DEVE ser omitida.

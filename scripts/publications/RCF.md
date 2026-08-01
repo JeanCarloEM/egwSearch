@@ -36,8 +36,8 @@ O acronimo do titulo DEVE derivar apenas de suas palavras normalizadas: titulo d
 ## 2. Paths e colisoes
 
 A raiz local é `src/publications/`; cada grupo DEVE ocupar
-`<author-key>/<language-path>/<category>/<type>/<slug-titulo>/`, com `category` derivada do rótulo editorial oficial da coleção pelo normalizador URI comum. [PENDENTE-CODIGO]
-O rótulo original e o slug da categoria DEVEM integrar metadado e identidade estável; ausência, categoria arbitrária ou inferência por título/autor DEVEM bloquear aquisição. [PENDENTE-CODIGO]
+`<author-key>/<language-path>/[<category>/]<type>/<slug-titulo>/`; `category` DEVE ser código curto explícito em PT-BR e URI-safe, aplicável também à coleção inglesa, e o segmento DEVE ser omitido somente quando igual a `author-key`. [PENDENTE-CODIGO]
+O rótulo remoto original e o código da categoria DEVEM integrar metadado e identidade estável; ausência, categoria arbitrária ou inferência por título/autor DEVEM bloquear aquisição. [PENDENTE-CODIGO]
 Para Ellen G. White,
 `author-key` permanece `egw`; autores pioneiros NÃO DEVEM ser gravados sob [3301a97]
 `egw`. `pt-BR` projeta `pt-br` e `en` projeta `en` no path. O legado `en-us`
