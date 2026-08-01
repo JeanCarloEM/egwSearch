@@ -993,8 +993,9 @@ Falha em descobrir, baixar ou validar qualquer ativo habilitado impede
 Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [be82602]
 URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
 término declarado. [be82602]
-A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [be82602]
-anterior/próximo coerentes e preservar todos os blocos editoriais identificados
+A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [495e8c4]
+anterior/próximo coerentes — considerando equivalentes a rota da página e a
+rota do primeiro bloco editorial comprovado da mesma página — e preservar todos os blocos editoriais identificados
 no contêiner de leitura, inclusive headings, parágrafos, listas, tabelas, notas,
 ênfases, links e quebras semanticamente materiais. [be82602]
 

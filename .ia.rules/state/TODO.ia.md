@@ -1931,7 +1931,7 @@
 
   Registrar unidade transacional, critérios de completude e pareamento, arquivos por publicação, índices alterados, staging seletivo, convenção de commit, concorrência, rollback e retomada, testes, commits de validação, resultado de push e limitações remanescentes.
 
-- [x] Corrigir a completude real do downloader e dos derivados editoriais
+- [ ] Corrigir a completude real do downloader e dos derivados editoriais
 
   A FT-012 DEVE corrigir a evidência funcional superveniente: o coletor DEVE
   enumerar todas as obras do catálogo; consultar a página individual de cada
@@ -1974,3 +1974,9 @@
   sumário. Após o sumário, conteúdo DEVE usar cabeçalho contextual e rodapé
   numerado fora do corpo XHTML indexável; a primeira página de cada capítulo,
   seção ou unidade equivalente NÃO DEVE exibir cabeçalho.
+
+  Evidência superveniente: a navegação da obra `14623` foi corrigida e
+  concluiu 12 unidades, mas o `og:image` oficial responde conclusivamente
+  `404 Cover not found`. É necessária decisão humana sobre reconhecer esse
+  metadado quebrado como ausência comprovada de capa ou manter a obra
+  bloqueada.

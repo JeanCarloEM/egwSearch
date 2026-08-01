@@ -5,7 +5,8 @@
 - FT: `FT-012`.
 - tipo: `implementacao_codigo` com correção normativa causal.
 - fonte: `.ia.rules/state/requests/FT-012/source.md`.
-- estado: reaberta para aprimoramento de capa editorial.
+- estado: reaberta e aguardando decisão humana sobre capa oficialmente
+  declarada, mas comprovadamente inexistente.
 - autorização: solicitação humana explícita para corrigir e concluir a
   funcionalidade real de `baixar.py`.
 
@@ -125,3 +126,9 @@ capa oficialmente declarada para a obra.
   primeiro segmento, adapta o migrador aos dois layouts e preserva rollback.
 - refinamento editorial `f4b4563` antecipa a proveniência, inclui o sumário no
   spine e separa cabeçalhos/rodapés do texto por caixas de margem CSS paginada.
+- correção `486883c` reconhece como equivalentes a rota da página e a rota de
+  seu primeiro bloco editorial na validação anterior/próximo; a obra `14623`
+  concluiu 12 unidades na amostra pública.
+- bloqueio atual: o `og:image` da obra `14623` aponta para endpoint oficial que
+  responde `404 Cover not found`; alterar o bloqueio contratual exige
+  confirmação humana explícita.

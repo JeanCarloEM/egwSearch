@@ -106,3 +106,23 @@ Cabeçalhos e números serão conteúdo gerado em caixas de margem CSS paginada,
 fora do corpo XHTML, para não integrar o texto editorial consumido por parser,
 indexador, tokenizador ou LLM. A primeira página de cada unidade suprimirá o
 cabeçalho, preservando o contador no rodapé.
+
+## Evidência superveniente de 2026-08-01 — navegação e capa inexistente
+
+> `TEXT_DISCOVERY_PROGRESS book=14623 units=1 complete=false`
+> `ERRO_CONTRATO: navegação editorial anterior/próximo divergente`
+
+A execução pública controlada comprovou que uma página pode apontar em
+`rel=prev` para o identificador do primeiro bloco editorial da página anterior,
+em vez da rota pela qual ela foi acessada. A correção passou a reconhecer essas
+duas identidades somente quando ambas pertencem à mesma obra e página; a obra
+`14623` então concluiu sua cadeia real com 12 unidades.
+
+Na fase seguinte, o `og:image` oficial da mesma obra declarou
+`https://a.egwwritings.org/covers/14623?type=large`, mas o próprio endpoint
+respondeu conclusivamente `404`, `application/problem+json` e
+`detail="Cover not found"`; as variantes oficiais conhecidas também não
+oferecem imagem válida. O RCF vigente bloqueia `completed` nessa condição. A
+decisão entre manter o bloqueio ou reconhecer metadado remoto quebrado como
+ausência comprovada de capa exige confirmação humana antes de evolução
+comportamental.
