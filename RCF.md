@@ -1008,7 +1008,11 @@ O documento DEVE ser semanticamente identico em JSON e YAML e possuir exatamente
 
 Cada `book.contributors[]` DEVE conter exatamente `name` e `role`.
 
-`book.edition` DEVE existir e ser exatamente `{}`; detalhe necessario para distinguir edicao DEVE bloquear conformidade ate decisao especifica, sem descarte ou projecao em outro campo.
+`book.edition` DEVE existir e ser exatamente `{}`. Qualificador editorial oficial
+necessário para distinguir publicações, quando já integrar inequivocamente o
+título canônico ou a evidência editorial, DEVE permanecer como parte indivisível
+de `book.title`, sem ser projetado em propriedade adicional. Qualificador
+inferido, técnico ou não comprovado DEVE bloquear conformidade.
 
 `book.tags` DEVE existir e PODE ser `[]`; nenhum outro objeto ou lista vazia e admitido.
 

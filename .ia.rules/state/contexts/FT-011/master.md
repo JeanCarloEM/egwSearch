@@ -7,6 +7,10 @@
 - estado: em andamento; FT-010 concluída.
 - autorização: prompt humano de `2026-08-01` para concluir todas as fases de
   `baixar.py` com funcionalidade efetiva.
+- autorização superveniente: após pergunta explícita sobre a colisão de
+  edições, o prompt humano determinou continuar e fazer o necessário para a
+  conclusão; aplica-se a evolução recomendada de `book.title`, preservando
+  `book.edition: {}`.
 
 ## Arquitetura de execução
 

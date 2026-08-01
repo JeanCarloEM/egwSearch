@@ -56,7 +56,7 @@
   silenciosa: 19 entre titulo canônico e Package Document EPUB e 65 entre
   titulos visiveis/estruturados de pares PDF/EPUB.
 
-## Bloqueio normativo
+## Decisão normativa superveniente
 
 O RCF §44 determina `book.edition: {}` e proibe emitir documento quando
 detalhe de edicao for necessario para distinguir a publicacao ate decisao
@@ -71,10 +71,10 @@ especifica. A auditoria encontrou seis colisoes de titulo-base, abrangendo
 5. `Caminho a Cristo` e `Caminho a Cristo (nova edição)`;
 6. `O Grande Conflito` e `O Grande Conflito (condensado)`.
 
-Nenhum indice ou documento formativo foi emitido. A continuacao exige
-decisao humana evolutiva sobre como preservar a distincao dessas edicoes sem
-violar o escopo fechado de `formative_data`. A alternativa recomendada e
-tratar os qualificadores oficiais ja preservados nos titulos canônicos como
-parte indivisivel de `book.title`, manter `book.edition` exatamente `{}` e
-registrar no RCF a decisao finita para estes grupos, sem criar propriedade
-formativa adicional.
+Nenhum índice ou documento formativo havia sido emitido. Em `2026-08-01`, a
+solicitação humana autorizou fazer o necessário para concluir integralmente o
+downloader após pergunta explícita sobre esta decisão. O RCF evoluiu para
+preservar qualificadores oficiais já comprovados como parte indivisível de
+`book.title`, manter `book.edition` exatamente `{}` e proibir propriedade
+formativa adicional ou qualificador inferido. O bloqueio fica resolvido para
+os 12 grupos auditados, condicionado à validação de suas evidências locais.
