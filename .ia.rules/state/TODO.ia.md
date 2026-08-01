@@ -1931,7 +1931,7 @@
 
   Registrar unidade transacional, critérios de completude e pareamento, arquivos por publicação, índices alterados, staging seletivo, convenção de commit, concorrência, rollback e retomada, testes, commits de validação, resultado de push e limitações remanescentes.
 
-- [x] Corrigir a completude real do downloader e dos EPUBs derivados
+- [ ] Corrigir a completude real do downloader e dos derivados editoriais
 
   A FT-012 DEVE corrigir a evidência funcional superveniente: o coletor DEVE
   enumerar todas as obras do catálogo; consultar a página individual de cada
@@ -1944,3 +1944,8 @@
   explícita. A conclusão exige comparação entre catálogo, ativos descobertos,
   cadeia textual e artefatos finais, além de amostras públicas controladas de
   uma obra nativa e uma obra somente textual.
+
+  O aprimoramento reaberto da FT-012 DEVE adquirir a capa oficialmente
+  declarada pela ficha/coleção para uma obra somente textual, materializar o
+  `cover.png` canônico e incorporar a mesma imagem aos EPUB/PDF localmente
+  derivados, sem aceitar imagem arbitrária como capa.

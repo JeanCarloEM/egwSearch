@@ -5,7 +5,7 @@
 - FT: `FT-012`.
 - tipo: `implementacao_codigo` com correção normativa causal.
 - fonte: `.ia.rules/state/requests/FT-012/source.md`.
-- estado: concluída.
+- estado: reaberta para aprimoramento de capa editorial.
 - autorização: solicitação humana explícita para corrigir e concluir a
   funcionalidade real de `baixar.py`.
 
@@ -14,7 +14,8 @@
 Corrigir a conclusão indevida da FT-011 e tornar o coletor verificavelmente
 completo: enumerar todas as obras do catálogo, inspecionar cada página de obra,
 adquirir todos os PDF/EPUB nativos disponíveis e, somente na ausência de ambos,
-extrair a sequência editorial integral e gerar EPUB derivado fiel.
+extrair a sequência editorial integral e gerar derivados fiéis, incorporando a
+capa oficialmente declarada para a obra.
 
 ## Decomposição
 
@@ -27,6 +28,9 @@ extrair a sequência editorial integral e gerar EPUB derivado fiel.
    árvore canônica e impedir regressão;
 6. validar por fixtures realistas e amostra pública controlada, atualizar
    rastreabilidade, estado e commits.
+7. adquirir e validar a capa declarada pela ficha/coleção, gerar `cover.png`
+   canônico e incorporá-la ao EPUB e ao PDF local quando esses derivados forem
+   produzidos.
 
 ## Invariantes
 
@@ -39,6 +43,8 @@ extrair a sequência editorial integral e gerar EPUB derivado fiel.
   resumo, reescrita ou salto silencioso;
 - desafio de segurança continua sem bypass e estado de runtime continua fora do
   Git.
+- capa remota só é aceita quando declarada pela origem oficial da mesma obra;
+  imagem arbitrária ou de outra edição não é fallback válido.
 
 ## Aceite global
 
@@ -49,6 +55,8 @@ extrair a sequência editorial integral e gerar EPUB derivado fiel.
 - EPUB derivado contém o conteúdo real e sumário, e não texto de fixture;
 - testes não escrevem em `src/publications`;
 - amostra pública comprova ao menos uma obra nativa e uma obra somente textual.
+- obra textual com capa declarada produz `cover.png` e derivados que incorporam
+  exatamente essa capa validada.
 
 ## Resultado
 
