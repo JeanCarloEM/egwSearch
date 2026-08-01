@@ -250,26 +250,26 @@ desafio. [PENDENTE-CODIGO]
 
 ### 7.3 Publicação completa e efeito Git
 
-O coletor DEVE centralizar uma função que calcule e valide a unidade [PENDENTE-CODIGO]
+O coletor DEVE centralizar uma função que calcule e valide a unidade [5cacaf1]
 `completa_e_pareada`: ativos, metadado, segmentos, derivados, referências e
 entradas de índice impactadas. [PENDENTE-CODIGO]
-O resultado DEVE expor allowlist relativa à raiz, [PENDENTE-CODIGO]
+O resultado DEVE expor allowlist relativa à raiz, [5cacaf1]
 hashes e evidência de completude; item ambíguo ou incompleto não é elegível a
 Git. [PENDENTE-CODIGO]
 
-Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [PENDENTE-CODIGO]
+Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [5cacaf1]
 CLI. [PENDENTE-CODIGO]
-Quando habilitado, a finalização DEVE adquirir lock global no runtime, [PENDENTE-CODIGO]
+Quando habilitado, a finalização DEVE adquirir lock global no runtime, [5cacaf1]
 validar `dev`, worktree/índice, excluir estado não canônico, adicionar somente a
 allowlist com `git add -- <paths>`, validar o diff staged e criar exatamente um
 commit por publicação. [PENDENTE-CODIGO]
 Alteração staged preexistente ou conflito em path da
 unidade bloqueia sem modificar o índice. [PENDENTE-CODIGO]
 
-Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [PENDENTE-CODIGO]
+Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [5cacaf1]
 preservar preparação no runtime para retomada. [PENDENTE-CODIGO]
-Commit confirmado DEVE ser [PENDENTE-CODIGO]
-registrado no ledger e não pode ser repetido. [PENDENTE-CODIGO]
+Commit confirmado DEVE ser [5cacaf1]
+registrado no ledger e não pode ser repetido. [5cacaf1]
 Push, se futuramente habilitado,
 é fase separada e nunca requisito implícito do download. [PENDENTE-CODIGO]
 
