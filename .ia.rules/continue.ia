@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-01T18:20:00-03:00`.
+Atualizado_em: `2026-08-01T15:22:55-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-012 em andamento para corrigir a completude real do downloader.
+Escopo_atual: FT-012 concluída; próxima demanda autorizada deve ser selecionada do TODO canônico.
 Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
 Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -315,7 +315,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-012/source.md`
 - escopo: Técnico
 - prioridade: alta
-- status: em andamento
+- status: concluída
 - objetivo: enumerar integralmente cada catálogo, descobrir todos os PDF/EPUB
   na página de cada obra e gerar derivado somente a partir da cadeia editorial
   real completa quando não houver ativo nativo.
@@ -326,4 +326,16 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   cartões de catálogo não bastam para descobrir ativos; páginas de leitura
   públicas expõem blocos reais em `#r-pl` e encadeamento `rel=next`.
 - aceite: conforme contexto mestre, com provas públicas de obra nativa e textual.
-- proximo_ponto: evoluir RCF antes da alteração de código.
+- implementacao: catálogo público leve integral; enriquecimento pela página da
+  obra; aquisição de todos os ativos nativos; travessia textual por `rel=next`;
+  checkpoints retomáveis; Markdown/EPUB semântico; fixtures isoladas.
+- validacao: catálogo direto com 84 obras; publicação `1806` com PDF+EPUB;
+  publicação `14389` com 31 unidades reais, 316297 caracteres e EPUB de 136844
+  bytes; 49 testes Python, três Node, bootstrap/check e RCF aprovados;
+  `agent:verify` conserva o diagnóstico preexistente `TSCONFIG_AUSENTE`.
+- commits: `ca12610`, `36fa333`, `2ed0d43` e `279e2ef`.
+- pendencias: nenhuma na FT-012; publicação real de validação permanece não
+  rastreada e runtime/quarentena permanece ignorado, conforme determinação
+  humana de não incluir conteúdo gerado pelo downloader.
+- proximo_ponto: selecionar a próxima demanda autorizada do TODO canônico; não
+  executar coleta em massa implicitamente.

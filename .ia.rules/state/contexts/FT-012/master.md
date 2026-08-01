@@ -5,7 +5,7 @@
 - FT: `FT-012`.
 - tipo: `implementacao_codigo` com correção normativa causal.
 - fonte: `.ia.rules/state/requests/FT-012/source.md`.
-- estado: em andamento.
+- estado: concluída.
 - autorização: solicitação humana explícita para corrigir e concluir a
   funcionalidade real de `baixar.py`.
 
@@ -49,3 +49,23 @@ extrair a sequência editorial integral e gerar EPUB derivado fiel.
 - EPUB derivado contém o conteúdo real e sumário, e não texto de fixture;
 - testes não escrevem em `src/publications`;
 - amostra pública comprova ao menos uma obra nativa e uma obra somente textual.
+
+## Resultado
+
+- catálogo público leve adotado e enumeração direta comprovada com 84 obras
+  únicas em `pt-br-livros`;
+- página individual tornada autoridade para título, autor, leitura e todos os
+  ativos PDF/EPUB habilitados;
+- obra nativa `1806` comprovada com dois ativos obrigatórios, ambos íntegros e
+  idempotentemente reconhecidos;
+- obra textual `14389` percorrida até término em 31 unidades reais, com
+  checkpoint retomável, 316297 caracteres Markdown e EPUB de 136844 bytes;
+- headings e ênfases preservados no EPUB, sem `Primeiro capítulo.` nem
+  `Texto editorial inicial`;
+- fixtures impedidas de escrever no acervo canônico; saída sintética anterior
+  preservada em quarentena de runtime fora do Git;
+- 49 testes Python, três testes Node, compilação Python, bootstrap/check,
+  `agent:rcf` e `git diff --check` aprovados;
+- `agent:verify` permanece não aplicável ao produto Python neste repositório e
+  reporta o diagnóstico preexistente `TSCONFIG_AUSENTE`;
+- commits materiais e normativos: `2ed0d43` e `279e2ef`.
