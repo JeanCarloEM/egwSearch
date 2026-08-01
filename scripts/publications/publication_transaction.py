@@ -6,12 +6,14 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import subprocess
 from typing import Iterable
+import zipfile
 
 from acquisition import AcquisitionLedger, CatalogItem
 from publication_contract import (
@@ -108,6 +110,7 @@ def validate_complete_publication(
         "remote_id": item.remote_id,
         "author_key": item.author_key,
         "language": item.language,
+        "category": item.category_path,
         "type": item.publication_type,
         "acronym": identity.acronym,
         "route_slug": identity.route_slug,
@@ -136,12 +139,32 @@ def validate_complete_publication(
             r"[0-9a-f]{64}", str(expected_hash or "")
         ):
             raise PublicationTransactionError("segmento sem path/hash")
-        candidate = (directory / relative).resolve()
-        if not _inside(candidate, directory) or not candidate.is_file():
-            raise PublicationTransactionError("segmento ausente ou fora da unidade")
-        if hash_file(candidate).sha256 != expected_hash:
-            raise PublicationTransactionError("hash de segmento divergente")
-        referenced.add(candidate)
+        if "!/" in relative:
+            archive_relative, internal = relative.split("!/", 1)
+            candidate = (directory / archive_relative).resolve()
+            if (
+                not _inside(candidate, directory)
+                or candidate.suffix.casefold() != ".epub"
+                or not candidate.is_file()
+                or not internal.startswith("META-INF/egwsearch-source/")
+                or Path(internal).name != internal.rsplit("/", 1)[-1]
+            ):
+                raise PublicationTransactionError("segmento interno ausente ou fora da unidade")
+            try:
+                with zipfile.ZipFile(candidate) as archive:
+                    value = archive.read(internal)
+            except (OSError, KeyError, zipfile.BadZipFile) as error:
+                raise PublicationTransactionError("segmento interno EPUB ausente") from error
+            if hashlib.sha256(value).hexdigest() != expected_hash:
+                raise PublicationTransactionError("hash de segmento interno divergente")
+            referenced.add(candidate)
+        else:
+            candidate = (directory / relative).resolve()
+            if not _inside(candidate, directory) or not candidate.is_file():
+                raise PublicationTransactionError("segmento ausente ou fora da unidade")
+            if hash_file(candidate).sha256 != expected_hash:
+                raise PublicationTransactionError("hash de segmento divergente")
+            referenced.add(candidate)
 
     for record in derivations:
         relative = record.get("path")
@@ -282,11 +305,12 @@ class GitPublicationPublisher:
             raise PublicationTransactionError("publicação sem formato indexável")
         identity = metadata["identity"]
         return {
-            "id": f"{identity['author_key']}:{identity['language_path']}:{identity['type']}:{identity['remote_id']}",
+            "id": f"{identity['author_key']}:{identity['language_path']}:{identity['category']}:{identity['type']}:{identity['remote_id']}",
             "remote_id": identity["remote_id"],
             "title": identity["title_normalized"],
             "author_key": identity["author_key"],
             "language": identity["language"],
+            "category": identity["category"],
             "type": identity["type"],
             "path": directory.relative_to(self.repository_root).as_posix(),
             "files": sorted(path.as_posix() for path in paths),
@@ -321,6 +345,7 @@ class GitPublicationPublisher:
                 value["title"].casefold(),
                 value["author_key"],
                 value["language"],
+                value["category"],
                 value["type"],
                 value["remote_id"],
             ),

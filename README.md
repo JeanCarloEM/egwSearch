@@ -51,6 +51,12 @@ selecionar uma publicação exata por identificador remoto, título ou URL, use
 os catálogos individuais de autores, abre a ficha de cada obra e adquire todos os
 PDFs e EPUBs habilitados. Quando não há formato nativo, percorre a sequência real
 do leitor por `rel=next`, preserva o conteúdo editorial e gera EPUB verificável.
+A capa oficial declarada pela ficha da obra origina `cover.png` e integra o EPUB
+como `cover-image`. O EPUB mantém XHTML semântico para indexação, inclui uma
+contracapa de proveniência não editorial em estilo ABNT e carrega um manifesto
+Markdown interno que permite restauração byte a byte; por isso, os `.md`
+externos são removidos depois do round trip validado. PDF derivado permanece
+opcional e não é gerado nesta FT.
 
 O progresso e o ponto de retomada de textos extensos ficam exclusivamente em
 `constructor/.state/egwsearch`. Fixtures também escrevem nesse estado temporário
@@ -65,10 +71,8 @@ sem tentativa de resolução automática.
 metadado local contém validadores. Coleta ampla não é implícita nem autorizada
 por esses comandos.
 
-## Autoria, repositorio e licenca
+## Autor e Licença
 
-Autoria: nao declarada nos artefatos atuais do repositorio.
+**Autor:** [JeanCarloEM](https://jeancarloem.com)
 
-Repositorio: remoto Git configurado no proprio checkout.
-
-Licenca: [Mozilla Public License 2.0](LICENSE). Texto de cabecalho equivalente: `This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.`
+**Licença:** [MPL-2.0](https://www.mozilla.org/MPL/2.0/) — uso, modificação e distribuição permitidos; alterações em arquivos MPL devem permanecer sob MPL-2.0.

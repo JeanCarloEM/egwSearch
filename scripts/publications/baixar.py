@@ -14,6 +14,7 @@ import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import hashlib
+import io
 import ipaddress
 import json
 import os
@@ -44,6 +45,7 @@ from acquisition import (
     generate_epub,
     parse_catalog_payload,
     remote_id_from_url,
+    restore_markdown_from_epub,
     validate_generated_epub,
     write_markdown_publication,
 )
@@ -60,6 +62,7 @@ from publication_contract import (
     read_source_records,
     resolve_repository_path,
     runtime_paths,
+    uri_slug,
     validate_file_signature,
     validate_source_url,
     write_json_atomic,
@@ -195,6 +198,34 @@ def _request_asset(session, initial_url: str, download_config: dict):
             raise DownloadError(f"HTTP {response.status_code} em aquisicao")
         return response, current, expected_format
     raise DownloadError("limite de redirecionamentos excedido")
+
+
+def _request_cover(session, initial_url: str, download_config: dict):
+    """Obtém capa oficial com redirects manuais e a mesma política SSRF dos ativos."""
+
+    allowed_hosts = {item.casefold() for item in download_config["allowed_asset_hosts"]}
+    current = initial_url
+    limiter = download_config.get("_rate_limiter")
+    for redirect_count in range(download_config["max_redirects"] + 1):
+        _validate_network_url(current, allowed_hosts, require_format=False)
+        response = _get_with_retry(
+            session,
+            current,
+            download_config,
+            limiter=limiter,
+        )
+        if response.status_code in {301, 302, 303, 307, 308}:
+            location = response.headers.get("location")
+            response.close()
+            if not location or redirect_count == download_config["max_redirects"]:
+                raise DownloadError("redirecionamento de capa ausente ou acima do limite")
+            current = urljoin(current, location)
+            continue
+        if response.status_code < 200 or response.status_code >= 300:
+            response.close()
+            raise DownloadError(f"HTTP {response.status_code} em aquisicao de capa")
+        return response, current
+    raise DownloadError("limite de redirecionamentos de capa excedido")
 
 
 def _rate_policy(download_config: dict) -> RatePolicy:
@@ -351,6 +382,129 @@ def _stream_to_temporary(
     finally:
         response.close()
         progress.close()
+
+
+def validate_cover_png(path: Path, download_config: dict) -> tuple[int, int]:
+    """Comprova PNG canônico, dimensões limitadas e ausência de metadado textual."""
+
+    try:
+        from PIL import Image
+
+        with Image.open(path) as image:
+            image.load()
+            if image.format != "PNG":
+                raise DownloadError("cover.png nao e PNG")
+            width, height = image.size
+            maximum = int(download_config.get("cover_max_dimension", 800))
+            if width < 1 or height < 1 or width > maximum or height > maximum:
+                raise DownloadError("cover.png excede dimensoes permitidas")
+            if image.info:
+                raise DownloadError("cover.png preservou metadado dispensavel")
+            return width, height
+    except DownloadError:
+        raise
+    except Exception as error:
+        raise DownloadError("cover.png invalido ou indecodificavel") from error
+
+
+def download_cover(
+    session,
+    item: CatalogItem,
+    source_root: Path,
+    download_config: dict,
+) -> tuple[Path, dict, dict]:
+    """Adquire a capa declarada e promove um PNG determinístico sem metadados."""
+
+    if not item.cover_url:
+        raise ContractError("obra sem URL de capa declarada")
+    response, final_url = _request_cover(session, item.cover_url, download_config)
+    maximum_bytes = int(download_config.get("max_cover_bytes", 20 * 1024 * 1024))
+    declared_size = response.headers.get("content-length")
+    if declared_size:
+        try:
+            if int(declared_size) > maximum_bytes:
+                response.close()
+                raise DownloadError("Content-Length da capa acima do limite")
+        except ValueError as error:
+            response.close()
+            raise DownloadError("Content-Length da capa invalido") from error
+    raw = bytearray()
+    try:
+        for chunk in response.iter_content(chunk_size=min(download_config["chunk_bytes"], 262144)):
+            if not chunk:
+                continue
+            raw.extend(chunk)
+            if len(raw) > maximum_bytes:
+                raise DownloadError("capa excedeu limite de bytes")
+    finally:
+        response.close()
+    if not raw:
+        raise DownloadError("capa remota vazia")
+    try:
+        from PIL import Image, ImageOps
+
+        with Image.open(io.BytesIO(raw)) as opened:
+            width, height = opened.size
+            if width * height > int(download_config.get("cover_max_pixels", 40_000_000)):
+                raise DownloadError("capa excedeu limite de pixels")
+            opened.load()
+            image = ImageOps.exif_transpose(opened)
+            image = image.convert("RGBA" if "A" in image.getbands() else "RGB")
+            maximum = int(download_config.get("cover_max_dimension", 800))
+            image.thumbnail((maximum, maximum), Image.Resampling.LANCZOS)
+            normalized = Image.new(image.mode, image.size)
+            normalized.paste(image)
+            image = normalized
+            directory = source_root / item.publication_identity().relative_directory()
+            directory.mkdir(parents=True, exist_ok=True)
+            temporary_directory = Path(download_config.get("_download_tmp_dir", directory))
+            temporary_directory.mkdir(parents=True, exist_ok=True)
+            descriptor, temporary_name = tempfile.mkstemp(
+                prefix=".cover-",
+                suffix=".png.partial",
+                dir=temporary_directory,
+            )
+            os.close(descriptor)
+            temporary = Path(temporary_name)
+            try:
+                image.save(temporary, format="PNG", optimize=True, compress_level=9)
+                validate_cover_png(temporary, download_config)
+                target = directory / "cover.png"
+                temporary.replace(target)
+            except Exception:
+                temporary.unlink(missing_ok=True)
+                raise
+    except DownloadError:
+        raise
+    except Exception as error:
+        raise DownloadError("capa remota invalida ou indecodificavel") from error
+    original_hashes = {
+        "sha1": hashlib.sha1(raw, usedforsecurity=False).hexdigest(),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "sha512": hashlib.sha512(raw).hexdigest(),
+    }
+    normalized_hashes = hash_file(target)
+    accessed_at = datetime.now(timezone.utc).isoformat()
+    source_record = {
+        "format": "cover",
+        "url": item.cover_url,
+        "resolved_url": final_url,
+        "method": "official-book-cover",
+        "accessed_at": accessed_at,
+        "size": len(raw),
+        "hashes": original_hashes,
+        "mime": response.headers.get("content-type") or "",
+    }
+    derivation_record = {
+        "format": "cover",
+        "method": "normalized-official-cover",
+        "path": "cover.png",
+        "generator": "egwSearch/FT-012",
+        "source": item.cover_url,
+        "size": normalized_hashes.size,
+        "hashes": normalized_hashes.as_dict(),
+    }
+    return target, source_record, derivation_record
 
 
 def _identity_directories(source_root: Path, identity) -> list[Path]:
@@ -623,6 +777,10 @@ def _catalog_item_from_element(book, collection: dict, runtime: dict) -> Catalog
     if not public_url:
         raise ContractError("publicacao sem URL publica ou identificador remoto")
     language, language_path = canonical_language(collection["language"])
+    category_name = str(collection.get("category_name") or "").strip()
+    category_path = str(collection.get("category") or "").strip()
+    if not category_name or not category_path or uri_slug(category_path) != category_path:
+        raise ContractError("colecao sem categoria editorial oficial")
     return CatalogItem(
         remote_id=remote_id_from_url(public_url),
         collection_id=collection["id"],
@@ -641,6 +799,8 @@ def _catalog_item_from_element(book, collection: dict, runtime: dict) -> Catalog
         title_original=title,
         title_normalized=title,
         public_url=public_url,
+        category_name=category_name,
+        category_path=category_path,
         assets=tuple(
             sorted(assets, key=lambda item: (item.format != "epub", item.url))
         ),
@@ -847,6 +1007,19 @@ class BrowserSessionManager:
         author = re.sub(r"^\s*By[\s\u00a0]+", "", author, flags=re.IGNORECASE).strip()
         if not title or not author:
             raise ContractError("página individual sem título ou autor comprovado")
+        cover_url = ""
+        for selector in (
+            "meta[property='og:image']",
+            "meta[name='twitter:image']",
+            "meta[property='twitter:image']",
+        ):
+            elements = driver.find_elements(self.runtime["By"].CSS_SELECTOR, selector)
+            if not elements:
+                continue
+            candidate = str(elements[0].get_attribute("content") or "").strip()
+            if candidate:
+                cover_url = urljoin(str(driver.current_url), candidate)
+                break
         assets: dict[tuple[str, str], CatalogAsset] = {}
         read_url = ""
         for link in driver.find_elements(self.runtime["By"].TAG_NAME, "a"):
@@ -866,6 +1039,10 @@ class BrowserSessionManager:
                 url=absolute,
             )
         language, language_path = canonical_language(collection["language"])
+        category_name = str(collection.get("category_name") or "").strip()
+        category_path = str(collection.get("category") or "").strip()
+        if not category_name or not category_path or uri_slug(category_path) != category_path:
+            raise ContractError("colecao sem categoria editorial oficial")
         segments: tuple[CatalogSegment, ...] = ()
         if not assets:
             if not read_url:
@@ -887,6 +1064,9 @@ class BrowserSessionManager:
             title_original=title,
             title_normalized=title,
             public_url=canonical_url,
+            category_name=category_name,
+            category_path=category_path,
+            cover_url=cover_url,
             assets=tuple(sorted(assets.values(), key=lambda item: (item.format != "epub", item.url))),
             segments=segments,
         )
@@ -1405,8 +1585,9 @@ def _write_v3_metadata(
 def preflight_existing_text(
     item: CatalogItem,
     source_root: Path,
-) -> tuple[list[Path], Path] | None:
-    """Valida Markdown+EPUB derivados sem reescrever nem recolher segmentos."""
+    download_config: dict,
+) -> tuple[Path, Path | None] | None:
+    """Valida EPUB, fonte Markdown interna e capa sem depender de `.md` externo."""
 
     identity = item.publication_identity()
     directory = source_root / identity.relative_directory()
@@ -1427,9 +1608,40 @@ def preflight_existing_text(
     derivations = document.get("derivations")
     if not isinstance(segment_records, list) or not isinstance(derivations, list):
         return None
+    cover_path: Path | None = None
+    cover_hash = ""
+    if item.cover_url:
+        cover_sources = [
+            record
+            for record in document.get("sources", [])
+            if record.get("format") == "cover" and record.get("url") == item.cover_url
+        ]
+        cover_derivations = [
+            record
+            for record in derivations
+            if record.get("format") == "cover"
+            and record.get("method") == "normalized-official-cover"
+        ]
+        if len(cover_sources) != 1 or len(cover_derivations) != 1:
+            return None
+        cover_record = cover_derivations[0]
+        cover_path = (directory / str(cover_record.get("path", ""))).resolve()
+        cover_hash = (cover_record.get("hashes") or {}).get("sha256", "")
+        try:
+            if (
+                directory.resolve() not in cover_path.parents
+                or cover_path.name != "cover.png"
+                or not cover_path.is_file()
+                or not re_full_sha256(cover_hash)
+                or hash_file(cover_path).sha256 != cover_hash
+            ):
+                return None
+            validate_cover_png(cover_path, download_config)
+        except (OSError, DownloadError):
+            return None
     if len(segment_records) != len(item.segments):
         return None
-    markdown_paths: list[Path] = []
+    expected_markdown: dict[str, str] = {}
     for expected_order, record in enumerate(segment_records, 1):
         if record.get("order") != expected_order:
             return None
@@ -1437,12 +1649,13 @@ def preflight_existing_text(
         expected_hash = record.get("sha256")
         if not isinstance(relative, str) or not re_full_sha256(expected_hash):
             return None
-        path = (directory / relative).resolve()
-        if directory.resolve() not in path.parents or not path.is_file():
+        prefix = f"{identity.asset_name('epub', 'derived')}!/META-INF/egwsearch-source/"
+        if not relative.startswith(prefix):
             return None
-        if hash_file(path).sha256 != expected_hash:
+        name = relative.removeprefix(prefix)
+        if Path(name).name != name or not name.endswith(".md") or name in expected_markdown:
             return None
-        markdown_paths.append(path)
+        expected_markdown[name] = expected_hash
     epub_records = [
         record
         for record in derivations
@@ -1462,10 +1675,17 @@ def preflight_existing_text(
             or hash_file(epub_path).sha256 != expected_hash
         ):
             return None
-        validate_generated_epub(epub_path, expected_sections=len(markdown_paths))
-    except (OSError, ContractError):
+        validate_generated_epub(
+            epub_path,
+            expected_sections=len(segment_records),
+            expected_cover_sha256=(cover_hash or None),
+            expected_markdown_sha256=expected_markdown,
+            expected_public_url=item.public_url,
+            expected_accessed_at=str(epub_record.get("accessed_at") or ""),
+        )
+    except (OSError, ContractError, ValueError):
         return None
-    return markdown_paths, epub_path
+    return epub_path, cover_path
 
 
 def _process_catalog_item(
@@ -1551,7 +1771,7 @@ def _process_catalog_item(
                     "converted": 0,
                 }
         elif item.segments:
-            existing_text = preflight_existing_text(item, source_root)
+            existing_text = preflight_existing_text(item, source_root, download_config)
             if existing_text is not None and not revalidate:
                 ledger.transition(
                     key,
@@ -1566,16 +1786,52 @@ def _process_catalog_item(
                     "converted": 0,
                 }
             directory = source_root / identity.relative_directory()
+            cover_path: Path | None = None
+            cover_source: dict | None = None
+            cover_derivation: dict | None = None
+            if item.cover_url:
+                if no_network:
+                    ledger.transition(key, "pending", reason="cover-network-disabled")
+                    return {
+                        "state": "pending",
+                        "downloaded": 0,
+                        "skipped": 0,
+                        "extracted": 0,
+                        "converted": 0,
+                    }
+                cover_path, cover_source, cover_derivation = download_cover(
+                    session,
+                    item,
+                    source_root,
+                    download_config,
+                )
+                installed_assets.append(cover_path)
+                downloaded += 1
             markdown_paths, segment_evidence = write_markdown_publication(
                 directory,
                 item,
             )
             extracted = len(segment_evidence)
+            accessed_at = datetime.now(timezone.utc).isoformat()
             epub_path = generate_epub(
                 directory / identity.asset_name("epub", "derived"),
                 item,
                 markdown_paths,
+                cover_path=cover_path,
+                accessed_at=accessed_at,
             )
+            installed_assets.append(epub_path)
+            expected_markdown = {path.name: path.read_bytes() for path in markdown_paths}
+            temporary_root = Path(download_config.get("_download_tmp_dir", directory))
+            temporary_root.mkdir(parents=True, exist_ok=True)
+            with tempfile.TemporaryDirectory(
+                prefix="markdown-roundtrip-",
+                dir=temporary_root,
+            ) as restoration_directory:
+                restored = restore_markdown_from_epub(epub_path, Path(restoration_directory))
+                restored_markdown = {path.name: path.read_bytes() for path in restored}
+                if restored_markdown != expected_markdown:
+                    raise ContractError("round trip Markdown EPUB divergente")
             epub_hashes = hash_file(epub_path)
             converted = 1
             segment_sources = [
@@ -1583,7 +1839,7 @@ def _process_catalog_item(
                     "format": "text",
                     "url": evidence["url"],
                     "method": "text-extraction",
-                    "accessed_at": datetime.now(timezone.utc).isoformat(),
+                    "accessed_at": accessed_at,
                     "size": len(
                         (directory / evidence["path"]).read_bytes()
                     ),
@@ -1591,24 +1847,49 @@ def _process_catalog_item(
                 }
                 for evidence in segment_evidence
             ]
-            _write_v3_metadata(
-                source_root,
-                item,
-                "completed",
-                segment_sources,
-                segments=segment_evidence,
-                derivations=[
-                    {
-                        "format": "epub",
-                        "method": "local-conversion",
-                        "path": epub_path.relative_to(directory).as_posix(),
-                        "generator": "egwSearch/FT-012",
-                        "source": "text/0000-metadata.json",
-                        "hashes": epub_hashes.as_dict(),
-                        "size": epub_hashes.size,
-                    }
-                ],
-            )
+            if cover_source is not None:
+                segment_sources.append(cover_source)
+            derivations = [
+                {
+                    "format": "epub",
+                    "method": "local-conversion",
+                    "path": epub_path.relative_to(directory).as_posix(),
+                    "generator": "egwSearch/FT-012",
+                    "source": "text/0000-metadata.json",
+                    "accessed_at": accessed_at,
+                    "hashes": epub_hashes.as_dict(),
+                    "size": epub_hashes.size,
+                }
+            ]
+            if cover_derivation is not None:
+                derivations.append(cover_derivation)
+            for evidence, markdown_path in zip(segment_evidence, markdown_paths, strict=True):
+                evidence["path"] = (
+                    f"{epub_path.name}!/META-INF/egwsearch-source/{markdown_path.name}"
+                )
+            text_metadata_path = directory / "text" / "0000-metadata.json"
+            original_text_metadata = json.loads(text_metadata_path.read_text(encoding="utf-8"))
+            reversible_text_metadata = {
+                **original_text_metadata,
+                "segments": segment_evidence,
+                "reversible_epub": epub_path.name,
+            }
+            try:
+                write_json_atomic(text_metadata_path, reversible_text_metadata)
+                for markdown_path in markdown_paths:
+                    markdown_path.unlink()
+                _write_v3_metadata(
+                    source_root,
+                    item,
+                    "completed",
+                    segment_sources,
+                    segments=segment_evidence,
+                    derivations=derivations,
+                )
+            except Exception:
+                restore_markdown_from_epub(epub_path, directory / "text")
+                write_json_atomic(text_metadata_path, original_text_metadata)
+                raise
         else:
             ledger.transition(
                 key,

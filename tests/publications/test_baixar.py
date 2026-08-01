@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import io
 from pathlib import Path
 import sys
 import tempfile
@@ -206,17 +207,25 @@ class DownloaderTests(unittest.TestCase):
         )
 
     def test_detail_page_discovers_every_enabled_native_asset(self) -> None:
-        def element(text: str = "", href: str | None = None, disabled: bool = False):
+        def element(
+            text: str = "",
+            href: str | None = None,
+            disabled: bool = False,
+            content: str | None = None,
+        ):
             value = Mock(text=text)
             value.get_attribute.side_effect = lambda name: (
                 href
                 if name == "href"
+                else (content if name == "content" else None)
+                if name == "content"
                 else ("true" if name == "disabled" and disabled else None)
             )
             return value
 
         title = element("Atos dos Apóstolos")
         author = element("By Ellen G. White")
+        cover = element(content="https://a.egwwritings.org/covers/1806?type=large")
         links = [
             element(href="https://media2.egwwritings.org/pdf/pt_AA(AA).pdf"),
             element(href="https://media2.egwwritings.org/epub/pt_AA(AA).epub"),
@@ -232,6 +241,8 @@ class DownloaderTests(unittest.TestCase):
                 return [title]
             if selector == ".book-info-content__subtitle__author":
                 return [author]
+            if selector == "meta[property='og:image']":
+                return [cover]
             return []
 
         driver.find_elements = Mock(side_effect=find_elements)
@@ -248,6 +259,8 @@ class DownloaderTests(unittest.TestCase):
                     {
                         "id": "pt-br-livros",
                         "name": "Livros",
+                        "category_name": "Escritos de Ellen White",
+                        "category": "egw",
                         "language": "pt-BR",
                         "type": "livros",
                         "default_author_key": "egw",
@@ -261,6 +274,76 @@ class DownloaderTests(unittest.TestCase):
         self.assertEqual([asset.format for asset in item.assets], ["epub", "pdf"])
         self.assertEqual(len(item.assets), 2)
         self.assertEqual(item.author_name, "Ellen G. White")
+        self.assertEqual(
+            item.cover_url,
+            "https://a.egwwritings.org/covers/1806?type=large",
+        )
+
+    def test_official_cover_is_normalized_without_upscale_or_metadata(self) -> None:
+        from PIL import Image
+
+        source = io.BytesIO()
+        image = Image.new("RGB", (1600, 400), (35, 70, 105))
+        image.save(source, format="JPEG", quality=95, exif=b"Exif\x00\x00fixture")
+        payload = source.getvalue()
+        response = Mock(
+            status_code=200,
+            headers={
+                "content-length": str(len(payload)),
+                "content-type": "image/jpeg",
+            },
+        )
+        response.iter_content.return_value = [payload]
+        session = Mock()
+        session.get.return_value = response
+        item = CatalogItem(
+            remote_id="14389",
+            collection_id="pt-br-pioneiros",
+            collection_name="Pioneiros",
+            author_name="Alonzo Trevier Jones",
+            author_key="alonzo-trevier-jones",
+            language_original="pt-BR",
+            language="pt-BR",
+            language_path="pt-br",
+            publication_type="livros",
+            title_original="Estudos Sobre a Fé",
+            title_normalized="Estudos Sobre a Fé",
+            public_url="https://text.egwwritings.org/book/b14389",
+            cover_url="https://a.egwwritings.org/covers/14389?type=large",
+        )
+        config = {
+            "allowed_asset_hosts": ["a.egwwritings.org", "media4.egwwritings.org"],
+            "max_redirects": 2,
+            "max_attempts": 1,
+            "connect_timeout_seconds": 1,
+            "read_timeout_seconds": 1,
+            "chunk_bytes": 262144,
+            "max_cover_bytes": 2_000_000,
+            "cover_max_dimension": 800,
+            "cover_max_pixels": 4_000_000,
+            "delay_seconds": 0,
+            "jitter_min_seconds": 0,
+            "jitter_max_seconds": 0,
+            "backoff_base_seconds": 0,
+            "backoff_cap_seconds": 0,
+            "retry_after_cap_seconds": 0,
+            "_rate_limiter": Mock(before_request=Mock()),
+        }
+        with tempfile.TemporaryDirectory() as temporary, patch.object(
+            baixar, "_validate_public_dns", return_value=None
+        ):
+            path, source_record, derivation = baixar.download_cover(
+                session,
+                item,
+                Path(temporary),
+                config,
+            )
+            self.assertEqual(baixar.validate_cover_png(path, config), (800, 200))
+            with Image.open(path) as normalized:
+                self.assertFalse(normalized.info)
+            self.assertEqual(source_record["url"], item.cover_url)
+            self.assertEqual(derivation["path"], "cover.png")
+            self.assertEqual(derivation["hashes"]["sha256"], hash_file(path).sha256)
 
     def test_asset_install_is_atomic_and_repetition_is_idempotent(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

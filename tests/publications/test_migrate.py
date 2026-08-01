@@ -67,11 +67,11 @@ class MigrationTests(unittest.TestCase):
             self.assertEqual(first["summary"]["actions"], 2)
             targets = {action["target"] for action in first["actions"]}
             self.assertIn(
-                "egw/pt-br/livros/atos-dos-apostolos/ada.pdf",
+                "egw/pt-br/geral/livros/atos-dos-apostolos/ada.pdf",
                 targets,
             )
             self.assertIn(
-                "egw/pt-br/livros/atos-dos-apostolos/ada.source.json",
+                "egw/pt-br/geral/livros/atos-dos-apostolos/ada.source.json",
                 targets,
             )
 
@@ -90,6 +90,7 @@ class MigrationTests(unittest.TestCase):
                 source_root
                 / "egw"
                 / "pt-br"
+                / "geral"
                 / "livros"
                 / "atos-dos-apostolos"
                 / "ada.pdf"
@@ -212,7 +213,14 @@ class MigrationTests(unittest.TestCase):
             migrate.write_json_atomic(plan_path, plan)
 
             journal_path = migrate.apply_plan(plan_path, root / ".state")
-            slug_directory = title_directory.with_name("a-maravilhosa-graca-de-deus")
+            slug_directory = (
+                source_root
+                / "egw"
+                / "pt-br"
+                / "geral"
+                / "devocionais"
+                / "a-maravilhosa-graca-de-deus"
+            )
             self.assertFalse(title_directory.exists())
             self.assertTrue((slug_directory / "amgdd.pdf").is_file())
             post_plan = migrate.build_plan(source_root)
@@ -254,7 +262,8 @@ class MigrationTests(unittest.TestCase):
             migrate.write_json_atomic(plan_path, plan)
 
             journal_path = migrate.apply_plan(plan_path, root / ".state")
-            names = {candidate.name for candidate in title_directory.parent.iterdir()}
+            target_parent = source_root / "egw" / "en-us" / "geral" / "books"
+            names = {candidate.name for candidate in target_parent.iterdir()}
             self.assertNotIn("Education", names)
             self.assertIn("education", names)
             migrate.rollback(journal_path)

@@ -111,7 +111,7 @@ def _iter_legacy_files(source_root: Path) -> Iterable[tuple[str, str, str, Path]
 
 def _iter_canonical_directories(
     source_root: Path,
-) -> Iterable[tuple[str, str, str, Path]]:
+) -> Iterable[tuple[str, str, str, str, Path]]:
     for author_directory in sorted(source_root.iterdir(), key=lambda item: item.name.casefold()):
         if not author_directory.is_dir():
             continue
@@ -120,21 +120,37 @@ def _iter_canonical_directories(
         ):
             if not language_directory.is_dir():
                 continue
-            for type_directory in sorted(
+            for category_or_type in sorted(
                 language_directory.iterdir(), key=lambda item: item.name.casefold()
             ):
-                if not type_directory.is_dir():
+                if not category_or_type.is_dir():
                     continue
-                for candidate in sorted(
-                    type_directory.iterdir(), key=lambda item: item.name.casefold()
-                ):
-                    if candidate.is_dir():
+                children = sorted(
+                    category_or_type.iterdir(), key=lambda item: item.name.casefold()
+                )
+                for candidate in children:
+                    if candidate.is_dir() and any(item.is_file() for item in candidate.iterdir()):
                         yield (
                             author_directory.name,
                             language_directory.name,
-                            type_directory.name,
+                            "geral",
+                            category_or_type.name,
                             candidate,
                         )
+                for type_directory in children:
+                    if not type_directory.is_dir():
+                        continue
+                    for candidate in sorted(
+                        type_directory.iterdir(), key=lambda item: item.name.casefold()
+                    ):
+                        if candidate.is_dir() and any(item.is_file() for item in candidate.iterdir()):
+                            yield (
+                                author_directory.name,
+                                language_directory.name,
+                                category_or_type.name,
+                                type_directory.name,
+                                candidate,
+                            )
 
 
 def _canonical_kind(path: Path, acronym: str) -> str | None:
@@ -157,7 +173,7 @@ def _canonical_kind(path: Path, acronym: str) -> str | None:
 
 def _build_canonical_plan(
     source_root: Path,
-    directories: list[tuple[str, str, str, Path]],
+    directories: list[tuple[str, str, str, str, Path]],
 ) -> dict:
     inventory: list[dict] = []
     planned_groups: list[dict] = []
@@ -166,7 +182,7 @@ def _build_canonical_plan(
     descriptors: list[dict] = []
     destinations: dict[str, list[str]] = {}
 
-    for author, language, publication_type, directory in directories:
+    for author, language, category, publication_type, directory in directories:
         source_directory = _relative(directory, source_root)
         try:
             slug = uri_slug(directory.name)
@@ -194,6 +210,7 @@ def _build_canonical_plan(
                     language,
                     publication_type,
                     directory.name,
+                    category=category,
                 )
             except ContractError as error:
                 problems.append(
@@ -207,10 +224,11 @@ def _build_canonical_plan(
             title = identity.title
             slug = identity.route_slug
             acronym = identity.acronym
-        target_directory = Path(author, language, publication_type, slug).as_posix()
+        target_directory = Path(author, language, category, publication_type, slug).as_posix()
         descriptor = {
             "author": author,
             "language": language,
+            "category": category,
             "type": publication_type,
             "directory": directory,
             "source_directory": source_directory,
@@ -387,6 +405,7 @@ def _build_canonical_plan(
                 "identity": {
                     "author": descriptor["author"],
                     "language": descriptor["language"],
+                    "category": descriptor["category"],
                     "type": descriptor["type"],
                     "title": descriptor["title"],
                     "slug": descriptor["slug"],
@@ -604,6 +623,7 @@ def build_plan(source_root: Path) -> dict:
                 "identity": {
                     "author": identity.author,
                     "language": identity.language,
+                    "category": identity.category,
                     "type": identity.publication_type,
                     "title": identity.title,
                     "acronym": identity.acronym,
@@ -874,6 +894,7 @@ def apply_plan(plan_path: Path, state_root: Path = DEFAULT_STATE_ROOT) -> Path:
                 write_json_atomic(journal_path, journal)
                 if target.exists():
                     raise ContractError(f"destino apareceu durante migracao: {target}")
+                target.parent.mkdir(parents=True, exist_ok=True)
                 os.replace(temporary, target)
                 record["current"] = str(target)
                 record["status"] = "moved"

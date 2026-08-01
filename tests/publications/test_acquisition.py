@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -32,6 +33,7 @@ from acquisition import (  # noqa: E402
     ordered_segments,
     parse_catalog_payload,
     parse_retry_after,
+    restore_markdown_from_epub,
     validate_generated_epub,
     write_markdown_publication,
 )
@@ -46,6 +48,8 @@ def _collection(identifier: str, language: str, name: str) -> dict:
     return {
         "id": identifier,
         "name": name,
+        "category_name": "Biblioteca dos Pioneiros Adventistas",
+        "category": "pioneiros",
         "language": language,
         "type": "livros" if language.startswith("pt") else "books",
         "discover_authors": True,
@@ -63,6 +67,22 @@ class IdentityAndCatalogTests(unittest.TestCase):
         self.assertEqual(canonical_author_key("J. N. Andrews"), "j-n-andrews")
         self.assertEqual(canonical_author_key("J. N. Andrews"), canonical_author_key("J. N. Andrews"))
         self.assertNotIn("..", canonical_author_key("../../evil"))
+
+    def test_official_collection_category_becomes_uri_path_segment(self) -> None:
+        fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
+        items = parse_catalog_payload(
+            fixture["collections"]["pt-br-pioneiros"],
+            _collection("pt-br-pioneiros", "pt-BR", "Pioneiros"),
+        )
+        identity = items[0].publication_identity()
+        self.assertEqual(identity.category, "pioneiros")
+        self.assertEqual(
+            identity.relative_directory().parts[2],
+            "pioneiros",
+        )
+        metadata = build_source_v3(items[0], "completed", [{"format": "epub", "url": "https://example.test/a.epub"}])
+        self.assertEqual(metadata["identity"]["category_original"], "Biblioteca dos Pioneiros Adventistas")
+        self.assertEqual(metadata["identity"]["category"], "pioneiros")
 
     def test_pioneer_fixture_preserves_multiple_authors_and_formats(self) -> None:
         fixture = json.loads(FIXTURE.read_text(encoding="utf-8"))
@@ -211,6 +231,50 @@ class TextAndEpubTests(unittest.TestCase):
             validate_generated_epub(first, expected_sections=2)
             self.assertEqual(hash_file(first).sha256, hash_file(second).sha256)
 
+    def test_generated_epub_embeds_canonical_cover_as_first_spine_item(self) -> None:
+        from PIL import Image
+        import zipfile
+
+        item = self._item()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            cover = root / "cover.png"
+            Image.new("RGB", (320, 480), (20, 40, 60)).save(cover, format="PNG")
+            paths, _evidence = write_markdown_publication(root, item)
+            epub = generate_epub(root / "covered.epub", item, paths, cover_path=cover)
+            cover_hash = hashlib.sha256(cover.read_bytes()).hexdigest()
+            validate_generated_epub(
+                epub,
+                expected_sections=2,
+                expected_cover_sha256=cover_hash,
+            )
+            with zipfile.ZipFile(epub) as archive:
+                self.assertEqual(archive.read("OEBPS/cover.png"), cover.read_bytes())
+                opf = archive.read("OEBPS/content.opf").decode("utf-8")
+                cover_page = archive.read("OEBPS/cover.xhtml").decode("utf-8")
+                provenance = archive.read("OEBPS/provenance.xhtml").decode("utf-8")
+                self.assertLess(
+                    opf.find('idref="cover-page"'),
+                    opf.find('idref="section-0001"'),
+                )
+                self.assertGreater(
+                    opf.find('idref="provenance"'),
+                    opf.find('idref="section-0001"'),
+                )
+                self.assertIn("Nota de proveniência (não editorial)", provenance)
+                self.assertIn(item.public_url, provenance)
+                self.assertIn('@page{margin:0;padding:0}', cover_page)
+                self.assertIn('epub:type="cover"', cover_page)
+                self.assertIn('width="100%" height="100%"', cover_page)
+                self.assertIn('preserveAspectRatio="xMidYMid slice"', cover_page)
+                self.assertNotIn("<img", cover_page)
+                self.assertNotIn("<p", cover_page)
+            restored = restore_markdown_from_epub(epub, root / "restored")
+            self.assertEqual(
+                {path.name: path.read_bytes() for path in restored},
+                {path.name: path.read_bytes() for path in paths},
+            )
+
     def test_metadata_distinguishes_original_and_local_derivative(self) -> None:
         item = self._item()
         document = build_source_v3(
@@ -260,6 +324,20 @@ class TextAndEpubTests(unittest.TestCase):
             )
             self.assertEqual(first["extracted"], 2)
             self.assertEqual(first["converted"], 1)
+            self.assertFalse(list(source_root.rglob("*.md")))
+            epub = next(source_root.rglob("*.derived.epub"))
+            restored = restore_markdown_from_epub(epub, root / "restored")
+            self.assertEqual(len(restored), 2)
+            source_document = json.loads(
+                next(source_root.rglob("*.source.json")).read_text(encoding="utf-8")
+            )
+            self.assertTrue(
+                all("!/META-INF/egwsearch-source/" in record["path"] for record in source_document["segments"])
+            )
+            text_document = json.loads(
+                next(source_root.rglob("0000-metadata.json")).read_text(encoding="utf-8")
+            )
+            self.assertEqual(text_document["reversible_epub"], epub.name)
             output_files = sorted(
                 path for path in source_root.rglob("*") if path.is_file()
             )

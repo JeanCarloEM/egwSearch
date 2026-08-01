@@ -183,6 +183,9 @@ class CatalogItem:
     title_original: str
     title_normalized: str
     public_url: str
+    category_name: str = "Geral"
+    category_path: str = "geral"
+    cover_url: str = ""
     edition: str = ""
     assets: tuple[CatalogAsset, ...] = ()
     segments: tuple[CatalogSegment, ...] = ()
@@ -193,6 +196,7 @@ class CatalogItem:
             self.language_path,
             self.publication_type,
             self.title_normalized,
+            category=self.category_path,
         )
 
     def stable_key(self) -> str:
@@ -202,9 +206,11 @@ class CatalogItem:
                 self.remote_id,
                 self.author_key,
                 self.language,
+                self.category_path,
                 self.publication_type,
                 self.title_normalized,
                 self.edition,
+                self.cover_url,
             )
         )
         return hashlib.sha256(material.encode("utf-8")).hexdigest()
@@ -247,6 +253,10 @@ def parse_catalog_payload(payload: object, collection: dict) -> list[CatalogItem
 
     result: list[CatalogItem] = []
     seen: set[str] = set()
+    category_name = str(collection.get("category_name") or "").strip()
+    category_path = str(collection.get("category") or "").strip()
+    if not category_name or not category_path or uri_slug(category_path) != category_path:
+        raise ContractError("colecao sem categoria editorial oficial")
     for raw in _payload_items(payload):
         title = str(_first(raw, "title", "name", "book_title", default="")).strip()
         author = _first(raw, "author", "authors", "contributor")
@@ -256,6 +266,10 @@ def parse_catalog_payload(payload: object, collection: dict) -> list[CatalogItem
             author = _first(author, "name", "display_name", default="")
         author = str(author or collection.get("default_author_name", "")).strip()
         public_url = str(_first(raw, "public_url", "url", "book_url", default="")).strip()
+        cover_value = _first(raw, "cover_url", "cover", "cover_image", "image", default="")
+        if isinstance(cover_value, dict):
+            cover_value = _first(cover_value, "url", "src", default="")
+        cover_url = str(cover_value or "").strip()
         remote_id = str(_first(raw, "remote_id", "book_id", "id", default="")).strip()
         if not remote_id and public_url:
             remote_id = remote_id_from_url(public_url)
@@ -321,6 +335,9 @@ def parse_catalog_payload(payload: object, collection: dict) -> list[CatalogItem
             title_original=title,
             title_normalized=title,
             public_url=public_url,
+            category_name=category_name,
+            category_path=category_path,
+            cover_url=cover_url,
             edition=str(_first(raw, "edition", "version", "pub_year", default="")),
             assets=tuple(sorted(assets, key=lambda item: (item.format != "epub", item.url))),
             segments=segments,
@@ -672,37 +689,106 @@ def _xhtml(title: str, body: str, language: str) -> str:
     )
 
 
+def _abnt_access_date(value: str) -> str:
+    """Formata a data efetiva de acesso sem depender de locale do sistema."""
+
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise ContractError("data de acesso invalida para nota de proveniencia") from error
+    months = (
+        "jan.", "fev.", "mar.", "abr.", "maio", "jun.",
+        "jul.", "ago.", "set.", "out.", "nov.", "dez.",
+    )
+    return f"{parsed.day} {months[parsed.month - 1]} {parsed.year}"
+
+
+def _provenance_xhtml(item: CatalogItem, accessed_at: str) -> str:
+    citation_prefix = (
+        f"{item.author_name.upper()}. {item.title_original}. "
+        "EGW Writings, [s. d.]. Disponível em: "
+    )
+    return (
+        '<?xml version="1.0" encoding="utf-8"?>'
+        '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" '
+        'xmlns:epub="http://www.idpf.org/2007/ops" '
+        f'lang="{escape(item.language)}"><head><title>Nota de proveniência (não editorial)</title></head>'
+        '<body epub:type="colophon" class="non-editorial-provenance">'
+        '<h1>Nota de proveniência (não editorial)</h1>'
+        '<p>Esta nota foi acrescentada pelo gerador e não integra o conteúdo editorial da obra.</p>'
+        f'<p>{escape(citation_prefix)}<a href="{escape(item.public_url, quote=True)}">'
+        f'&lt;{escape(item.public_url)}&gt;</a>. Acesso em: {_abnt_access_date(accessed_at)}.</p>'
+        '</body></html>'
+    )
+
+
 def generate_epub(
     target: Path,
     item: CatalogItem,
     markdown_paths: Iterable[Path],
+    cover_path: Path | None = None,
+    accessed_at: str | None = None,
 ) -> Path:
     paths = list(markdown_paths)
     if not paths:
         raise ContractError("EPUB derivado sem Markdown")
+    accessed_at = accessed_at or "2000-01-01T00:00:00+00:00"
     identifier = f"urn:sha256:{item.stable_key()}"
+    cover_bytes = b""
+    if cover_path is not None:
+        cover_bytes = Path(cover_path).read_bytes()
+        if not cover_bytes.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise ContractError("capa EPUB nao e PNG")
+        if len(cover_bytes) < 24:
+            raise ContractError("capa EPUB PNG truncada")
     manifest = []
     spine = []
     navigation = []
     documents: list[tuple[str, str]] = []
+    markdown_sources: list[tuple[str, bytes]] = []
+    markdown_manifest: list[dict] = []
     for index, path in enumerate(paths, 1):
         name = f"section-{index:04d}.xhtml"
         item_id = f"section-{index:04d}"
         title = path.stem.split("-", 1)[-1].replace("-", " ")
-        content = _xhtml(title, path.read_text(encoding="utf-8"), item.language)
+        markdown_bytes = path.read_bytes()
+        try:
+            markdown = markdown_bytes.decode("utf-8")
+        except UnicodeDecodeError as error:
+            raise ContractError(f"Markdown nao UTF-8: {path.name}") from error
+        content = _xhtml(title, markdown, item.language)
         documents.append((name, content))
+        markdown_sources.append((path.name, markdown_bytes))
+        markdown_manifest.append(
+            {
+                "name": path.name,
+                "order": index,
+                "path": f"META-INF/egwsearch-source/{path.name}",
+                "sha256": hashlib.sha256(markdown_bytes).hexdigest(),
+            }
+        )
         manifest.append(
             f'<item id="{item_id}" href="{name}" media-type="application/xhtml+xml"/>'
         )
         spine.append(f'<itemref idref="{item_id}"/>')
         navigation.append(f'<li><a href="{name}">{escape(title)}</a></li>')
+    cover_navigation = '<li><a href="cover.xhtml">Capa</a></li>' if cover_bytes else ""
+    provenance_navigation = '<li><a href="provenance.xhtml">Nota de proveniência (não editorial)</a></li>'
     nav = (
         '<?xml version="1.0" encoding="utf-8"?>'
         '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" '
         'xmlns:epub="http://www.idpf.org/2007/ops">'
         f"<head><title>{escape(item.title_original)}</title></head>"
-        f'<body><nav epub:type="toc"><ol>{"".join(navigation)}</ol></nav></body></html>'
+        f'<body><nav epub:type="toc"><ol>{cover_navigation}{"".join(navigation)}{provenance_navigation}</ol></nav></body></html>'
     )
+    cover_metadata = '<meta name="cover" content="cover-image"/>' if cover_bytes else ""
+    cover_manifest = (
+        '<item id="cover-image" href="cover.png" media-type="image/png" properties="cover-image"/>'
+        '<item id="cover-page" href="cover.xhtml" media-type="application/xhtml+xml"/>'
+        if cover_bytes
+        else ""
+    )
+    cover_spine = '<itemref idref="cover-page"/>' if cover_bytes else ""
     opf = (
         '<?xml version="1.0" encoding="utf-8"?>'
         '<package xmlns="http://www.idpf.org/2007/opf" version="3.0" '
@@ -713,9 +799,12 @@ def generate_epub(
         f"<dc:creator>{escape(item.author_name)}</dc:creator>"
         f"<dc:language>{escape(item.language)}</dc:language>"
         '<meta property="dcterms:modified">2000-01-01T00:00:00Z</meta>'
+        f"{cover_metadata}"
         "</metadata><manifest>"
         '<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>'
-        f'{"".join(manifest)}</manifest><spine>{"".join(spine)}</spine></package>'
+        '<item id="provenance" href="provenance.xhtml" media-type="application/xhtml+xml"/>'
+        f'{cover_manifest}{"".join(manifest)}</manifest><spine>{cover_spine}{"".join(spine)}'
+        '<itemref idref="provenance"/></spine></package>'
     )
     container = (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -731,9 +820,58 @@ def generate_epub(
         _zip_write(archive, "META-INF/container.xml", container)
         _zip_write(archive, "OEBPS/content.opf", opf)
         _zip_write(archive, "OEBPS/nav.xhtml", nav)
+        _zip_write(archive, "OEBPS/provenance.xhtml", _provenance_xhtml(item, accessed_at))
+        _zip_write(
+            archive,
+            "META-INF/egwsearch-source/manifest.json",
+            json.dumps(
+                {
+                    "schema_version": "egwsearch-reversible-markdown/v1",
+                    "files": markdown_manifest,
+                },
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ),
+        )
+        for source_name, source_bytes in markdown_sources:
+            _zip_write(
+                archive,
+                f"META-INF/egwsearch-source/{source_name}",
+                source_bytes,
+            )
+        if cover_bytes:
+            cover_width = int.from_bytes(cover_bytes[16:20], "big")
+            cover_height = int.from_bytes(cover_bytes[20:24], "big")
+            if cover_width < 1 or cover_height < 1:
+                raise ContractError("dimensoes da capa EPUB invalidas")
+            cover_xhtml = (
+                '<?xml version="1.0" encoding="utf-8"?>'
+                '<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" '
+                'xmlns:epub="http://www.idpf.org/2007/ops" '
+                f'lang="{escape(item.language)}" style="height:100%;margin:0;padding:0">'
+                f'<head><title>Capa</title><meta name="viewport" content="width={cover_width},height={cover_height}"/>'
+                '<style>@page{margin:0;padding:0}html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden}'
+                'svg{display:block;width:100%;height:100%;margin:0;padding:0}</style></head>'
+                '<body epub:type="cover">'
+                '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" '
+                f'viewBox="0 0 {cover_width} {cover_height}" preserveAspectRatio="xMidYMid slice" '
+                f'role="img" aria-label="Capa de {escape(item.title_original)}">'
+                f'<image href="cover.png" width="{cover_width}" height="{cover_height}" '
+                'preserveAspectRatio="xMidYMid slice"/></svg></body></html>'
+            )
+            _zip_write(archive, "OEBPS/cover.png", cover_bytes)
+            _zip_write(archive, "OEBPS/cover.xhtml", cover_xhtml)
         for name, content in documents:
             _zip_write(archive, f"OEBPS/{name}", content)
-    validate_generated_epub(temporary, expected_sections=len(paths))
+    validate_generated_epub(
+        temporary,
+        expected_sections=len(paths),
+        expected_cover_sha256=(hashlib.sha256(cover_bytes).hexdigest() if cover_bytes else None),
+        expected_markdown_sha256={entry["name"]: entry["sha256"] for entry in markdown_manifest},
+        expected_public_url=item.public_url,
+        expected_accessed_at=accessed_at,
+    )
     temporary.replace(target)
     return target
 
@@ -751,19 +889,156 @@ def _zip_write(
     archive.writestr(info, value.encode("utf-8") if isinstance(value, str) else value)
 
 
-def validate_generated_epub(path: Path, expected_sections: int | None = None) -> None:
+def validate_generated_epub(
+    path: Path,
+    expected_sections: int | None = None,
+    expected_cover_sha256: str | None = None,
+    expected_markdown_sha256: dict[str, str] | None = None,
+    expected_public_url: str | None = None,
+    expected_accessed_at: str | None = None,
+) -> None:
     if not zipfile.is_zipfile(path):
         raise ContractError("EPUB derivado nao e ZIP")
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
         if names[0] != "mimetype" or archive.read("mimetype") != b"application/epub+zip":
             raise ContractError("EPUB derivado sem mimetype inicial")
-        required = {"META-INF/container.xml", "OEBPS/content.opf", "OEBPS/nav.xhtml"}
+        required = {
+            "META-INF/container.xml",
+            "META-INF/egwsearch-source/manifest.json",
+            "OEBPS/content.opf",
+            "OEBPS/nav.xhtml",
+            "OEBPS/provenance.xhtml",
+        }
         if not required.issubset(names):
             raise ContractError("EPUB derivado incompleto")
         sections = [name for name in names if re.fullmatch(r"OEBPS/section-\d{4}\.xhtml", name)]
         if expected_sections is not None and len(sections) != expected_sections:
             raise ContractError("EPUB derivado perdeu secoes")
+        try:
+            source_manifest = json.loads(
+                archive.read("META-INF/egwsearch-source/manifest.json").decode("utf-8")
+            )
+        except (UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ContractError("manifesto Markdown reversivel invalido") from error
+        if (
+            not isinstance(source_manifest, dict)
+            or set(source_manifest) != {"schema_version", "files"}
+            or source_manifest["schema_version"] != "egwsearch-reversible-markdown/v1"
+        ):
+            raise ContractError("schema Markdown reversivel divergente")
+        files = source_manifest["files"]
+        if not isinstance(files, list) or len(files) != len(sections):
+            raise ContractError("cardinalidade Markdown reversivel divergente")
+        observed: dict[str, str] = {}
+        for order, record in enumerate(files, 1):
+            if not isinstance(record, dict) or set(record) != {"name", "order", "path", "sha256"}:
+                raise ContractError("entrada Markdown reversivel invalida")
+            name = record["name"]
+            internal = record["path"]
+            if (
+                record["order"] != order
+                or not isinstance(name, str)
+                or Path(name).name != name
+                or not name.endswith(".md")
+                or internal != f"META-INF/egwsearch-source/{name}"
+                or internal not in names
+            ):
+                raise ContractError("path ou ordem Markdown reversivel invalida")
+            digest = hashlib.sha256(archive.read(internal)).hexdigest()
+            if digest != record["sha256"]:
+                raise ContractError("hash Markdown reversivel divergente")
+            observed[name] = digest
+        internal_markdown = {
+            name
+            for name in names
+            if name.startswith("META-INF/egwsearch-source/") and name.endswith(".md")
+        }
+        if internal_markdown != {record["path"] for record in files}:
+            raise ContractError("EPUB contem Markdown reversivel nao manifestado")
+        if expected_markdown_sha256 is not None and observed != expected_markdown_sha256:
+            raise ContractError("fonte Markdown EPUB diverge da esperada")
+        opf = archive.read("OEBPS/content.opf").decode("utf-8")
+        provenance = archive.read("OEBPS/provenance.xhtml").decode("utf-8")
+        if (
+            "Nota de proveniência (não editorial)" not in provenance
+            or 'epub:type="colophon"' not in provenance
+            or opf.find('idref="provenance"') <= opf.find('idref="section-0001"')
+        ):
+            raise ContractError("nota nao editorial ausente ou fora da contracapa")
+        if expected_public_url is not None and f'href="{escape(expected_public_url, quote=True)}"' not in provenance:
+            raise ContractError("nota nao editorial sem URL oficial")
+        if expected_accessed_at is not None and _abnt_access_date(expected_accessed_at) not in provenance:
+            raise ContractError("nota nao editorial sem data de acesso")
+        if expected_cover_sha256 is not None:
+            if not {"OEBPS/cover.png", "OEBPS/cover.xhtml"}.issubset(names):
+                raise ContractError("EPUB derivado sem capa")
+            if hashlib.sha256(archive.read("OEBPS/cover.png")).hexdigest() != expected_cover_sha256:
+                raise ContractError("EPUB derivado diverge de cover.png")
+            if 'properties="cover-image"' not in opf:
+                raise ContractError("EPUB derivado sem propriedade cover-image")
+            if not (0 <= opf.find('idref="cover-page"') < opf.find('idref="section-0001"')):
+                raise ContractError("pagina de capa nao inicia o spine EPUB")
+            cover_page = archive.read("OEBPS/cover.xhtml").decode("utf-8")
+            cover_body = re.search(r"<body\b[^>]*>(.*?)</body>", cover_page, re.DOTALL)
+            if (
+                cover_body is None
+                or not re.fullmatch(r"<svg\b.*</svg>", cover_body.group(1), re.DOTALL)
+                or 'epub:type="cover"' not in cover_page
+                or '@page{margin:0;padding:0}' not in cover_page
+                or 'html,body{width:100%;height:100%;margin:0;padding:0;overflow:hidden}' not in cover_page
+                or '<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%"' not in cover_page
+                or 'preserveAspectRatio="xMidYMid slice"' not in cover_page
+                or re.search(r"<(?:p|h[1-6]|div|span|img|text)\b", cover_body.group(1))
+            ):
+                raise ContractError("pagina de capa EPUB nao e exclusiva e borda a borda")
+
+
+def restore_markdown_from_epub(epub_path: Path, target_directory: Path) -> list[Path]:
+    """Restaura exatamente o payload Markdown manifestado dentro do EPUB."""
+
+    target = Path(target_directory)
+    target.mkdir(parents=True, exist_ok=True)
+    restored: list[Path] = []
+    with zipfile.ZipFile(epub_path) as archive:
+        try:
+            manifest = json.loads(
+                archive.read("META-INF/egwsearch-source/manifest.json").decode("utf-8")
+            )
+        except (KeyError, UnicodeDecodeError, json.JSONDecodeError) as error:
+            raise ContractError("manifesto Markdown reversivel invalido") from error
+        files = manifest.get("files") if isinstance(manifest, dict) else None
+        if (
+            not isinstance(manifest, dict)
+            or manifest.get("schema_version") != "egwsearch-reversible-markdown/v1"
+            or not isinstance(files, list)
+        ):
+            raise ContractError("schema Markdown reversivel divergente")
+        for order, record in enumerate(files, 1):
+            if not isinstance(record, dict):
+                raise ContractError("entrada Markdown reversivel invalida")
+            name = record.get("name")
+            internal = record.get("path")
+            if (
+                record.get("order") != order
+                or not isinstance(name, str)
+                or Path(name).name != name
+                or not name.endswith(".md")
+                or internal != f"META-INF/egwsearch-source/{name}"
+            ):
+                raise ContractError("path ou ordem Markdown reversivel invalida")
+            try:
+                value = archive.read(internal)
+            except KeyError as error:
+                raise ContractError("Markdown reversivel ausente") from error
+            if hashlib.sha256(value).hexdigest() != record.get("sha256"):
+                raise ContractError("hash Markdown reversivel divergente")
+            destination = target / name
+            temporary = destination.with_name(f".{destination.name}.tmp")
+            temporary.write_bytes(value)
+            temporary.replace(destination)
+            restored.append(destination)
+    return restored
 
 
 def build_source_v3(
@@ -788,6 +1063,8 @@ def build_source_v3(
             "language_original": item.language_original,
             "language": item.language,
             "language_path": item.language_path,
+            "category_original": item.category_name,
+            "category": item.category_path,
             "type": item.publication_type,
             "edition": item.edition,
             "acronym": identity.acronym,
@@ -798,6 +1075,8 @@ def build_source_v3(
         "collection": {
             "id": item.collection_id,
             "name": item.collection_name,
+            "category_original": item.category_name,
+            "category": item.category_path,
         },
         "state": state,
         "sources": sorted(sources, key=lambda value: (value.get("format", ""), value.get("url", ""))),

@@ -48,6 +48,16 @@ class PublicationContractTests(unittest.TestCase):
             identity.route_slug,
             "atos-dos-apostolos-nova-edicao",
         )
+        self.assertEqual(
+            identity.relative_directory().as_posix(),
+            "egw/pt-br/geral/livros/atos-dos-apostolos-nova-edicao",
+        )
+        categorized = publication_identity(
+            "egw", "pt-br", "comentarios", "Daniel", category="Comentários Bíblicos"
+        )
+        self.assertEqual(categorized.category, "comentarios-biblicos")
+        egw = publication_identity("egw", "en", "books", "Education", category="egw")
+        self.assertEqual(egw.relative_directory().as_posix(), "egw/en/books/education")
         self.assertEqual(uri_slug('A: B/C?'), "a-bc")
 
     def test_uri_slug_is_ascii_rfc3986_and_portable(self) -> None:

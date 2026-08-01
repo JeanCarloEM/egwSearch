@@ -81,18 +81,18 @@ class PublicationIdentity:
 
     author: str
     language: str
+    category: str
     publication_type: str
     title: str
     acronym: str
     route_slug: str
 
     def relative_directory(self) -> Path:
-        return Path(
-            self.author,
-            self.language,
-            self.publication_type,
-            self.route_slug,
-        )
+        parts = [self.author, self.language]
+        if self.category != self.author:
+            parts.append(self.category)
+        parts.extend((self.publication_type, self.route_slug))
+        return Path(*parts)
 
     def asset_name(self, publication_format: str, qualifier: str | None = None) -> str:
         validate_format(publication_format)
@@ -148,6 +148,17 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
         ids = [item.get("id") for item in data["collections"] if isinstance(item, dict)]
         if len(ids) != len(data["collections"]) or len(ids) != len(set(ids)):
             raise ContractError("colecoes invalidas ou duplicadas")
+        for collection in data["collections"]:
+            category = collection.get("category") if isinstance(collection, dict) else None
+            category_name = collection.get("category_name") if isinstance(collection, dict) else None
+            if (
+                not isinstance(category, str)
+                or not category.strip()
+                or uri_slug(category) != category
+                or not isinstance(category_name, str)
+                or not category_name.strip()
+            ):
+                raise ContractError("colecao sem categoria editorial")
     if schema == 3:
         transaction = data["transaction"]
         if not isinstance(transaction, dict) or set(transaction) != {
@@ -297,6 +308,7 @@ def publication_identity(
     language: str,
     publication_type: str,
     title: str,
+    category: str = "geral",
 ) -> PublicationIdentity:
     """Materializa identidade somente depois de validar seus componentes."""
 
@@ -304,6 +316,7 @@ def publication_identity(
     return PublicationIdentity(
         author=validate_slug(author, "autor"),
         language=validate_language(language),
+        category=uri_slug(category),
         publication_type=validate_slug(publication_type, "tipo"),
         title=normalized_title,
         acronym=title_acronym(normalized_title),

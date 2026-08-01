@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import json
 from pathlib import Path
 import subprocess
@@ -15,7 +16,14 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(CONTRACT_ROOT))
 
-from acquisition import AcquisitionLedger, CatalogItem, build_source_v3  # noqa: E402
+from acquisition import (  # noqa: E402
+    AcquisitionLedger,
+    CatalogItem,
+    CatalogSegment,
+    build_source_v3,
+    generate_epub,
+    write_markdown_publication,
+)
 from publication_contract import hash_file, write_json_atomic  # noqa: E402
 from publication_transaction import (  # noqa: E402
     GitPublicationPublisher,
@@ -77,6 +85,63 @@ def _materialize(root: Path, item: CatalogItem) -> Path:
 
 
 class PublicationTransactionTests(unittest.TestCase):
+    def test_complete_publication_accepts_reversible_markdown_inside_epub(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            item = replace(
+                _item(),
+                segments=(
+                    CatalogSegment(
+                        remote_id="42.1",
+                        url="https://example.test/read/42.1",
+                        order=1,
+                        title="Capítulo real",
+                        html="<h1>Capítulo real</h1><p>Conteúdo.</p>",
+                    ),
+                ),
+            )
+            source_root = root / "src" / "publications"
+            identity = item.publication_identity()
+            directory = source_root / identity.relative_directory()
+            markdown, evidence = write_markdown_publication(directory, item)
+            epub = generate_epub(
+                directory / identity.asset_name("epub", "derived"),
+                item,
+                markdown,
+                accessed_at="2026-08-01T12:00:00+00:00",
+            )
+            epub_hashes = hash_file(epub)
+            for record, path in zip(evidence, markdown, strict=True):
+                record["path"] = (
+                    f"{epub.name}!/META-INF/egwsearch-source/{path.name}"
+                )
+                path.unlink()
+            metadata = build_source_v3(
+                item,
+                "completed",
+                [
+                    {
+                        "format": "text",
+                        "url": item.segments[0].url,
+                        "method": "text-extraction",
+                    }
+                ],
+                segments=evidence,
+                derivations=[
+                    {
+                        "format": "epub",
+                        "method": "local-conversion",
+                        "path": epub.name,
+                        "size": epub_hashes.size,
+                        "hashes": epub_hashes.as_dict(),
+                    }
+                ],
+            )
+            write_json_atomic(directory / identity.metadata_name(), metadata)
+            allowlist = validate_complete_publication(item, source_root, root)
+            self.assertIn(epub.relative_to(root), allowlist)
+            self.assertFalse(list(directory.rglob("*.md")))
+
     def test_commit_contains_exactly_one_publication_and_preserves_unrelated(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
