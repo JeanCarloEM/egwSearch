@@ -31,6 +31,9 @@ capa oficialmente declarada para a obra.
 7. adquirir e validar a capa declarada pela ficha/coleção, gerar `cover.png`
    canônico e incorporá-la ao EPUB e ao PDF local quando esses derivados forem
    produzidos.
+8. empacotar no EPUB uma fonte Markdown reversível com manifesto/hash, remover
+   os `.md` externos somente após validação e acrescentar contracapa de
+   proveniência inequivocamente não editorial em estilo ABNT.
 
 ## Invariantes
 
@@ -45,6 +48,8 @@ capa oficialmente declarada para a obra.
   Git.
 - capa remota só é aceita quando declarada pela origem oficial da mesma obra;
   imagem arbitrária ou de outra edição não é fallback válido.
+- remoção dos `.md` externos depende de restauração byte a byte comprovada a
+  partir do EPUB; a nota de proveniência não integra o texto editorial.
 
 ## Aceite global
 
@@ -57,6 +62,9 @@ capa oficialmente declarada para a obra.
 - amostra pública comprova ao menos uma obra nativa e uma obra somente textual.
 - obra textual com capa declarada produz `cover.png` e derivados que incorporam
   exatamente essa capa validada.
+- EPUB expõe estrutura adequada à indexação, contém contracapa não editorial e
+  restaura os Markdown originais com nomes, ordem e hashes idênticos, sem exigir
+  sua persistência externa.
 
 ## Resultado
 

@@ -32,3 +32,16 @@ A ficha pública leve da obra `14389`, pertencente à coleção indicada, declar
 `og:image=https://a.egwwritings.org/covers/14389?type=large`, com alternativa
 editorial “Cover of the book ESF”. A projeção móvel oficial confirma a imagem
 equivalente em `https://media4.egwwritings.org/covers/14389_r.jpg`.
+
+## Complementação de 2026-08-01 — reversibilidade e nota não editorial
+
+> Uma vez o EPUB gerado a partir dos `.md` e bem formatado para indexação
+> conforme o RCF, permitindo fácil reversão posterior, os `.md` originais não
+> precisam persistir. O EPUB deve conter contracapa ou nota em página inicial
+> adequada, identificada como não editorial, informando origem, data e link em
+> estilo ABNT.
+
+A implementação preservará os bytes Markdown e seus hashes dentro do contêiner
+EPUB, fora do spine editorial, com manifesto reversível. Somente depois de
+validar contêiner, conteúdo renderizado, manifesto e restauração byte a byte os
+arquivos `.md` externos serão removidos.

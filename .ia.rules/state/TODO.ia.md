@@ -1949,3 +1949,9 @@
   declarada pela ficha/coleção para uma obra somente textual, materializar o
   `cover.png` canônico e incorporar a mesma imagem aos EPUB/PDF localmente
   derivados, sem aceitar imagem arbitrária como capa.
+
+  O EPUB derivado DEVE permanecer corretamente estruturado para indexação e
+  conter fonte Markdown reversível com manifesto e hashes. Os `.md` externos
+  PODEM ser removidos somente depois de restauração byte a byte comprovada. Uma
+  contracapa separada DEVE identificar-se como nota não editorial e registrar
+  origem, URL e data de acesso em referência de estilo ABNT.
