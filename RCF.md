@@ -1020,6 +1020,10 @@ Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da m
 A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [PENDENTE-CODIGO]
 Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [PENDENTE-CODIGO]
 
+O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [PENDENTE-CODIGO]
+Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [PENDENTE-CODIGO]
+Uma página final `colophon` DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [PENDENTE-CODIGO]
+
 ## 43. Indice global
 
 Um indice JSON global DEVE representar todas as publicacoes e ser gerado deterministicamente por uma unica fonte ou etapa canônica.

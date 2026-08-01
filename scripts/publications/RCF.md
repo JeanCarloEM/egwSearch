@@ -338,6 +338,12 @@ A imagem DEVE ser limitada, decodificada e normalizada deterministicamente para 
 O EPUB derivado DEVE incluir a imagem no manifesto com propriedade `cover-image`, página de capa no início do spine e bytes iguais ao `cover.png`; um gerador PDF futuro DEVE usar o mesmo arquivo como capa antes do texto, sem autorizar PDF rasterizado como falso equivalente editorial. [PENDENTE-CODIGO]
 Metadado v3 DEVE registrar separadamente a fonte remota e o derivado normalizado, com URL, método, path, tamanho e hashes verificáveis. [PENDENTE-CODIGO]
 Reexecução sem mudança DEVE validar e reutilizar capa e EPUB; `--revalidate` DEVE readquirir ou revalidar a capa antes de concluir. [PENDENTE-CODIGO]
+O EPUB textual DEVE manter documentos XHTML semânticos no spine e armazenar fora dele os bytes Markdown intermediários, acompanhados de manifesto versionado com nome, ordem e SHA-256. [PENDENTE-CODIGO]
+Uma operação de restauração DEVE validar paths, cardinalidade, ordem e hashes do manifesto e recriar os `.md` byte a byte sem interpretar o XHTML. [PENDENTE-CODIGO]
+Os `.md` externos somente PODEM ser removidos após validação integral do EPUB e round trip de restauração em runtime temporário; qualquer falha DEVE preservar os arquivos e bloquear conclusão. [PENDENTE-CODIGO]
+O último item do spine DEVE ser uma página `epub:type="colophon"`, rotulada “Nota de proveniência (não editorial)”, separada das fontes Markdown e do corpo editorial. [PENDENTE-CODIGO]
+A nota DEVE registrar autor, título, plataforma EGW Writings, URL oficial e data de acesso em forma de referência ABNT, usando data da aquisição efetiva e sem inventar local, editora ou data de publicação ausentes. [PENDENTE-CODIGO]
+Metadado de segmentos DEVE referenciar paths internos do EPUB e a validação incremental DEVE comprovar os hashes diretamente no contêiner, sem depender de `.md` externo. [PENDENTE-CODIGO]
 
 ## 9. Segurança, validação e fronteira
 
@@ -369,6 +375,7 @@ desabilitado, cadeia textual multiunidade, ciclo, quebra de obra, ausência de
 contêiner, preservação semântica, isolamento de fixture e comparação do texto
 real no EPUB. [PENDENTE-CODIGO]
 O gate também DEVE cobrir capa oficial JPEG/PNG, host e redirecionamento permitidos, limite de bytes/dimensões, remoção de metadados, determinismo, `cover.png`, manifesto/spine EPUB, igualdade de bytes e falha de capa. [PENDENTE-CODIGO]
+O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte, remoção pós-validação, indexabilidade XHTML e separação/texto/data/link da nota ABNT não editorial. [PENDENTE-CODIGO]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação
 pertence à FT-006 e exige nova autorização humana explícita após a conclusão
