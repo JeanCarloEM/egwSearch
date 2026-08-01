@@ -974,47 +974,47 @@ concorrência, retomada, commit exato e ausência de runtime. [PENDENTE-CODIGO]
 
 ### 42.12 Completude observável da descoberta e da derivação
 
-O catálogo DEVE ser enumerado até que todos os links únicos de publicação [PENDENTE-CODIGO]
-expostos pela coleção tenham sido coletados. [PENDENTE-CODIGO]
-Grade virtualizada ou paginação DEVE ser colhida incrementalmente; inspecionar [PENDENTE-CODIGO]
-somente o DOM final depois da rolagem NÃO comprova completude. [PENDENTE-CODIGO]
-A execução DEVE registrar contagem observada, [PENDENTE-CODIGO]
-identidades únicas e critério objetivo de término. [PENDENTE-CODIGO]
+O catálogo DEVE ser enumerado até que todos os links únicos de publicação [be82602]
+expostos pela coleção tenham sido coletados. [be82602]
+Grade virtualizada ou paginação DEVE ser colhida incrementalmente; inspecionar [be82602]
+somente o DOM final depois da rolagem NÃO comprova completude. [be82602]
+A execução DEVE registrar contagem observada, [be82602]
+identidades únicas e critério objetivo de término. [be82602]
 
-Cada publicação DEVE ser enriquecida pela sua página individual. [PENDENTE-CODIGO]
-Todos os links habilitados de PDF e EPUB ali expostos DEVEM integrar o conjunto [PENDENTE-CODIGO]
-obrigatório; link ausente no cartão, botão desabilitado ou `href="#"` NÃO [PENDENTE-CODIGO]
-constitui ativo. [PENDENTE-CODIGO]
+Cada publicação DEVE ser enriquecida pela sua página individual. [be82602]
+Todos os links habilitados de PDF e EPUB ali expostos DEVEM integrar o conjunto [be82602]
+obrigatório; link ausente no cartão, botão desabilitado ou `href="#"` NÃO [be82602]
+constitui ativo. [be82602]
 Falha em descobrir, baixar ou validar qualquer ativo habilitado impede
-`completed`. [PENDENTE-CODIGO]
+`completed`. [be82602]
 
-Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [PENDENTE-CODIGO]
+Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [be82602]
 URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
-término declarado. [PENDENTE-CODIGO]
-A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [PENDENTE-CODIGO]
+término declarado. [be82602]
+A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [be82602]
 anterior/próximo coerentes e preservar todos os blocos editoriais identificados
 no contêiner de leitura, inclusive headings, parágrafos, listas, tabelas, notas,
-ênfases, links e quebras semanticamente materiais. [PENDENTE-CODIGO]
+ênfases, links e quebras semanticamente materiais. [be82602]
 
-O hash e o estado de cada unidade DEVEM derivar do conteúdo editorial real [PENDENTE-CODIGO]
-normalizado sem controles da interface. [PENDENTE-CODIGO]
+O hash e o estado de cada unidade DEVEM derivar do conteúdo editorial real [be82602]
+normalizado sem controles da interface. [be82602]
 Cadeia interrompida, vazia, repetida, divergente do sumário ou cuja obra mude
-no percurso DEVE resultar em [PENDENTE-CODIGO]
-`review_required`, nunca em EPUB parcial. [PENDENTE-CODIGO]
+no percurso DEVE resultar em [be82602]
+`review_required`, nunca em EPUB parcial. [be82602]
 
-Fixture e mock DEVEM usar raiz temporária explícita ou raiz de saída de teste [PENDENTE-CODIGO]
-segregada. [PENDENTE-CODIGO]
-A CLI NÃO DEVE materializar fixture em `src/publications`, mesmo quando [PENDENTE-CODIGO]
-`source_root` canônico estiver configurado. [PENDENTE-CODIGO]
-Artefato sintético detectado na raiz canônica DEVE ser isolado como [PENDENTE-CODIGO]
+Fixture e mock DEVEM usar raiz temporária explícita ou raiz de saída de teste [be82602]
+segregada. [be82602]
+A CLI NÃO DEVE materializar fixture em `src/publications`, mesmo quando [be82602]
+`source_root` canônico estiver configurado. [be82602]
+Artefato sintético detectado na raiz canônica DEVE ser isolado como [be82602]
 runtime/quarentena, sem publicação ou
-commit. [PENDENTE-CODIGO]
+commit. [be82602]
 
-Aceite DEVE comparar: quantidade de obras no catálogo e identidades coletadas; [PENDENTE-CODIGO]
+Aceite DEVE comparar: quantidade de obras no catálogo e identidades coletadas; [be82602]
 ativos habilitados e arquivos incorporados; cadeia editorial observada e
-segmentos persistidos; e conteúdo real renderizado do EPUB derivado. [PENDENTE-CODIGO]
-Amostra pública controlada DEVE abranger uma obra com ativos nativos e uma sem eles, [PENDENTE-CODIGO]
-sem autorizar coleta em massa. [PENDENTE-CODIGO]
+segmentos persistidos; e conteúdo real renderizado do EPUB derivado. [be82602]
+Amostra pública controlada DEVE abranger uma obra com ativos nativos e uma sem eles, [be82602]
+sem autorizar coleta em massa. [be82602]
 
 ## 43. Indice global
 

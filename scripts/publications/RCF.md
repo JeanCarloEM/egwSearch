@@ -125,15 +125,15 @@ houver contrato direto adequado, e DEVE usar fixture versionada, seletores [3301
 semânticos e falha fechada diante de alteração.
 
 Quando o portal oferecer uma interface pública leve com o mesmo conteúdo
-editorial, ela DEVE ser preferida à aplicação completa se reduzir desafio, [PENDENTE-CODIGO]
+editorial, ela DEVE ser preferida à aplicação completa se reduzir desafio, [be82602]
 virtualização e dependência de JavaScript sem reduzir cobertura. [PENDENTE-CODIGO]
-A enumeração DEVE coletar incrementalmente todos os `href` únicos de obra; [PENDENTE-CODIGO]
+A enumeração DEVE coletar incrementalmente todos os `href` únicos de obra; [be82602]
 rolar e analisar somente o DOM final é insuficiente para grade virtualizada. [PENDENTE-CODIGO]
 
 O cartão do catálogo fornece somente identidade preliminar. A página individual
-da obra DEVE ser consultada antes da aquisição e é a autoridade para autor, [PENDENTE-CODIGO]
+da obra DEVE ser consultada antes da aquisição e é a autoridade para autor, [be82602]
 título, código, URL inicial de leitura e todos os links PDF/EPUB habilitados. [PENDENTE-CODIGO]
-Cada ativo habilitado é obrigatório; `disabled`, URL vazia ou `#` significa [PENDENTE-CODIGO]
+Cada ativo habilitado é obrigatório; `disabled`, URL vazia ou `#` significa [be82602]
 indisponível e não falha de download.
 
 Antes de solicitar catálogo novamente para unidade conhecida ou qualquer
@@ -291,10 +291,10 @@ Texto on-line somente PODE ser adquirido se PDF e EPUB nativos estiverem [3301a9
 ausentes e se identidade, ordem, primeira/última unidade e completude forem
 determináveis sem contorno.
 
-A extração DEVE iniciar na URL `Read Online` da página individual e seguir [PENDENTE-CODIGO]
+A extração DEVE iniciar na URL `Read Online` da página individual e seguir [be82602]
 somente links editoriais `rel=next` da mesma obra até ausência ou marca de
 término. [PENDENTE-CODIGO]
-Cada transição DEVE validar URL, identificador da obra, ausência de [PENDENTE-CODIGO]
+Cada transição DEVE validar URL, identificador da obra, ausência de [be82602]
 ciclo, coerência do `rel=prev` quando aplicável e presença do contêiner
 editorial `#r-pl` ou contrato público equivalente. [PENDENTE-CODIGO]
 
@@ -318,16 +318,16 @@ completo. Sanitização NÃO DEVE corrigir, resumir, modernizar, traduzir ou [33
 reescrever conteúdo; Unicode e estrutura semântica DEVEM ser preservados. [3301a97]
 
 No contêiner editorial, elementos `h1` a `h6`, parágrafos, listas, tabelas,
-blockquote, imagens editoriais, notas, ênfase, links e quebras materiais DEVEM [PENDENTE-CODIGO]
+blockquote, imagens editoriais, notas, ênfase, links e quebras materiais DEVEM [be82602]
 ser preservados em ordem. [PENDENTE-CODIGO]
-Marcadores de referência e controles da aplicação DEVEM ser separados do texto, [PENDENTE-CODIGO]
-mas seu identificador editorial DEVE permanecer no metadado do bloco. [PENDENTE-CODIGO]
+Marcadores de referência e controles da aplicação DEVEM ser separados do texto, [be82602]
+mas seu identificador editorial DEVE permanecer no metadado do bloco. [be82602]
 Texto vazio, placeholder, fixture ou corpo sem blocos
-editoriais válidos DEVE impedir derivação. [PENDENTE-CODIGO]
+editoriais válidos DEVE impedir derivação. [be82602]
 
-Fixture executada pela CLI DEVE exigir `--output-root` explícito fora da raiz [PENDENTE-CODIGO]
+Fixture executada pela CLI DEVE exigir `--output-root` explícito fora da raiz [be82602]
 canônica ou usar automaticamente subdiretório temporário da raiz de runtime; [PENDENTE-CODIGO]
-ela nunca PODE gravar em `src/publications`. [PENDENTE-CODIGO]
+ela nunca PODE gravar em `src/publications`. [be82602]
 
 Derivado local NÃO DEVE integrar `formative_data.urls` ou [3301a97]
 `formative_data.global_hashes` como se fosse original. Seu hash, gerador e
@@ -357,8 +357,8 @@ Fixture/mock DEVE preceder amostra pública mínima. A amostra DEVE limitar [330
 coleção, autor/publicação e ativos; desafio ou `403` encerra sem evasão. Coleta
 ampliada exige todos os gates e autorização material própria.
 
-O gate de completude DEVE incluir catálogo com múltiplas obras, ativos presentes [PENDENTE-CODIGO]
-somente na página individual, múltiplos formatos obrigatórios, botão [PENDENTE-CODIGO]
+O gate de completude DEVE incluir catálogo com múltiplas obras, ativos presentes [be82602]
+somente na página individual, múltiplos formatos obrigatórios, botão [be82602]
 desabilitado, cadeia textual multiunidade, ciclo, quebra de obra, ausência de
 contêiner, preservação semântica, isolamento de fixture e comparação do texto
 real no EPUB. [PENDENTE-CODIGO]
