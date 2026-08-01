@@ -1016,6 +1016,10 @@ segmentos persistidos; e conteúdo real renderizado do EPUB derivado. [be82602]
 Amostra pública controlada DEVE abranger uma obra com ativos nativos e uma sem eles, [be82602]
 sem autorizar coleta em massa. [be82602]
 
+Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da mesma obra, inclusive `og:image`, DEVE ser adquirida como fonte editorial e NÃO PODE ser substituída por imagem inferida por título, semelhança ou posição. [PENDENTE-CODIGO]
+A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [PENDENTE-CODIGO]
+Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [PENDENTE-CODIGO]
+
 ## 43. Indice global
 
 Um indice JSON global DEVE representar todas as publicacoes e ser gerado deterministicamente por uma unica fonte ou etapa canônica.
