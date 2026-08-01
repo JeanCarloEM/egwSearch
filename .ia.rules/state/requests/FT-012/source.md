@@ -3,7 +3,7 @@
 - origem: prompts humanos desta conversa e anexo visual.
 - recebido em: `2026-08-01`.
 - anexo: `codex-clipboard-7727984a-9c3a-4cb0-a921-d3355bc30002.png`.
-- incorporação: em andamento pela FT-012.
+- incorporação: concluída pela FT-012.
 
 ## Solicitação integral
 

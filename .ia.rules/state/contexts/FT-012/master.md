@@ -103,3 +103,13 @@ capa oficialmente declarada para a obra.
 - `agent:verify` permanece não aplicável ao produto Python neste repositório e
   reporta o diagnóstico preexistente `TSCONFIG_AUSENTE`;
 - commits materiais e normativos: `2ed0d43` e `279e2ef`.
+- aprimoramento concluído com capa oficial normalizada `cover.png`, primeira
+  página EPUB exclusiva e borda a borda, 31 fontes Markdown reversíveis
+  internas, zero `.md` externo e contracapa ABNT não editorial;
+- categorias de coleção preservam rótulo remoto e código curto em PT-BR;
+  pioneiros usam `pioneiros/`, enquanto `egw` não é duplicado após o autor;
+- amostra pública `14389` revalidada no novo path com 13 obras enumeradas,
+  31 unidades extraídas, zero falha/revisão e reexecução idempotente `skipped`;
+- 53 testes Python, três testes Node, compilação Python, bootstrap/check,
+  rastreabilidade RCF e `git diff --check` aprovados;
+- commits do aprimoramento material e da sincronização: `297d5bc` e `b933ecd`.
