@@ -50,6 +50,8 @@ capa oficialmente declarada para a obra.
   imagem arbitrária ou de outra edição não é fallback válido.
 - remoção dos `.md` externos depende de restauração byte a byte comprovada a
   partir do EPUB; a nota de proveniência não integra o texto editorial.
+- conversão Markdown materializa somente EPUB nesta FT; geração PDF permanece
+  opcional, futura e fora do escopo implementado.
 
 ## Aceite global
 

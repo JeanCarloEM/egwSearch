@@ -45,3 +45,12 @@ A implementação preservará os bytes Markdown e seus hashes dentro do contêin
 EPUB, fora do spine editorial, com manifesto reversível. Somente depois de
 validar contêiner, conteúdo renderizado, manifesto e restauração byte a byte os
 arquivos `.md` externos serão removidos.
+
+## Esclarecimento de 2026-08-01 — formato derivado
+
+> Para geração a partir de `.md`, pode-se gerar apenas o EPUB. PDF fica como
+> opcional e futuramente implementável, caso desejado.
+
+Logo, a FT-012 não implementará gerador PDF; apenas preservará no contrato que
+um gerador futuro reutilize a mesma capa canônica e não produza falso
+equivalente rasterizado.
