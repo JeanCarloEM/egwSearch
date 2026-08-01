@@ -4,7 +4,7 @@
 
 - FT: `FT-011`.
 - tipo: `implementacao_codigo`.
-- estado: pendente da FT-010.
+- estado: em andamento; FT-010 concluída.
 - autorização: prompt humano de `2026-08-01` para concluir todas as fases de
   `baixar.py` com funcionalidade efetiva.
 

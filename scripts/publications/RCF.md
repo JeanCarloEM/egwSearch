@@ -197,6 +197,82 @@ humana, tempo de espera da grade, limite de recuperação e tamanho da janela. [
 Padrões DEVEM privilegiar navegador visível, perfil fora de commits, espera sem [77eac45]
 timeout curto, baixo consumo e recuperação finita. [PENDENTE-CODIGO]
 
+### 7.1 Estado local central
+
+`config/publications.json` DEVE declarar uma única `runtime_state_root`; ambiente [PENDENTE-CODIGO]
+Python, ledger, cache, perfil, sessão, temporários, locks, traces e logs DEVEM [PENDENTE-CODIGO]
+derivar dela por funções centrais, nunca por paths hardcoded dispersos. [PENDENTE-CODIGO]
+A raiz
+DEVE ser criada sob demanda, ignorada integralmente e excluída de build, Pages, [PENDENTE-CODIGO]
+pacote e release. [PENDENTE-CODIGO]
+
+O estado local DEVE ser classificado em persistente, temporário ou sensível e [PENDENTE-CODIGO]
+possuir isolamento, retenção, limite, invalidação e limpeza próprios. [PENDENTE-CODIGO]
+Perfil e
+sessão DEVEM ser isolados por provedor/domínio e finalidade; parcial DEVE ficar [PENDENTE-CODIGO]
+em subdiretório de runtime até promoção atômica. [PENDENTE-CODIGO]
+PDF, EPUB, Markdown, metadado e
+índice validados permanecem canônicos e não podem ser ignorados como runtime. [PENDENTE-CODIGO]
+[PENDENTE-CODIGO]
+
+Migração do perfil legado PODE mover somente árvore local comprovada, com [PENDENTE-CODIGO]
+origem/destino validados, ausência de processo ativo, operação idempotente e
+fallback removido após sucesso. [PENDENTE-CODIGO]
+Clone sem a raiz DEVE recriá-la sem perda [PENDENTE-CODIGO]
+funcional; corrupção de cache/perfil DEVE causar reset controlado ou diagnóstico, [PENDENTE-CODIGO]
+nunca sucesso falso. [PENDENTE-CODIGO]
+
+### 7.2 Handoff humano desacoplado
+
+O estado do navegador DEVE seguir `automatizado`, [PENDENTE-CODIGO]
+`aguardando_intervencao_humana`, `validando_retomada`, `retomado`, `cancelado`
+ou `bloqueado`. [PENDENTE-CODIGO]
+Transição para intervenção DEVE encerrar o WebDriver e todos os [PENDENTE-CODIGO]
+efeitos automáticos antes de abrir ou orientar o uso de navegador normal no
+perfil autorizado. [PENDENTE-CODIGO]
+Automação e humano não podem atuar simultaneamente. [PENDENTE-CODIGO]
+[PENDENTE-CODIGO]
+
+O handoff DEVE usar processo normal sem flags de WebDriver e aguardar seu [PENDENTE-CODIGO]
+encerramento ou cancelamento sem inspecionar/interagir com o DOM. [PENDENTE-CODIGO]
+Reinício do
+controlador no mesmo perfil somente PODE ocorrer depois do encerramento humano; [PENDENTE-CODIGO]
+a retomada exige catálogo esperado, origem correta e ausência de desafio. [PENDENTE-CODIGO]
+Perfil
+incompatível, bloqueio persistente, expiração ou reapresentação encerra a
+coleção como revisão, sem bypass ou retry ilimitado. [PENDENTE-CODIGO]
+
+CLI DEVE permitir cancelar a espera, limitar seu tempo quando configurado, [PENDENTE-CODIGO]
+selecionar binário normal explicitamente e desabilitar handoff. [PENDENTE-CODIGO]
+Log DEVE usar [PENDENTE-CODIGO]
+eventos sanitizados e nunca registrar cookie, token, storage ou resposta do
+desafio. [PENDENTE-CODIGO]
+
+### 7.3 Publicação completa e efeito Git
+
+O coletor DEVE centralizar uma função que calcule e valide a unidade [PENDENTE-CODIGO]
+`completa_e_pareada`: ativos, metadado, segmentos, derivados, referências e
+entradas de índice impactadas. [PENDENTE-CODIGO]
+O resultado DEVE expor allowlist relativa à raiz, [PENDENTE-CODIGO]
+hashes e evidência de completude; item ambíguo ou incompleto não é elegível a
+Git. [PENDENTE-CODIGO]
+
+Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [PENDENTE-CODIGO]
+CLI. [PENDENTE-CODIGO]
+Quando habilitado, a finalização DEVE adquirir lock global no runtime, [PENDENTE-CODIGO]
+validar `dev`, worktree/índice, excluir estado não canônico, adicionar somente a
+allowlist com `git add -- <paths>`, validar o diff staged e criar exatamente um
+commit por publicação. [PENDENTE-CODIGO]
+Alteração staged preexistente ou conflito em path da
+unidade bloqueia sem modificar o índice. [PENDENTE-CODIGO]
+
+Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [PENDENTE-CODIGO]
+preservar preparação no runtime para retomada. [PENDENTE-CODIGO]
+Commit confirmado DEVE ser [PENDENTE-CODIGO]
+registrado no ledger e não pode ser repetido. [PENDENTE-CODIGO]
+Push, se futuramente habilitado,
+é fase separada e nunca requisito implícito do download. [PENDENTE-CODIGO]
+
 ## 8. Conteúdo textual e derivados
 
 Texto on-line somente PODE ser adquirido se PDF e EPUB nativos estiverem [3301a97]
@@ -240,7 +316,9 @@ plano, repetição, apply, rollback, falha de persistência, skip sem request,
 parcial, corrupção, atualização, `pt-BR`/`en`, rejeição de idioma, multiautor,
 coleções, extração ordenada, exclusão da interface, lacunas, Markdown, EPUB,
 original/derivado, `Retry-After`, backoff, limite, contenção, retomada, entrada
-hostil e índice. [c5c4da6]
+hostil, índice, raiz de runtime ausente/corrompida, migração de perfil, suspensão
+integral, handoff cancelado/aceito/recusado, segredo em log, publicação completa,
+allowlist Git, worktree alheia, falha de commit e retomada. [PENDENTE-CODIGO]
 
 O dry-run integral DEVE contabilizar todo arquivo esperado, rejeitar orfao, slug invalido ou colisao, comparar bytes/hashes e produzir plano reproduzivel antes de qualquer movimento. Depois da aplicacao, DEVE auditar a arvore canônica integralmente em slugs, produzir zero acao residual e repetir inventario identico. [3301a97]
 

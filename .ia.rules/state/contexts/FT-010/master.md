@@ -5,7 +5,7 @@
 - FT: `FT-010`.
 - tipo: `implementacao_normativa`.
 - fonte: `.ia.rules/state/TODO.ia.md:1416`, `:1577` e `:1763`.
-- estado: em andamento.
+- estado: concluído.
 
 ## Objetivo e integração
 
@@ -19,9 +19,9 @@ FT-006 a FT-008.
 
 | Ordem | Contexto | Entrega | Estado |
 | ---: | --- | --- | --- |
-| 1 | `01-handoff-humano.md` | detecção, suspensão, sessão humana e retomada | pendente |
-| 2 | `02-estado-runtime.md` | classificação, raiz, retenção, limpeza e Git | pendente |
-| 3 | `03-transacao-publicacao.md` | completude, índice, staging e commit | pendente |
+| 1 | `01-handoff-humano.md` | detecção, suspensão, sessão humana e retomada | concluído |
+| 2 | `02-estado-runtime.md` | classificação, raiz, retenção, limpeza e Git | concluído |
+| 3 | `03-transacao-publicacao.md` | completude, índice, staging e commit | concluído |
 
 ## Decisões estruturantes
 
@@ -41,3 +41,10 @@ FT-006 a FT-008.
 Todos os requisitos e conflitos da fonte devem estar refletidos no RCF global
 e especializado, com fases técnicas ordenadas, testes verificáveis e nenhum
 código alterado nesta FT.
+
+## Validação
+
+- RCF global incorporou §§42.9-42.11.
+- RCF especializado incorporou §§7.1-7.3 e ampliou testes.
+- mapa causal registrou 23 linhas materiais pendentes da FT-011.
+- `npm run agent:rcf`: 117 entradas e 116 linhas materiais, aprovado.

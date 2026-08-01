@@ -1,7 +1,7 @@
 # FT-010/01 - Handoff humano
 
 - ordem: 1 de 3.
-- estado: pendente.
+- estado: concluído.
 - objetivo: normatizar detecção conservadora, suspensão integral, cancelamento,
   sessão humana normal, preservação compatível e retomada objetivamente validada.
 - restrições: nenhum clique automático em desafio; nenhum stealth, spoofing,

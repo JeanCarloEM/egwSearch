@@ -1,14 +1,14 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-01T16:01:18-03:00`.
+Atualizado_em: `2026-08-01T16:18:00-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-010 normativa e FT-011 técnica conciliam o delta integrado de `main` para concluir o downloader sem versionar estado de runtime.
+Escopo_atual: FT-010 concluída; FT-011 autorizada e em andamento para concluir o downloader sem versionar estado de runtime.
 Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
 Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
 Fonte_atual_sha256: `nao_aplicavel; fonte local Git integral`.
-Contexto_mestre: `.ia.rules/state/contexts/FT-010/master.md`.
+Contexto_mestre: `.ia.rules/state/contexts/FT-011/master.md`.
 Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 ## FT-001 - Inicializacao normativa do projeto
@@ -273,7 +273,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`
 - escopo: Técnico
 - prioridade: alta
-- status: em andamento
+- status: concluída
 - fase_global: 1 de 2 desta evolução da cadeia pública
 - objetivo: consolidar no RCF o handoff humano sem evasão, a raiz única de runtime e a unidade transacional completa por publicação, conciliando FT-004, FT-008 e FT-009.
 - dependencias: FT-003, FT-006, FT-007 e FT-008 concluídas; merge `8998fe1` concluído.
@@ -284,7 +284,9 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   - commits automáticos pertencem ao produto somente por autorização explícita da execução, allowlist determinística e validação integral; nunca incluem cache, sessão, perfil, temporário ou alteração alheia.
 - contexto_mestre: `.ia.rules/state/contexts/FT-010/master.md`
 - aceite: origem integral absorvida no RCF global e especializado, sem contradição, duplicação ou antecipação técnica; validação normativa e commit exclusivo.
-- proximo_ponto: concluir os três subcontextos normativos e entregar à FT-011.
+- validacao: `npm run agent:rcf` aprovado com 117 entradas e 116 linhas materiais no RCF especializado; `git diff --check` sem erro após normalização.
+- decisoes_consolidadas: handoff humano desacoplado sem evasão; `runtime_state_root` único; transação `completa_e_pareada`; efeito Git opt-in por allowlist.
+- proximo_ponto: FT-011 autorizada e iniciada.
 
 ## FT-011 - Conclusão funcional do downloader
 
@@ -293,11 +295,11 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577`, `.ia.rules/state/TODO.ia.md:1763` e contrato normativo da FT-009
 - escopo: Técnico
 - prioridade: alta
-- status: pendente da FT-010
+- status: em andamento
 - fase_global: 2 de 2 desta evolução da cadeia pública
 - objetivo: concluir `scripts/publications/baixar.py`, o bootstrap multi-runtime, o handoff humano real, o estado local central, a validação transacional e o commit atômico opcional por publicação.
 - dependencias: FT-010 concluída; código parcial da FT-009 auditado; autorização humana explícita do prompt de `2026-08-01` para implementar todas as fases de `baixar.py` até funcionalidade efetiva.
 - nao_escopo: evasão de proteção de terceiro, coleta em massa sem limites, inclusão de runtime no Git, alteração da Norma gerenciada ou implementação da busca da FT-002.
 - contexto_mestre: `.ia.rules/state/contexts/FT-011/master.md`
 - aceite: testes sem rede, bootstrap validado, clone limpo sem estado prévio, runtime ignorado, handoff/cancelamento/retomada comprovados, transação Git isolada e amostra pública legítima quando a origem permitir.
-- proximo_ponto: aguardar conclusão e commit normativo da FT-010.
+- proximo_ponto: concluir bootstrap/runtime/handoff, transação Git, testes e validação pública legítima.

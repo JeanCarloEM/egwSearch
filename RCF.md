@@ -853,6 +853,125 @@ ocorrer após os gates de descoberta, elegibilidade, idempotência, fidelidade,
 contenção e integridade e mediante autorização material própria; a conclusão
 normativa ou da amostra NÃO autoriza download em massa.
 
+### 42.9 Raiz única de estado de runtime
+
+Todo estado mutável não canônico da cadeia de publicações DEVE convergir para [PENDENTE-CODIGO]
+uma raiz local única, configurável e resolvida pela raiz do repositório,
+denominada `runtime_state_root`. Ela DEVE permanecer fora de `src/`, `scripts/`, [PENDENTE-CODIGO]
+`dist/`, artefatos públicos e releases, ser integralmente ignorada pelo Git e
+ser removível sem perda de publicação, configuração, schema ou fixture. [PENDENTE-CODIGO]
+
+São runtime: cache, ledger, checkpoint, sessão, perfil de navegador, cookie,
+storage, autenticação transitória, ambiente de linguagem, lock, PID, socket,
+temporário, parcial, trace, screenshot, dump, log e relatório efêmero. PDF,
+EPUB, Markdown editorial, metadado de proveniência e índice validados são
+canônicos quando pertencem à publicação concluída e NÃO DEVEM ser ocultados por [PENDENTE-CODIGO]
+padrão de ignore amplo. [PENDENTE-CODIGO]
+
+Cada subdiretório DEVE declarar classe, produtor, consumidor, persistência, [PENDENTE-CODIGO]
+isolamento, retenção, limite, expiração, invalidação e limpeza. Estado sensível
+DEVE ser isolado por domínio, perfil, usuário e finalidade, usar permissões [PENDENTE-CODIGO]
+mínimas, nunca integrar log e ser invalidado em expiração, corrupção ou troca
+de identidade. Cache DEVE tolerar ausência e corrupção; temporário e lock DEVEM [PENDENTE-CODIGO]
+ter criação sem colisão e limpeza limitada à raiz validada, sem atingir processo
+ativo ou execução concorrente. [PENDENTE-CODIGO]
+
+Configuração DEVE derivar os paths de runtime da raiz única e admitir override [PENDENTE-CODIGO]
+explícito seguro. Caminho legado PODE ser migrado uma única vez, de forma [PENDENTE-CODIGO]
+idempotente e retomável, somente quando seu conteúdo e proprietário forem
+comprovados; produtores e consumidores DEVEM convergir no mesmo ciclo e o [PENDENTE-CODIGO]
+fallback legado DEVE ser removido após validação. Clone limpo, CI e execução [PENDENTE-CODIGO]
+offline NÃO DEVEM depender de estado preexistente. [PENDENTE-CODIGO]
+
+Validação DEVE inspecionar índice e histórico corrente sem reescrevê-lo, [PENDENTE-CODIGO]
+rejeitar runtime rastreado ou empacotado, comprovar `.gitignore` cirúrgico e
+garantir que limpeza, build, bundle e release não incluam sessão, perfil,
+cache, temporário, lock, trace ou segredo. Remoção de runtime já rastreado DEVE [PENDENTE-CODIGO]
+ocorrer apenas do índice, preservando localmente o que ainda for necessário e
+sem reescrever histórico compartilhado sem autorização própria. [PENDENTE-CODIGO]
+
+### 42.10 Suspensão e handoff humano diante de desafio
+
+Detecção de challenge page, CAPTCHA, intersticial, bloqueio por automação,
+loop de redirecionamento ou estado incompatível DEVE combinar URL, título, [PENDENTE-CODIGO]
+conteúdo esperado, resposta e transições; indisponibilidade isolada NÃO comprova
+desafio. A detecção NÃO DEVE clicar, preencher, recarregar nem tentar resolver [PENDENTE-CODIGO]
+o mecanismo. [PENDENTE-CODIGO]
+
+Ao detectar desafio, a máquina de estados DEVE entrar em [PENDENTE-CODIGO]
+`aguardando_intervencao_humana`, cessar integralmente automação, polling do DOM,
+timers, filas, scripts, cliques, recargas e navegações e impedir atuação
+simultânea do controlador e do operador. O operador DEVE poder cancelar, e [PENDENTE-CODIGO]
+nenhum timeout curto PODE reiniciar a página ou invalidar sua ação. Somente um [PENDENTE-CODIGO]
+monitor externo de baixa frequência, sem interação com a página e com limite
+configurável, PODE observar encerramento/cancelamento da etapa humana. [PENDENTE-CODIGO]
+[PENDENTE-CODIGO]
+
+Em domínio de terceiro, a ordem de preferência é API, autenticação, feed,
+exportação ou integração oficial; na falta, o handoff DEVE usar navegador normal [PENDENTE-CODIGO]
+operado diretamente pelo usuário ou perfil humano autorizado sem automação
+ativa. Janela ainda anexada ao WebDriver NÃO constitui handoff humano completo.
+O controlador DEVE ser encerrado/desanexado antes da intervenção e somente [PENDENTE-CODIGO]
+PODERÁ ser recriado depois que a sessão humana terminar, usando o mesmo perfil
+apenas quando compatibilidade, escopo, consentimento e proteção forem
+comprovados. [PENDENTE-CODIGO]
+
+A retomada DEVE validar objetivamente ausência do desafio, origem, página, [PENDENTE-CODIGO]
+conteúdo esperado, identidade e inexistência de loop. Clique humano isolado não
+comprova liberação. Recusa, expiração, novo desafio ou estado incompatível DEVE [PENDENTE-CODIGO]
+manter a unidade suspensa ou encerrá-la como `review_required`, com progresso
+preservado e tentativas finitas. [PENDENTE-CODIGO]
+
+Falso positivo NÃO autoriza stealth, spoofing, proxy, rotação de identidade,
+mascaramento de WebDriver, solução automática de CAPTCHA, cópia incompatível de
+cookie/token/storage ou qualquer bypass. Exceção em domínio próprio somente
+PODE usar mecanismo oficial, mínimo, auditável, revogável e restrito, como [PENDENTE-CODIGO]
+identidade de serviço ou ambiente de automação dedicado. [PENDENTE-CODIGO]
+
+Log DEVE registrar somente transições, origem sanitizada, tipo provável, [PENDENTE-CODIGO]
+início/fim/método do handoff, validação e motivo final; senha, resposta de
+CAPTCHA, cookie, token, cabeçalho de autenticação, storage e dado pessoal
+reutilizável são proibidos. Testes DEVEM usar fixture, mock ou domínio próprio e [PENDENTE-CODIGO]
+cobrir suspensão total, cancelamento, aceitação, recusa, expiração,
+reapresentação, isolamento e ausência de segredo. [PENDENTE-CODIGO]
+
+### 42.11 Unidade transacional e commit por publicação
+
+Uma publicação somente PODE atingir `completa_e_pareada` quando todos os [PENDENTE-CODIGO]
+ativos obrigatórios terminaram, não há parcial, formato/tamanho/hash são [PENDENTE-CODIGO]
+válidos, identidade e metadado são inequívocos, assets e referências existem,
+duplicidades/colisões foram tratadas e índices locais/globais refletem uma única
+entrada final. HTTP de sucesso, existência ou stream encerrado isoladamente não
+comprovam conclusão. Ambiguidade material exige `review_required`.
+[PENDENTE-CODIGO]
+
+Download, promoção, metadado, derivados, índice e eventual commit DEVEM formar [PENDENTE-CODIGO]
+uma transação lógica por publicação. Falha DEVE remover ou isolar preparatórios, [PENDENTE-CODIGO]
+restaurar índice anterior, manter runtime retomável e impedir commit. Reexecução
+inalterada DEVE resultar em `skipped` sem commit, timestamp ou derivado [PENDENTE-CODIGO]
+divergente. [PENDENTE-CODIGO]
+
+Efeito Git DEVE ser opt-in explícito por execução e somente PODE ocorrer em [PENDENTE-CODIGO]
+`dev`, em repositório Git validado, sem operação Git concorrente e com identidade
+configurada. A allowlist DEVE ser calculada por identidade da publicação e [PENDENTE-CODIGO]
+derivados globais inevitáveis; `git add .`, `git add -A`, glob aberto ou
+inclusão de runtime são proibidos. Alteração alheia permanece fora do índice; [PENDENTE-CODIGO]
+conflito no mesmo arquivo bloqueia. [PENDENTE-CODIGO]
+
+Antes do commit, o coletor DEVE validar novamente os blobs staged, schemas, [PENDENTE-CODIGO]
+hashes, referências, índice, ausência de segredo/runtime e conteúdo exato da
+allowlist. O commit DEVE conter exatamente uma publicação completa e seus [PENDENTE-CODIGO]
+derivados inevitáveis, possuir mensagem com identificador estável e ter seu
+hash confirmado no ledger. Commit vazio, parcial, agrupado, fragmentado ou
+recriado após retomada é proibido. [PENDENTE-CODIGO]
+
+Downloads distintos PODEM ser concorrentes, mas promoção, índice, staging e [PENDENTE-CODIGO]
+commit DEVEM ser serializados por lock de runtime. Push é operação separada, [PENDENTE-CODIGO]
+opt-in, posterior à validação de branch, upstream e sincronização; falha de push
+preserva o commit local e nunca o recria. Testes DEVEM cobrir worktree alheia, [PENDENTE-CODIGO]
+conflito, completude, parcial, índice quebrado, falhas antes/depois do staging,
+concorrência, retomada, commit exato e ausência de runtime. [PENDENTE-CODIGO]
+
 ## 43. Indice global
 
 Um indice JSON global DEVE representar todas as publicacoes e ser gerado deterministicamente por uma unica fonte ou etapa canônica.

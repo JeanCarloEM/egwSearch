@@ -1,7 +1,7 @@
 # FT-010/03 - Transação por publicação
 
 - ordem: 3 de 3.
-- estado: pendente.
+- estado: concluído.
 - objetivo: normatizar `COMPLETA_E_PAREADA`, arquivos impactados, índices,
   staging seletivo, commit, retomada, concorrência e push separado.
 - restrições: sem `git add .`/`-A`, sem commit parcial, vazio, agrupado ou com
