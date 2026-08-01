@@ -136,3 +136,14 @@ capa oficialmente declarada para a obra.
   somente será ignorada se a unidade inteira — PDF/EPUB, capa, metadado,
   derivados e fontes reversíveis — for íntegra e verificável, sem qualquer
   acesso HTTP específico da obra; `--revalidate` força o fluxo remoto.
+- implementação material: `90dda8a168bfe30b16fdb301abdb529d4d52b5eb`;
+  o fallback aceita apenas `application/json` ou `application/problem+json`
+  com `detail="Cover not found"`, enquanto HTML e demais falhas continuam
+  bloqueados.
+- validação pública final: `14623` concluída com capa técnica inspecionada,
+  12 segmentos, EPUB válido, proveniência ABNT anterior ao sumário, 12 fontes
+  Markdown internas e zero `.md` externo; repetição registrou
+  `PUBLICATION_LOCAL_VALID` e `ITEM_SKIPPED`, sem acesso específico da obra.
+- suíte final: 58 testes Python, três testes Node, `py_compile` e
+  `publications:check` aprovados; arquivos gerados permanecem não rastreados.
+- estado: concluída e pronta para integração de `dev` em `main` e push.

@@ -145,3 +145,12 @@ o enriquecimento individual: somente uma publicação inteira validada pode ser
 dispensada, abrangendo PDF, EPUB, capa, metadado, derivados e fontes reversíveis.
 Uma unidade incompleta ou inválida continua no fluxo remoto, e `--revalidate`
 permanece como opt-in humano para conferência condicional.
+
+## Evidência de conclusão de 2026-08-01
+
+A execução controlada de `14623` terminou `completed`, com 12 segmentos, um
+EPUB derivado e `cover.png` técnico originado exclusivamente do `404` oficial
+estruturado. A validação do contêiner confirmou a ordem de spine `capa ->
+proveniência -> sumário -> 12 seções`, URL oficial na nota não editorial, 12
+Markdown internos e zero `.md` externo. A repetição terminou `skipped`, com
+`downloaded=0`, `extracted=0`, `converted=0` e sem navegação específica da obra.

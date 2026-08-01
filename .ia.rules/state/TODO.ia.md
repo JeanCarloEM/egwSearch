@@ -1931,7 +1931,7 @@
 
   Registrar unidade transacional, critérios de completude e pareamento, arquivos por publicação, índices alterados, staging seletivo, convenção de commit, concorrência, rollback e retomada, testes, commits de validação, resultado de push e limitações remanescentes.
 
-- [ ] Corrigir a completude real do downloader e dos derivados editoriais
+- [x] Corrigir a completude real do downloader e dos derivados editoriais
 
   A FT-012 DEVE corrigir a evidência funcional superveniente: o coletor DEVE
   enumerar todas as obras do catálogo; consultar a página individual de cada
@@ -1986,3 +1986,9 @@
   completos e íntegros, DEVE registrar `skipped` sem abrir página, texto, capa
   ou ativo remoto; unidade incompleta, inválida ou executada com `--revalidate`
   continua no fluxo remoto normal.
+
+  Concluído no commit material `90dda8a`: a obra pública `14623` produziu capa
+  técnica não editorial, EPUB válido com 12 fontes Markdown reversíveis, nota
+  ABNT antes do sumário e nenhum `.md` externo. A repetição consultou somente o
+  catálogo, registrou `PUBLICATION_LOCAL_VALID`/`ITEM_SKIPPED` e não abriu a
+  página, texto, capa, EPUB ou PDF da obra.

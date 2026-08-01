@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-01T21:10:00-03:00`.
+Atualizado_em: `2026-08-01T20:57:32-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-012 reaberta; fallback técnico e preflight integral autorizados em implementação.
+Escopo_atual: FT-012 concluída; integração de dev em main e push pendentes.
 Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
 Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -315,7 +315,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-012/source.md`
 - escopo: Técnico
 - prioridade: alta
-- status: em implementação autorizada
+- status: concluída
 - objetivo: enumerar integralmente cada catálogo, descobrir todos os PDF/EPUB
   na página de cada obra e gerar derivado somente a partir da cadeia editorial
   real completa quando não houver ativo nativo.
@@ -336,10 +336,8 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   `agent:verify` conserva o diagnóstico preexistente `TSCONFIG_AUSENTE`.
 - commits: `ca12610`, `36fa333`, `2ed0d43`, `279e2ef`, `297d5bc`, `b933ecd` e
   `486883c`.
-- pendencias: implementar e validar capa técnica somente para o `404` oficial
-  estruturado; dispensar toda requisição específica de obra local integralmente
-  válida após a listagem; publicação real permanece não rastreada e runtime
-  ignorado por determinação humana.
+- pendencias: integrar `dev` em `main` e publicar; publicações reais permanecem
+  não rastreadas e runtime ignorado por determinação humana.
 - decisao: a conversão Markdown gera somente EPUB; PDF é opcional e futuro.
 - integracao: `dev` incorporada em `main` pelo merge `186bc2b`; referências
   remotas publicadas e convergentes.
@@ -349,5 +347,11 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - refinamento_epub: commit material `f4b4563`; proveniência ABNT antecede o
   sumário, e conteúdo usa cabeçalho contextual e rodapé numerado fora do corpo
   XHTML, com cabeçalho suprimido na primeira página de cada unidade.
+- refinamento_final: commit material `90dda8a`; ausência oficial estruturada
+  gera capa técnica determinística e não editorial, e publicação local inteira
+  validada após o catálogo dispensa toda requisição específica da obra.
+- validacao_final: obra `14623` concluída com 12 segmentos e EPUB reversível;
+  repetição `skipped` sem página/texto/capa/ativos; 58 testes Python, três Node,
+  compilação e bootstrap aprovados.
 - proximo_ponto: após confirmação humana, manter bloqueio ou evoluir o RCF para
   tratar o `404 Cover not found` como ausência comprovada sem inventar capa.
