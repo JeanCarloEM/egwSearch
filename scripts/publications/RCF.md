@@ -149,9 +149,9 @@ local inválido/ausente. [e59c122]
 
 Dependencias de Selenium, Requests e tqdm DEVEM ser carregadas apenas pela execucao da CLI. Ausencia de dependencia DEVE produzir diagnostico e codigo `3`, sem impedir importacao, teste do contrato ou migracao. [3301a97]
 
-Os requisitos fixados em `requirements.txt` DEVEM ser preparados pelo bootstrap multi-runtime do repositório em ambiente Python local segregado, antes da execução suportada da CLI. [PENDENTE-CODIGO]
+Os requisitos fixados em `requirements.txt` DEVEM ser preparados pelo bootstrap multi-runtime do repositório em ambiente Python local segregado, antes da execução suportada da CLI. [d9e37be]
 
-O bootstrap DEVE ser idempotente, não executar a CLI, não iniciar navegador e não realizar coleta; ausência ou incompatibilidade do interpretador/instalador DEVE produzir diagnóstico acionável. [PENDENTE-CODIGO]
+O bootstrap DEVE ser idempotente, não executar a CLI, não iniciar navegador e não realizar coleta; ausência ou incompatibilidade do interpretador/instalador DEVE produzir diagnóstico acionável. [d9e37be]
 
 ## 7. Cliente HTTP responsável
 
@@ -199,77 +199,77 @@ timeout curto, baixo consumo e recuperação finita. [PENDENTE-CODIGO]
 
 ### 7.1 Estado local central
 
-`config/publications.json` DEVE declarar uma única `runtime_state_root`; ambiente [PENDENTE-CODIGO]
-Python, ledger, cache, perfil, sessão, temporários, locks, traces e logs DEVEM [PENDENTE-CODIGO]
+`config/publications.json` DEVE declarar uma única `runtime_state_root`; ambiente [d9e37be]
+Python, ledger, cache, perfil, sessão, temporários, locks, traces e logs DEVEM [d9e37be]
 derivar dela por funções centrais, nunca por paths hardcoded dispersos. [PENDENTE-CODIGO]
 A raiz
-DEVE ser criada sob demanda, ignorada integralmente e excluída de build, Pages, [PENDENTE-CODIGO]
+DEVE ser criada sob demanda, ignorada integralmente e excluída de build, Pages, [d9e37be]
 pacote e release. [PENDENTE-CODIGO]
 
-O estado local DEVE ser classificado em persistente, temporário ou sensível e [PENDENTE-CODIGO]
+O estado local DEVE ser classificado em persistente, temporário ou sensível e [d9e37be]
 possuir isolamento, retenção, limite, invalidação e limpeza próprios. [PENDENTE-CODIGO]
 Perfil e
-sessão DEVEM ser isolados por provedor/domínio e finalidade; parcial DEVE ficar [PENDENTE-CODIGO]
+sessão DEVEM ser isolados por provedor/domínio e finalidade; parcial DEVE ficar [d9e37be]
 em subdiretório de runtime até promoção atômica. [PENDENTE-CODIGO]
 PDF, EPUB, Markdown, metadado e
-índice validados permanecem canônicos e não podem ser ignorados como runtime. [PENDENTE-CODIGO]
+índice validados permanecem canônicos e não podem ser ignorados como runtime. [d9e37be]
 [PENDENTE-CODIGO]
 
-Migração do perfil legado PODE mover somente árvore local comprovada, com [PENDENTE-CODIGO]
+Migração do perfil legado PODE mover somente árvore local comprovada, com [d9e37be]
 origem/destino validados, ausência de processo ativo, operação idempotente e
 fallback removido após sucesso. [PENDENTE-CODIGO]
-Clone sem a raiz DEVE recriá-la sem perda [PENDENTE-CODIGO]
-funcional; corrupção de cache/perfil DEVE causar reset controlado ou diagnóstico, [PENDENTE-CODIGO]
+Clone sem a raiz DEVE recriá-la sem perda [d9e37be]
+funcional; corrupção de cache/perfil DEVE causar reset controlado ou diagnóstico, [d9e37be]
 nunca sucesso falso. [PENDENTE-CODIGO]
 
 ### 7.2 Handoff humano desacoplado
 
-O estado do navegador DEVE seguir `automatizado`, [PENDENTE-CODIGO]
+O estado do navegador DEVE seguir `automatizado`, [d9e37be]
 `aguardando_intervencao_humana`, `validando_retomada`, `retomado`, `cancelado`
 ou `bloqueado`. [PENDENTE-CODIGO]
-Transição para intervenção DEVE encerrar o WebDriver e todos os [PENDENTE-CODIGO]
+Transição para intervenção DEVE encerrar o WebDriver e todos os [d9e37be]
 efeitos automáticos antes de abrir ou orientar o uso de navegador normal no
 perfil autorizado. [PENDENTE-CODIGO]
-Automação e humano não podem atuar simultaneamente. [PENDENTE-CODIGO]
+Automação e humano não podem atuar simultaneamente. [d9e37be]
 [PENDENTE-CODIGO]
 
-O handoff DEVE usar processo normal sem flags de WebDriver e aguardar seu [PENDENTE-CODIGO]
+O handoff DEVE usar processo normal sem flags de WebDriver e aguardar seu [d9e37be]
 encerramento ou cancelamento sem inspecionar/interagir com o DOM. [PENDENTE-CODIGO]
 Reinício do
-controlador no mesmo perfil somente PODE ocorrer depois do encerramento humano; [PENDENTE-CODIGO]
+controlador no mesmo perfil somente PODE ocorrer depois do encerramento humano; [d9e37be]
 a retomada exige catálogo esperado, origem correta e ausência de desafio. [PENDENTE-CODIGO]
 Perfil
 incompatível, bloqueio persistente, expiração ou reapresentação encerra a
 coleção como revisão, sem bypass ou retry ilimitado. [PENDENTE-CODIGO]
 
-CLI DEVE permitir cancelar a espera, limitar seu tempo quando configurado, [PENDENTE-CODIGO]
+CLI DEVE permitir cancelar a espera, limitar seu tempo quando configurado, [d9e37be]
 selecionar binário normal explicitamente e desabilitar handoff. [PENDENTE-CODIGO]
-Log DEVE usar [PENDENTE-CODIGO]
+Log DEVE usar [d9e37be]
 eventos sanitizados e nunca registrar cookie, token, storage ou resposta do
 desafio. [PENDENTE-CODIGO]
 
 ### 7.3 Publicação completa e efeito Git
 
-O coletor DEVE centralizar uma função que calcule e valide a unidade [PENDENTE-CODIGO]
+O coletor DEVE centralizar uma função que calcule e valide a unidade [d9e37be]
 `completa_e_pareada`: ativos, metadado, segmentos, derivados, referências e
 entradas de índice impactadas. [PENDENTE-CODIGO]
-O resultado DEVE expor allowlist relativa à raiz, [PENDENTE-CODIGO]
+O resultado DEVE expor allowlist relativa à raiz, [d9e37be]
 hashes e evidência de completude; item ambíguo ou incompleto não é elegível a
 Git. [PENDENTE-CODIGO]
 
-Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [PENDENTE-CODIGO]
+Commit automático DEVE ser desabilitado por padrão e exigir opção explícita da [d9e37be]
 CLI. [PENDENTE-CODIGO]
-Quando habilitado, a finalização DEVE adquirir lock global no runtime, [PENDENTE-CODIGO]
+Quando habilitado, a finalização DEVE adquirir lock global no runtime, [d9e37be]
 validar `dev`, worktree/índice, excluir estado não canônico, adicionar somente a
 allowlist com `git add -- <paths>`, validar o diff staged e criar exatamente um
 commit por publicação. [PENDENTE-CODIGO]
 Alteração staged preexistente ou conflito em path da
 unidade bloqueia sem modificar o índice. [PENDENTE-CODIGO]
 
-Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [PENDENTE-CODIGO]
+Falha entre promoção e commit DEVE restaurar índice/metadata da transação ou [d9e37be]
 preservar preparação no runtime para retomada. [PENDENTE-CODIGO]
-Commit confirmado DEVE ser [PENDENTE-CODIGO]
-registrado no ledger e não pode ser repetido. [PENDENTE-CODIGO]
+Commit confirmado DEVE ser [d9e37be]
+registrado no ledger e não pode ser repetido. [d9e37be]
 Push, se futuramente habilitado,
 é fase separada e nunca requisito implícito do download. [PENDENTE-CODIGO]
 
