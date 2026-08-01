@@ -983,12 +983,30 @@ somente o DOM final depois da rolagem NÃO comprova completude. [be82602]
 A execução DEVE registrar contagem observada, [be82602]
 identidades únicas e critério objetivo de término. [be82602]
 
-Cada publicação DEVE ser enriquecida pela sua página individual. [be82602]
+Cada publicação ainda ausente, incompleta, inválida ou sujeita a revalidação
+explícita DEVE ser enriquecida pela sua página individual. [PENDENTE-CODIGO]
 Todos os links habilitados de PDF e EPUB ali expostos DEVEM integrar o conjunto [be82602]
 obrigatório; link ausente no cartão, botão desabilitado ou `href="#"` NÃO [be82602]
 constitui ativo. [be82602]
 Falha em descobrir, baixar ou validar qualquer ativo habilitado impede
 `completed`. [be82602]
+
+Imediatamente depois de enumerar e normalizar o catálogo, mas antes de abrir a
+página individual, percorrer leitura, consultar capa ou acessar ativo, o coletor
+DEVE confrontar o identificador remoto com as publicações locais `completed`.
+[PENDENTE-CODIGO]
+A dispensa de rede específica da obra somente É VÁLIDA quando identidade,
+metadado, conjunto de fontes e derivados, tamanhos, assinaturas, hashes,
+segmentos reversíveis, EPUB e capa aplicável forem integralmente verificados;
+qualquer ausência, divergência, ambiguidade ou arquivo não canônico exige o
+fluxo remoto normal. [PENDENTE-CODIGO]
+Essa verificação DEVE abranger a publicação inteira, inclusive todos os PDF e
+EPUB registrados, `cover.png`, metadados e derivados, e registrar `skipped` sem
+alterar seus bytes. [PENDENTE-CODIGO]
+O catálogo da coleção PODE ser acessado uma vez para conhecer o conjunto
+vigente, mas uma publicação local válida NÃO DEVE provocar requisição de sua
+página, texto, capa, PDF ou EPUB, salvo opção humana explícita de revalidação.
+[PENDENTE-CODIGO]
 
 Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [be82602]
 URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
@@ -1021,7 +1039,15 @@ sem autorizar coleta em massa. [be82602]
 
 Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da mesma obra, inclusive `og:image`, DEVE ser adquirida como fonte editorial e NÃO PODE ser substituída por imagem inferida por título, semelhança ou posição. [297d5bc]
 A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [297d5bc]
-Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [297d5bc]
+Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`, exceto quando o endpoint oficial responder conclusivamente `404` em documento estruturado com `detail="Cover not found"`. [PENDENTE-CODIGO]
+Somente nessa ausência oficial comprovada o coletor DEVE gerar `cover.png`
+técnico determinístico, identificá-lo visualmente como capa técnica não
+editorial, usar apenas identidade e título comprovados da própria obra e
+registrar URL, status, detalhe, instante de acesso e método da derivação; timeout,
+contenção, `403`, `5xx`, HTML, resposta vazia ou outro `404` NÃO autorizam o
+fallback. [PENDENTE-CODIGO]
+A capa técnica NÃO PODE reutilizar imagem de outra edição, inferir arte por
+semelhança nem integrar o texto editorial/indexável. [PENDENTE-CODIGO]
 A página de capa DEVE ser o primeiro e exclusivo item visual do EPUB, sem margens, faixas ou texto, preenchendo toda a viewport de borda a borda; diferença de proporção DEVE preservar a imagem por escala proporcional com recorte central, nunca por deformação. [297d5bc]
 
 O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [297d5bc]

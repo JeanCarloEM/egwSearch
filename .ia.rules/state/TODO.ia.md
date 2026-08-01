@@ -1976,7 +1976,13 @@
   seção ou unidade equivalente NÃO DEVE exibir cabeçalho.
 
   Evidência superveniente: a navegação da obra `14623` foi corrigida e
-  concluiu 12 unidades, mas o `og:image` oficial responde conclusivamente
-  `404 Cover not found`. É necessária decisão humana sobre reconhecer esse
-  metadado quebrado como ausência comprovada de capa ou manter a obra
-  bloqueada.
+  concluiu 12 unidades; o `og:image` oficial responde conclusivamente
+  `404 Cover not found`. A decisão humana autorizou capa técnica determinística
+  e explicitamente não editorial somente nessa ausência estruturada.
+
+  Depois de obter e normalizar a lista da coleção, o coletor DEVE validar a
+  publicação local inteira antes de qualquer acesso específico da obra. Quando
+  PDF/EPUB, capa aplicável, metadado, derivados e fontes reversíveis estiverem
+  completos e íntegros, DEVE registrar `skipped` sem abrir página, texto, capa
+  ou ativo remoto; unidade incompleta, inválida ou executada com `--revalidate`
+  continua no fluxo remoto normal.

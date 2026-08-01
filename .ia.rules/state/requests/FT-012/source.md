@@ -126,3 +126,22 @@ oferecem imagem válida. O RCF vigente bloqueia `completed` nessa condição. A
 decisão entre manter o bloqueio ou reconhecer metadado remoto quebrado como
 ausência comprovada de capa exige confirmação humana antes de evolução
 comportamental.
+
+## Decisão e ajuste de 2026-08-01 — ausência oficial e preflight integral
+
+> sim, está funcional. O script baixar deve evitar disperdiçar requisições http
+> com publicações que já existam, ou seja, se ele conseguiu uma lista de
+> publicações de determinado autor, fez a normalização, e a publicação já existe
+> localmente (íntegra, verificável e válida), não há necessidade de gastar
+> recursos e, muito menos acessar o servidor e potencialmente acionar mecanismo
+> de prevenção de ataques. Corrija este ponto, faça o merge com main/master e
+> push.
+>
+> isso se aplica, não apenas a logo mas a própria publicação epub/pdf.
+
+O “sim” autoriza a evolução solicitada para a ausência oficial comprovada de
+capa da obra `14623`. O preflight passa a ocorrer entre a listagem normalizada e
+o enriquecimento individual: somente uma publicação inteira validada pode ser
+dispensada, abrangendo PDF, EPUB, capa, metadado, derivados e fontes reversíveis.
+Uma unidade incompleta ou inválida continua no fluxo remoto, e `--revalidate`
+permanece como opt-in humano para conferência condicional.

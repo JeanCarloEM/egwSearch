@@ -5,8 +5,8 @@
 - FT: `FT-012`.
 - tipo: `implementacao_codigo` com correção normativa causal.
 - fonte: `.ia.rules/state/requests/FT-012/source.md`.
-- estado: reaberta e aguardando decisão humana sobre capa oficialmente
-  declarada, mas comprovadamente inexistente.
+- estado: reaberta em implementação autorizada do fallback técnico e do
+  preflight integral anterior ao enriquecimento remoto.
 - autorização: solicitação humana explícita para corrigir e concluir a
   funcionalidade real de `baixar.py`.
 
@@ -129,6 +129,10 @@ capa oficialmente declarada para a obra.
 - correção `486883c` reconhece como equivalentes a rota da página e a rota de
   seu primeiro bloco editorial na validação anterior/próximo; a obra `14623`
   concluiu 12 unidades na amostra pública.
-- bloqueio atual: o `og:image` da obra `14623` aponta para endpoint oficial que
-  responde `404 Cover not found`; alterar o bloqueio contratual exige
-  confirmação humana explícita.
+- decisão humana: o `404 Cover not found` estruturado autoriza exclusivamente
+  uma capa técnica determinística, explicitamente não editorial e sem imagem de
+  outra edição; demais falhas de capa continuam bloqueantes.
+- ajuste final: depois da listagem normalizada, publicação local `completed`
+  somente será ignorada se a unidade inteira — PDF/EPUB, capa, metadado,
+  derivados e fontes reversíveis — for íntegra e verificável, sem qualquer
+  acesso HTTP específico da obra; `--revalidate` força o fluxo remoto.
