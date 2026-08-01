@@ -972,6 +972,50 @@ preserva o commit local e nunca o recria. Testes DEVEM cobrir worktree alheia, [
 conflito, completude, parcial, índice quebrado, falhas antes/depois do staging,
 concorrência, retomada, commit exato e ausência de runtime. [PENDENTE-CODIGO]
 
+### 42.12 Completude observável da descoberta e da derivação
+
+O catálogo DEVE ser enumerado até que todos os links únicos de publicação [PENDENTE-CODIGO]
+expostos pela coleção tenham sido coletados. [PENDENTE-CODIGO]
+Grade virtualizada ou paginação DEVE ser colhida incrementalmente; inspecionar [PENDENTE-CODIGO]
+somente o DOM final depois da rolagem NÃO comprova completude. [PENDENTE-CODIGO]
+A execução DEVE registrar contagem observada, [PENDENTE-CODIGO]
+identidades únicas e critério objetivo de término. [PENDENTE-CODIGO]
+
+Cada publicação DEVE ser enriquecida pela sua página individual. [PENDENTE-CODIGO]
+Todos os links habilitados de PDF e EPUB ali expostos DEVEM integrar o conjunto [PENDENTE-CODIGO]
+obrigatório; link ausente no cartão, botão desabilitado ou `href="#"` NÃO [PENDENTE-CODIGO]
+constitui ativo. [PENDENTE-CODIGO]
+Falha em descobrir, baixar ou validar qualquer ativo habilitado impede
+`completed`. [PENDENTE-CODIGO]
+
+Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [PENDENTE-CODIGO]
+URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
+término declarado. [PENDENTE-CODIGO]
+A cadeia DEVE ser acíclica, permanecer na mesma obra, possuir [PENDENTE-CODIGO]
+anterior/próximo coerentes e preservar todos os blocos editoriais identificados
+no contêiner de leitura, inclusive headings, parágrafos, listas, tabelas, notas,
+ênfases, links e quebras semanticamente materiais. [PENDENTE-CODIGO]
+
+O hash e o estado de cada unidade DEVEM derivar do conteúdo editorial real [PENDENTE-CODIGO]
+normalizado sem controles da interface. [PENDENTE-CODIGO]
+Cadeia interrompida, vazia, repetida, divergente do sumário ou cuja obra mude
+no percurso DEVE resultar em [PENDENTE-CODIGO]
+`review_required`, nunca em EPUB parcial. [PENDENTE-CODIGO]
+
+Fixture e mock DEVEM usar raiz temporária explícita ou raiz de saída de teste [PENDENTE-CODIGO]
+segregada. [PENDENTE-CODIGO]
+A CLI NÃO DEVE materializar fixture em `src/publications`, mesmo quando [PENDENTE-CODIGO]
+`source_root` canônico estiver configurado. [PENDENTE-CODIGO]
+Artefato sintético detectado na raiz canônica DEVE ser isolado como [PENDENTE-CODIGO]
+runtime/quarentena, sem publicação ou
+commit. [PENDENTE-CODIGO]
+
+Aceite DEVE comparar: quantidade de obras no catálogo e identidades coletadas; [PENDENTE-CODIGO]
+ativos habilitados e arquivos incorporados; cadeia editorial observada e
+segmentos persistidos; e conteúdo real renderizado do EPUB derivado. [PENDENTE-CODIGO]
+Amostra pública controlada DEVE abranger uma obra com ativos nativos e uma sem eles, [PENDENTE-CODIGO]
+sem autorizar coleta em massa. [PENDENTE-CODIGO]
+
 ## 43. Indice global
 
 Um indice JSON global DEVE representar todas as publicacoes e ser gerado deterministicamente por uma unica fonte ou etapa canônica.

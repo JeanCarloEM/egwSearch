@@ -124,6 +124,18 @@ preferida ao DOM. Parsing renderizado somente PODE ser fallback quando não [330
 houver contrato direto adequado, e DEVE usar fixture versionada, seletores [3301a97]
 semânticos e falha fechada diante de alteração.
 
+Quando o portal oferecer uma interface pública leve com o mesmo conteúdo
+editorial, ela DEVE ser preferida à aplicação completa se reduzir desafio, [PENDENTE-CODIGO]
+virtualização e dependência de JavaScript sem reduzir cobertura. [PENDENTE-CODIGO]
+A enumeração DEVE coletar incrementalmente todos os `href` únicos de obra; [PENDENTE-CODIGO]
+rolar e analisar somente o DOM final é insuficiente para grade virtualizada. [PENDENTE-CODIGO]
+
+O cartão do catálogo fornece somente identidade preliminar. A página individual
+da obra DEVE ser consultada antes da aquisição e é a autoridade para autor, [PENDENTE-CODIGO]
+título, código, URL inicial de leitura e todos os links PDF/EPUB habilitados. [PENDENTE-CODIGO]
+Cada ativo habilitado é obrigatório; `disabled`, URL vazia ou `#` significa [PENDENTE-CODIGO]
+indisponível e não falha de download.
+
 Antes de solicitar catálogo novamente para unidade conhecida ou qualquer
 ativo, o preflight DEVE consultar ledger/índice, identidade remota, metadado, [3301a97]
 path, integridade, tamanho, ETag, `Last-Modified` e hash disponível em níveis.
@@ -279,6 +291,13 @@ Texto on-line somente PODE ser adquirido se PDF e EPUB nativos estiverem [3301a9
 ausentes e se identidade, ordem, primeira/última unidade e completude forem
 determináveis sem contorno.
 
+A extração DEVE iniciar na URL `Read Online` da página individual e seguir [PENDENTE-CODIGO]
+somente links editoriais `rel=next` da mesma obra até ausência ou marca de
+término. [PENDENTE-CODIGO]
+Cada transição DEVE validar URL, identificador da obra, ausência de [PENDENTE-CODIGO]
+ciclo, coerência do `rel=prev` quando aplicável e presença do contêiner
+editorial `#r-pl` ou contrato público equivalente. [PENDENTE-CODIGO]
+
 Extrator DEVE preservar título, subtítulo, autoria, prefácio, introdução, [3301a97]
 capítulos, seções, parágrafos, notas, citações, listas, tabelas textuais,
 epígrafes e referências. DEVE excluir navegação, menus, cabeçalhos/rodapés da [3301a97]
@@ -297,6 +316,18 @@ passar validação técnica e ser marcado `local-conversion`.
 O pipeline `fonte estruturada -> Markdown -> EPUB` NÃO DEVE recolher texto já [3301a97]
 completo. Sanitização NÃO DEVE corrigir, resumir, modernizar, traduzir ou [3301a97]
 reescrever conteúdo; Unicode e estrutura semântica DEVEM ser preservados. [3301a97]
+
+No contêiner editorial, elementos `h1` a `h6`, parágrafos, listas, tabelas,
+blockquote, imagens editoriais, notas, ênfase, links e quebras materiais DEVEM [PENDENTE-CODIGO]
+ser preservados em ordem. [PENDENTE-CODIGO]
+Marcadores de referência e controles da aplicação DEVEM ser separados do texto, [PENDENTE-CODIGO]
+mas seu identificador editorial DEVE permanecer no metadado do bloco. [PENDENTE-CODIGO]
+Texto vazio, placeholder, fixture ou corpo sem blocos
+editoriais válidos DEVE impedir derivação. [PENDENTE-CODIGO]
+
+Fixture executada pela CLI DEVE exigir `--output-root` explícito fora da raiz [PENDENTE-CODIGO]
+canônica ou usar automaticamente subdiretório temporário da raiz de runtime; [PENDENTE-CODIGO]
+ela nunca PODE gravar em `src/publications`. [PENDENTE-CODIGO]
 
 Derivado local NÃO DEVE integrar `formative_data.urls` ou [3301a97]
 `formative_data.global_hashes` como se fosse original. Seu hash, gerador e
@@ -325,6 +356,12 @@ O dry-run integral DEVE contabilizar todo arquivo esperado, rejeitar orfao, slug
 Fixture/mock DEVE preceder amostra pública mínima. A amostra DEVE limitar [3301a97]
 coleção, autor/publicação e ativos; desafio ou `403` encerra sem evasão. Coleta
 ampliada exige todos os gates e autorização material própria.
+
+O gate de completude DEVE incluir catálogo com múltiplas obras, ativos presentes [PENDENTE-CODIGO]
+somente na página individual, múltiplos formatos obrigatórios, botão [PENDENTE-CODIGO]
+desabilitado, cadeia textual multiunidade, ciclo, quebra de obra, ausência de
+contêiner, preservação semântica, isolamento de fixture e comparação do texto
+real no EPUB. [PENDENTE-CODIGO]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação
 pertence à FT-006 e exige nova autorização humana explícita após a conclusão
