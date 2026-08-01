@@ -35,9 +35,8 @@ O acronimo do titulo DEVE derivar apenas de suas palavras normalizadas: titulo d
 
 ## 2. Paths e colisoes
 
-A raiz local é `src/publications/`; cada grupo DEVE ocupar
-`<author-key>/<language-path>/[<category>/]<type>/<slug-titulo>/`; `category` DEVE ser código curto explícito em PT-BR e URI-safe, aplicável também à coleção inglesa, e o segmento DEVE ser omitido somente quando igual a `author-key`. [PENDENTE-CODIGO]
-O rótulo remoto original e o código da categoria DEVEM integrar metadado e identidade estável; ausência, categoria arbitrária ou inferência por título/autor DEVEM bloquear aquisição. [PENDENTE-CODIGO]
+A raiz local é `src/publications/`; cada grupo DEVE ocupar `<author-key>/<language-path>/[<category>/]<type>/<slug-titulo>/`; `category` DEVE ser código curto explícito em PT-BR e URI-safe, aplicável também à coleção inglesa, e o segmento DEVE ser omitido somente quando igual a `author-key`. [3c94152]
+O rótulo remoto original e o código da categoria DEVEM integrar metadado e identidade estável; ausência, categoria arbitrária ou inferência por título/autor DEVEM bloquear aquisição. [3c94152]
 Para Ellen G. White,
 `author-key` permanece `egw`; autores pioneiros NÃO DEVEM ser gravados sob [3301a97]
 `egw`. `pt-BR` projeta `pt-br` e `en` projeta `en` no path. O legado `en-us`
@@ -335,18 +334,18 @@ Derivado local NÃO DEVE integrar `formative_data.urls` ou [3301a97]
 `formative_data.global_hashes` como se fosse original. Seu hash, gerador e
 proveniência DEVEM residir no envelope global e no metadado v3. [3301a97]
 
-Quando a ficha pública da obra textual declarar capa por `og:image`, relação equivalente ou endpoint oficial do mesmo identificador remoto, essa URL DEVE ser preservada e adquirida de host allowlisted como fonte obrigatória. [PENDENTE-CODIGO]
-A imagem DEVE ser limitada, decodificada e normalizada deterministicamente para `cover.png`, com no máximo 800 px por eixo, proporção preservada, sem ampliação e sem metadados dispensáveis; escrita e promoção DEVEM ser atômicas. [PENDENTE-CODIGO]
-O EPUB derivado DEVE incluir a imagem no manifesto com propriedade `cover-image`, página de capa no início do spine e bytes iguais ao `cover.png`; um gerador PDF futuro DEVE usar o mesmo arquivo como capa antes do texto, sem autorizar PDF rasterizado como falso equivalente editorial. [PENDENTE-CODIGO]
-A página `cover.xhtml` DEVE ser o primeiro item do spine e conter exclusivamente a capa, com viewport e página sem margens e preenchimento integral de borda a borda; proporções divergentes DEVEM usar escala proporcional `slice` e recorte central, sem faixas ou deformação. [PENDENTE-CODIGO]
-Metadado v3 DEVE registrar separadamente a fonte remota e o derivado normalizado, com URL, método, path, tamanho e hashes verificáveis. [PENDENTE-CODIGO]
-Reexecução sem mudança DEVE validar e reutilizar capa e EPUB; `--revalidate` DEVE readquirir ou revalidar a capa antes de concluir. [PENDENTE-CODIGO]
-O EPUB textual DEVE manter documentos XHTML semânticos no spine e armazenar fora dele os bytes Markdown intermediários, acompanhados de manifesto versionado com nome, ordem e SHA-256. [PENDENTE-CODIGO]
-Uma operação de restauração DEVE validar paths, cardinalidade, ordem e hashes do manifesto e recriar os `.md` byte a byte sem interpretar o XHTML. [PENDENTE-CODIGO]
-Os `.md` externos somente PODEM ser removidos após validação integral do EPUB e round trip de restauração em runtime temporário; qualquer falha DEVE preservar os arquivos e bloquear conclusão. [PENDENTE-CODIGO]
-O último item do spine DEVE ser uma página `epub:type="colophon"`, rotulada “Nota de proveniência (não editorial)”, separada das fontes Markdown e do corpo editorial. [PENDENTE-CODIGO]
-A nota DEVE registrar autor, título, plataforma EGW Writings, URL oficial e data de acesso em forma de referência ABNT, usando data da aquisição efetiva e sem inventar local, editora ou data de publicação ausentes. [PENDENTE-CODIGO]
-Metadado de segmentos DEVE referenciar paths internos do EPUB e a validação incremental DEVE comprovar os hashes diretamente no contêiner, sem depender de `.md` externo. [PENDENTE-CODIGO]
+Quando a ficha pública da obra textual declarar capa por `og:image`, relação equivalente ou endpoint oficial do mesmo identificador remoto, essa URL DEVE ser preservada e adquirida de host allowlisted como fonte obrigatória. [3c94152]
+A imagem DEVE ser limitada, decodificada e normalizada deterministicamente para `cover.png`, com no máximo 800 px por eixo, proporção preservada, sem ampliação e sem metadados dispensáveis; escrita e promoção DEVEM ser atômicas. [3c94152]
+O EPUB derivado DEVE incluir a imagem no manifesto com propriedade `cover-image`, página de capa no início do spine e bytes iguais ao `cover.png`; um gerador PDF futuro DEVE usar o mesmo arquivo como capa antes do texto, sem autorizar PDF rasterizado como falso equivalente editorial. [3c94152]
+A página `cover.xhtml` DEVE ser o primeiro item do spine e conter exclusivamente a capa, com viewport e página sem margens e preenchimento integral de borda a borda; proporções divergentes DEVEM usar escala proporcional `slice` e recorte central, sem faixas ou deformação. [3c94152]
+Metadado v3 DEVE registrar separadamente a fonte remota e o derivado normalizado, com URL, método, path, tamanho e hashes verificáveis. [3c94152]
+Reexecução sem mudança DEVE validar e reutilizar capa e EPUB; `--revalidate` DEVE readquirir ou revalidar a capa antes de concluir. [3c94152]
+O EPUB textual DEVE manter documentos XHTML semânticos no spine e armazenar fora dele os bytes Markdown intermediários, acompanhados de manifesto versionado com nome, ordem e SHA-256. [3c94152]
+Uma operação de restauração DEVE validar paths, cardinalidade, ordem e hashes do manifesto e recriar os `.md` byte a byte sem interpretar o XHTML. [3c94152]
+Os `.md` externos somente PODEM ser removidos após validação integral do EPUB e round trip de restauração em runtime temporário; qualquer falha DEVE preservar os arquivos e bloquear conclusão. [3c94152]
+O último item do spine DEVE ser uma página `epub:type="colophon"`, rotulada “Nota de proveniência (não editorial)”, separada das fontes Markdown e do corpo editorial. [3c94152]
+A nota DEVE registrar autor, título, plataforma EGW Writings, URL oficial e data de acesso em forma de referência ABNT, usando data da aquisição efetiva e sem inventar local, editora ou data de publicação ausentes. [3c94152]
+Metadado de segmentos DEVE referenciar paths internos do EPUB e a validação incremental DEVE comprovar os hashes diretamente no contêiner, sem depender de `.md` externo. [3c94152]
 
 ## 9. Segurança, validação e fronteira
 
@@ -377,9 +376,9 @@ somente na página individual, múltiplos formatos obrigatórios, botão [be8260
 desabilitado, cadeia textual multiunidade, ciclo, quebra de obra, ausência de
 contêiner, preservação semântica, isolamento de fixture e comparação do texto
 real no EPUB. [PENDENTE-CODIGO]
-O gate também DEVE cobrir capa oficial JPEG/PNG, host e redirecionamento permitidos, limite de bytes/dimensões, remoção de metadados, determinismo, `cover.png`, manifesto/spine EPUB, igualdade de bytes e falha de capa. [PENDENTE-CODIGO]
-O gate DEVE inspecionar `cover.xhtml` e comprovar primeira página exclusiva, ausência de margens/faixas/texto visível, preenchimento integral e recorte central proporcional. [PENDENTE-CODIGO]
-O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte, remoção pós-validação, indexabilidade XHTML e separação/texto/data/link da nota ABNT não editorial. [PENDENTE-CODIGO]
+O gate também DEVE cobrir capa oficial JPEG/PNG, host e redirecionamento permitidos, limite de bytes/dimensões, remoção de metadados, determinismo, `cover.png`, manifesto/spine EPUB, igualdade de bytes e falha de capa. [3c94152]
+O gate DEVE inspecionar `cover.xhtml` e comprovar primeira página exclusiva, ausência de margens/faixas/texto visível, preenchimento integral e recorte central proporcional. [3c94152]
+O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte, remoção pós-validação, indexabilidade XHTML e separação/texto/data/link da nota ABNT não editorial. [3c94152]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação
 pertence à FT-006 e exige nova autorização humana explícita após a conclusão

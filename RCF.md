@@ -613,9 +613,9 @@ Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio p
 
 A origem local DEVE ser `./src/publications/` e a raiz publica DEVE ser `/publications/`.
 
-Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/[<categoria>/]<tipo>/<slug-titulo>/`, onde `<categoria>` é código URI curto em PT-BR da classificação editorial oficial, omitido somente quando igual ao autor, `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial. [PENDENTE-CODIGO]
+Cada publicacao DEVE ocupar `/publications/<acronimo-autor>/<language>/[<categoria>/]<tipo>/<slug-titulo>/`, onde `<categoria>` é código URI curto em PT-BR da classificação editorial oficial, omitido somente quando igual ao autor, `<tipo>` e classificacao logica e nao formato fisico e `<slug-titulo>` e segmento URI ASCII deterministico derivado do titulo editorial. [297d5bc]
 
-O rótulo original da categoria DEVE ser preservado nos metadados e seu código de path DEVE vir de mapeamento explícito, curto e URI-safe em PT-BR, inclusive para coleções inglesas; categoria NÃO PODE ser inferida do título ou autor, e ausência de autoridade classificatória DEVE bloquear aquisição material. [PENDENTE-CODIGO]
+O rótulo original da categoria DEVE ser preservado nos metadados e seu código de path DEVE vir de mapeamento explícito, curto e URI-safe em PT-BR, inclusive para coleções inglesas; categoria NÃO PODE ser inferida do título ou autor, e ausência de autoridade classificatória DEVE bloquear aquisição material. [297d5bc]
 
 O slug de rota DEVE usar somente `[a-z0-9]+(?:-[a-z0-9]+)*`: converter o titulo para minusculas, decompor Unicode, remover acentos, diacriticos e caracteres especiais, substituir espacos por hifens, colapsar hifens repetidos e remover hifens nas extremidades. Caractere sem transliteracao ASCII e titulo cujo resultado fique vazio DEVEM receber fallback causal deterministico; limite de portabilidade DEVE truncar com sufixo de hash, sem colisao silenciosa.
 
@@ -1018,14 +1018,14 @@ segmentos persistidos; e conteúdo real renderizado do EPUB derivado. [be82602]
 Amostra pública controlada DEVE abranger uma obra com ativos nativos e uma sem eles, [be82602]
 sem autorizar coleta em massa. [be82602]
 
-Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da mesma obra, inclusive `og:image`, DEVE ser adquirida como fonte editorial e NÃO PODE ser substituída por imagem inferida por título, semelhança ou posição. [PENDENTE-CODIGO]
-A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [PENDENTE-CODIGO]
-Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [PENDENTE-CODIGO]
-A página de capa DEVE ser o primeiro e exclusivo item visual do EPUB, sem margens, faixas ou texto, preenchendo toda a viewport de borda a borda; diferença de proporção DEVE preservar a imagem por escala proporcional com recorte central, nunca por deformação. [PENDENTE-CODIGO]
+Para obra sem PDF/EPUB nativo, a capa declarada pela ficha pública oficial da mesma obra, inclusive `og:image`, DEVE ser adquirida como fonte editorial e NÃO PODE ser substituída por imagem inferida por título, semelhança ou posição. [297d5bc]
+A imagem validada DEVE originar o `cover.png` canônico e integrar o EPUB derivado como `cover-image`; eventual PDF derivado DEVE reutilizar a mesma capa como sua página de capa, sem rasterizar o restante do texto. [297d5bc]
+Falha de aquisição, decodificação, normalização ou incorporação de uma capa oficialmente declarada DEVE impedir `completed`. [297d5bc]
+A página de capa DEVE ser o primeiro e exclusivo item visual do EPUB, sem margens, faixas ou texto, preenchendo toda a viewport de borda a borda; diferença de proporção DEVE preservar a imagem por escala proporcional com recorte central, nunca por deformação. [297d5bc]
 
-O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [PENDENTE-CODIGO]
-Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [PENDENTE-CODIGO]
-Uma página final `colophon` DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [PENDENTE-CODIGO]
+O EPUB textual derivado DEVE manter XHTML semântico no spine para indexação e empacotar, fora do spine, os bytes Markdown intermediários com nomes, ordem, hashes e manifesto versionado que permitam restauração exata. [297d5bc]
+Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [297d5bc]
+Uma página final `colophon` DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [297d5bc]
 
 ## 43. Indice global
 
