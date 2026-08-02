@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 import struct
 import sys
+import tempfile
 import unittest
 
 
@@ -15,7 +17,11 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 MODULE_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(MODULE_ROOT))
 
-from publication_covers import CoverError, _pdf_cover_bytes  # noqa: E402
+from publication_covers import (  # noqa: E402
+    CoverError,
+    _pdf_cover_bytes,
+    ensure_publication_covers,
+)
 
 
 class PublicationCoverTests(unittest.TestCase):
@@ -39,6 +45,26 @@ class PublicationCoverTests(unittest.TestCase):
         )
         with self.assertRaises(CoverError):
             _pdf_cover_bytes(source, "Título inexistente e incompatível", "Autor ausente")
+
+    def test_missing_editorial_sources_blocks_cover_generation(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            index = root / "index.json"
+            index.write_text(
+                json.dumps(
+                    {
+                        "publications": [
+                            {
+                                "path": "egw/pt-br/livros/sem-fontes",
+                                "assets": [],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(CoverError, "sem capa EPUB ou página PDF"):
+                ensure_publication_covers(root, index, {"download": {}}, True)
 
 
 if __name__ == "__main__":

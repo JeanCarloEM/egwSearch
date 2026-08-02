@@ -18,8 +18,7 @@ from urllib.parse import unquote
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
 
-from acquisition import CatalogItem
-from baixar import OfficialCoverMissing, generate_technical_cover, validate_cover_png
+from baixar import validate_cover_png
 from publication_contract import (
     DEFAULT_CONFIG_PATH,
     REPOSITORY_ROOT,
@@ -187,35 +186,51 @@ def _pdf_cover_bytes(path: Path, title: str, author: str) -> bytes:
     try:
         import pypdfium2
 
-        document = pypdfium2.PdfDocument(path)
         title_tokens = {token for token in _search_text(title).split() if len(token) > 2}
         author_tokens = {token for token in _search_text(author).split() if len(token) > 2}
-        selected = None
+        selected_index = None
         selected_score = 0.0
-        for index in range(min(len(document), 12)):
-            page = document[index]
-            text = _search_text(page.get_textpage().get_text_range())
-            tokens = set(text.split())
-            title_ratio = (
-                len(title_tokens.intersection(tokens)) / len(title_tokens)
-                if title_tokens
-                else 0.0
-            )
-            author_ratio = (
-                len(author_tokens.intersection(tokens)) / len(author_tokens)
-                if author_tokens
-                else 0.0
-            )
-            exact = 1.0 if _search_text(title) in text else 0.0
-            score = exact * 100 + title_ratio * 50 + author_ratio * 15
-            if title_ratio >= 0.6 and score > selected_score:
-                selected = page
-                selected_score = score
-        if selected is None:
-            raise CoverError(f"PDF sem página editorial identificável: {path}")
-        width, height = selected.get_size()
-        scale = min(800 / width, 800 / height)
-        image = selected.render(scale=scale).to_pil()
+        document = pypdfium2.PdfDocument(path)
+        try:
+            for index in range(min(len(document), 12)):
+                page = document[index]
+                text_page = page.get_textpage()
+                try:
+                    text = _search_text(text_page.get_text_range())
+                    tokens = set(text.split())
+                    title_ratio = (
+                        len(title_tokens.intersection(tokens)) / len(title_tokens)
+                        if title_tokens
+                        else 0.0
+                    )
+                    author_ratio = (
+                        len(author_tokens.intersection(tokens)) / len(author_tokens)
+                        if author_tokens
+                        else 0.0
+                    )
+                    exact = 1.0 if _search_text(title) in text else 0.0
+                    score = exact * 100 + title_ratio * 50 + author_ratio * 15
+                    if title_ratio >= 0.6 and score > selected_score:
+                        selected_index = index
+                        selected_score = score
+                finally:
+                    text_page.close()
+                    page.close()
+            if selected_index is None:
+                raise CoverError(f"PDF sem página editorial identificável: {path}")
+            selected = document[selected_index]
+            try:
+                width, height = selected.get_size()
+                scale = min(800 / width, 800 / height)
+                bitmap = selected.render(scale=scale)
+                try:
+                    image = bitmap.to_pil()
+                finally:
+                    bitmap.close()
+            finally:
+                selected.close()
+        finally:
+            document.close()
         output = io.BytesIO()
         image.save(output, format="PNG")
         return output.getvalue()
@@ -223,29 +238,6 @@ def _pdf_cover_bytes(path: Path, title: str, author: str) -> bytes:
         raise
     except Exception as error:
         raise CoverError(f"PDF ilegível para capa: {path}") from error
-
-
-def _catalog_item(entry: dict) -> CatalogItem:
-    localization = entry["localization"]
-    title = entry["title"]
-    author = entry["author"]
-    remote_id = str(entry.get("remote_id") or entry["id"].rsplit(":", 1)[-1])
-    return CatalogItem(
-        remote_id=remote_id,
-        collection_id="public-archive",
-        collection_name="Acervo público",
-        author_name=author["name"],
-        author_key=author["key"],
-        language_original=localization["language"],
-        language=localization["language"],
-        language_path=localization["language_path"],
-        publication_type=localization["type"],
-        title_original=title["original"],
-        title_normalized=title["normalized"],
-        public_url=str(entry.get("public_url") or ""),
-        category_name=localization["category"],
-        category_path=localization["category"],
-    )
 
 
 def ensure_publication_covers(
@@ -323,18 +315,10 @@ def ensure_publication_covers(
                 continue
         if embedded:
             continue
-        item = _catalog_item(entry)
-        with tempfile.TemporaryDirectory(prefix="egwsearch-cover-") as temporary_root:
-            generated, _source, _derivation = generate_technical_cover(
-                item,
-                Path(temporary_root),
-                download_config,
-                OfficialCoverMissing("", "capa incorporada ausente", ""),
-            )
-            target.parent.mkdir(parents=True, exist_ok=True)
-            generated.replace(target)
-            validate_cover_png(target, download_config)
-        counters["technical"] += 1
+        raise CoverError(
+            "publicação sem capa EPUB ou página PDF editorialmente adequada: "
+            f"{entry['path']}"
+        )
     unknown = refresh.difference(observed_paths)
     if unknown:
         raise CoverError(f"publicação solicitada não existe: {sorted(unknown)[0]}")
