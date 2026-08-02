@@ -221,9 +221,9 @@
     - Requisitos próprios deste TODO — página, índice global, URLs públicas, capas, workflows, build e publicação — permanecem externos ao documento formativo e NÃO DEVEM ser atribuídos à `NORMA-IF-SIL-001`.
     - O envelope do índice global e o documento formativo possuem responsabilidades distintas e NÃO DEVEM ser fundidos estruturalmente.
 
-  - [ ] **Publicação não padronizada:** a implantação DEVE ocorrer por workflow dedicado, responsável por preparar, validar e publicar os artefatos no GitHub Pages a partir da origem, branch ou diretório definidos pelo projeto, sem depender implicitamente de build automático, tema ou convenção padrão da plataforma.
+  - [x] **Publicação não padronizada:** a implantação DEVE ocorrer por workflow dedicado, responsável por preparar, validar e publicar os artefatos no GitHub Pages a partir da origem, branch ou diretório definidos pelo projeto, sem depender implicitamente de build automático, tema ou convenção padrão da plataforma.
 
-  - [ ] **Página explicativa:** a página DEVE explicar de forma direta e compacta:
+  - [x] **Página explicativa:** a página DEVE explicar de forma direta e compacta:
     - finalidade do produto;
     - natureza das publicações disponibilizadas;
     - formatos suportados;
@@ -232,7 +232,7 @@
 
   - [ ] **Concisão:** a página NÃO DEVE conter conteúdo promocional excessivo, documentação extensa, seções redundantes ou informações sem utilidade imediata.
 
-  - [ ] **Qualidade visual:** o resultado DEVE apresentar composição profissional, elegante, bonita, atraente, responsiva, acessível e coerente, sem poluição visual, excesso de animações ou dependências desproporcionais.
+  - [x] **Qualidade visual:** o resultado DEVE apresentar composição profissional, elegante, bonita, atraente, responsiva, acessível e coerente, sem poluição visual, excesso de animações ou dependências desproporcionais.
 
   - [ ] **Tecnologias preferenciais:** quando houver necessidade de lógica cliente, utilizar TypeScript; quando houver estilização processada, utilizar Sass.
 
@@ -248,7 +248,7 @@
 
   - [ ] **Otimização:** HTML, CSS, JavaScript, fontes, ícones, imagens e demais ativos DEVEM ser reduzidos ao necessário, com cache, compressão, minificação, carregamento seletivo e invalidação adequados.
 
-  - [ ] **Separação de responsabilidades:** a página pública DEVE apresentar o produto, mas NÃO DEVE expor, listar ou vincular diretamente:
+  - [x] **Separação de responsabilidades:** a página pública DEVE apresentar o produto, mas NÃO DEVE expor, listar ou vincular diretamente:
     - o arquivo JSON indexador global;
     - os arquivos de publicação;
     - URLs diretas das publicações;
@@ -256,7 +256,7 @@
 
   - [ ] **Ausência de links indiretos:** o JSON e as publicações também NÃO DEVEM ser divulgados por botões, âncoras ocultas, metadados visuais ou listagens geradas na página, salvo futura determinação normativa expressa.
 
-  - [ ] **Indexador global obrigatório:** manter, de forma gerada e sincronizada, um indexador global de todas as publicações em JSON.
+  - [x] **Indexador global obrigatório:** manter, de forma gerada e sincronizada, um indexador global de todas as publicações em JSON.
 
   - [ ] **Localização:** o indexador DEVE existir:
     - em `dist/`, quando esse diretório integrar o fluxo de build ou distribuição;
@@ -326,7 +326,7 @@
 
   - [ ] **Processamento seguro de PDF:** usar biblioteca que interprete objetos, xref, streams, fontes, páginas e metadados. Regex sobre bytes crus NÃO DEVE extrair `book`. Página de rosto e colofão visíveis DEVEM prevalecer sobre metadado técnico conflitante.
 
-  - [ ] **Capa pública obrigatória:** imediatamente no mesmo diretório público de cada publicação, EPUB ou PDF, DEVE existir arquivo denominado exatamente `cover.png`.
+  - [x] **Capa pública obrigatória:** imediatamente no mesmo diretório público de cada publicação, EPUB ou PDF, DEVE existir arquivo denominado exatamente `cover.png`.
 
   - [ ] **Escopo por grupo lógico:** quando EPUB e PDF da mesma obra compartilharem diretório, DEVE existir uma única `cover.png` canônica. Quando estiverem em diretórios distintos, cada diretório DEVE conter cópia gerada da capa correspondente.
 
@@ -338,11 +338,11 @@
 
   - [ ] **Capa EPUB:** utilizar primeiro o item identificado editorialmente como capa, incluindo `cover-image` quando aplicável; fallback legado somente DEVE ser aceito com referência válida. Imagem arbitrária de maior dimensão NÃO DEVE ser presumida como capa.
 
-  - [ ] **Fallback PDF:** sem capa EPUB utilizável, renderizar a primeira página PDF adequada por analisador próprio, preservando conteúdo editorial e sem modificar o PDF original.
+  - [x] **Fallback PDF:** sem capa EPUB utilizável, renderizar a primeira página PDF adequada por analisador próprio, preservando conteúdo editorial e sem modificar o PDF original.
 
   - [ ] **Primeira página adequada:** página vazia, meramente técnica, corrompida, de erro, sem conteúdo representativo ou ilegível NÃO DEVE ser aceita.
 
-  - [ ] **Falha do grupo:** ausência de capa EPUB utilizável e de primeira página PDF adequada DEVE falhar a geração do grupo. Grupo incompleto NÃO DEVE ser publicado silenciosamente.
+  - [x] **Falha do grupo:** ausência de capa EPUB utilizável e de primeira página PDF adequada DEVE falhar a geração do grupo. Grupo incompleto NÃO DEVE ser publicado silenciosamente.
 
   - [ ] **Formato e dimensão:** a capa pública DEVE:
     - chamar-se exatamente `cover.png`;
@@ -378,7 +378,7 @@
 
   - [ ] **Cache rastreável:** caches PODEM evitar reprocessamento, mas DEVEM incorporar identidade suficiente das fontes, configuração e versões dos analisadores e geradores aplicáveis.
 
-  - [ ] **Workflow:** criar ou atualizar workflow dedicado para:
+  - [x] **Workflow:** criar ou atualizar workflow dedicado para:
     1. obter o código-fonte;
     2. instalar somente dependências necessárias;
     3. descobrir e agrupar publicações;
@@ -394,15 +394,15 @@
     13. validar URLs, JSON, dados formativos, capas e ativos;
     14. publicar no GitHub Pages.
 
-  - [ ] **Gatilhos:** o workflow DEVE executar quando alterações puderem afetar página, publicações, capas, índice, dados formativos, scripts, estilos, ativos, parser, norma ou configuração de publicação.
+  - [x] **Gatilhos:** o workflow DEVE executar quando alterações puderem afetar página, publicações, capas, índice, dados formativos, scripts, estilos, ativos, parser, norma ou configuração de publicação.
 
-  - [ ] **Execução manual:** o workflow DEVE permitir disparo manual para validação, recuperação ou republicação controlada.
+  - [x] **Execução manual:** o workflow DEVE permitir disparo manual para validação, recuperação ou republicação controlada.
 
-  - [ ] **Permissões mínimas:** as permissões DEVEM limitar-se às estritamente necessárias para build e publicação.
+  - [x] **Permissões mínimas:** as permissões DEVEM limitar-se às estritamente necessárias para build e publicação.
 
-  - [ ] **Concorrência:** publicações concorrentes DEVEM ser serializadas ou canceladas com segurança, impedindo que execução antiga sobrescreva resultado mais recente.
+  - [x] **Concorrência:** publicações concorrentes DEVEM ser serializadas ou canceladas com segurança, impedindo que execução antiga sobrescreva resultado mais recente.
 
-  - [ ] **Execução local equivalente:** o processo local DEVE reproduzir, tanto quanto tecnicamente possível, as mesmas etapas, validações e resultados do workflow.
+  - [x] **Execução local equivalente:** o processo local DEVE reproduzir, tanto quanto tecnicamente possível, as mesmas etapas, validações e resultados do workflow.
 
   - [ ] **Saída operacional:** scripts demorados DEVEM exibir progresso ultrassucinto, indicando etapa, publicação corrente, sucesso ou falha, sem inundar a saída nem aparentar congelamento.
 
@@ -1159,8 +1159,8 @@
   - [ ] URLs originais e SHA-256 foram incorporados ao indexador global.
   - [ ] URLs públicas diretas permanecem no indexador.
   - [ ] O índice está aderente à `NORMA-IF-SIL-001`.
-  - [ ] O build publica todo o conteúdo, mesmo sem links na interface.
-  - [ ] Cada arquivo é acessível diretamente no GitHub Pages.
+  - [x] O build publica todo o conteúdo, mesmo sem links na interface.
+  - [x] Cada arquivo é acessível diretamente no GitHub Pages.
   - [ ] Referências internas e documentação foram atualizadas.
   - [ ] As regras foram integralmente normatizadas no RCF.
   - [ ] Testes e validações passam sem regressão.
