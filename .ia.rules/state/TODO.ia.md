@@ -1997,3 +1997,8 @@
     enriquecimentos e itens confirmados; retomar automaticamente do ponto de
     interrupção; bloquear checkpoint inválido; e reiniciar somente mediante
     `--restart` explícito e limitado ao escopo.
+
+  - [x] Canonicalizar artigo final repetido antes do slug e impedir que PDF ou
+    EPUB com SHA-512 integral idêntico coexistam em diretórios de publicação
+    distintos, mesmo sob nomes diferentes; aliases históricos comprovadamente
+    idênticos foram deduplicados sem eliminar variantes materiais.

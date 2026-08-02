@@ -29,6 +29,7 @@ import zipfile
 from publication_contract import (
     ContractError,
     PublicationIdentity,
+    normalize_editorial_title,
     publication_identity,
     uri_slug,
     write_json_atomic,
@@ -190,6 +191,15 @@ class CatalogItem:
     assets: tuple[CatalogAsset, ...] = ()
     segments: tuple[CatalogSegment, ...] = ()
     local_complete: bool = False
+
+    def __post_init__(self) -> None:
+        """Canonicaliza a projeção editorial sem alterar a evidência original."""
+
+        object.__setattr__(
+            self,
+            "title_normalized",
+            normalize_editorial_title(self.title_normalized or self.title_original),
+        )
 
     def publication_identity(self) -> PublicationIdentity:
         return publication_identity(

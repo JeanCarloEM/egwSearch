@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-01T21:52:57-03:00`.
+Atualizado_em: `2026-08-01T22:25:18-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-012 concluída; integração de dev em main e push pendentes.
+Escopo_atual: FT-012 concluída com unicidade SHA-512; integração e push pendentes.
 Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
 Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -357,5 +357,10 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   confirmados usam checkpoint atômico por escopo; reexecução retoma o pendente,
   corrupção bloqueia e somente `--restart` explícito reinicia; suíte ampliada
   para 62 testes Python.
-- proximo_ponto: após confirmação humana, manter bloqueio ou evoluir o RCF para
-  tratar o `404 Cover not found` como ausência comprovada sem inventar capa.
+- deduplicacao_final: commit material `c3fbb92`; artigo invertido repetido é
+  canonicalizado antes do slug, promoção recalcula SHA-512 e bloqueia cópia em
+  outro diretório; aliases históricos idênticos foram retirados do acervo.
+- validacao_deduplicacao: 1.036 identidades físicas sem SHA-512 repetido entre
+  publicações; 65 testes Python, três Node, compilação e bootstrap aprovados.
+- proximo_ponto: integrar `dev` em `main`, publicar ambas e preservar arquivos
+  gerados e quarentena fora do Git.

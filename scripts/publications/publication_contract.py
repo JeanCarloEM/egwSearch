@@ -52,6 +52,9 @@ URI_TRANSLITERATION = str.maketrans(
         "þ": "th",
     }
 )
+INVERTED_ARTICLES = frozenset(
+    {"a", "o", "as", "os", "um", "uma", "uns", "umas", "an", "the"}
+)
 
 
 class ContractError(ValueError):
@@ -216,7 +219,11 @@ def resolve_repository_path(value: str, repository_root: Path = REPOSITORY_ROOT)
 
 
 def normalize_editorial_title(title: str) -> str:
-    """Preserva o titulo editorial e remove somente ruido estrutural."""
+    """Preserva o título editorial e remove ruído ou artigo invertido repetido.
+
+    Catálogos podem emitir ``A OBRA, A``. A cauda só é descartada quando é um
+    artigo conhecido e equivale ao primeiro token; outras vírgulas permanecem.
+    """
 
     if not isinstance(title, str):
         raise ContractError("titulo deve ser string")
@@ -228,7 +235,23 @@ def normalize_editorial_title(title: str) -> str:
     normalized = " ".join(normalized.split())
     if not normalized:
         raise ContractError("titulo vazio")
+    inverted = re.fullmatch(r"([^\W_]+)\s+(.+),\s*([^\W_]+)", normalized)
+    if inverted:
+        leading, body, trailing = inverted.groups()
+        leading_key = _comparison_token(leading)
+        trailing_key = _comparison_token(trailing)
+        if leading_key == trailing_key and leading_key in INVERTED_ARTICLES:
+            normalized = f"{leading} {body}".strip()
     return normalized
+
+
+def _comparison_token(value: str) -> str:
+    folded = unicodedata.normalize("NFKD", value.casefold())
+    return "".join(
+        character
+        for character in folded
+        if character.isalnum() and not unicodedata.category(character).startswith("M")
+    )
 
 
 def uri_slug(value: str) -> str:
@@ -386,6 +409,79 @@ def hash_file(path: Path | str, chunk_size: int = 1024 * 1024) -> FileHashes:
         sha512=algorithms["sha512"].hexdigest(),
         size=size,
     )
+
+
+def build_asset_identity_index(
+    source_root: Path | str,
+) -> dict[tuple[str, str], list[Path]]:
+    """Indexa candidatos por SHA-256 de metadado para conferir SHA-512 sob demanda.
+
+    O índice evita reler todo o acervo em cada execução. SHA-256 apenas reduz o
+    conjunto candidato; a decisão de identidade sempre recalcula SHA-512.
+    """
+
+    root = Path(source_root).resolve()
+    indexed: dict[tuple[str, str], list[Path]] = {}
+    if not root.is_dir():
+        return indexed
+    for metadata_path in sorted(root.rglob("*.source.json")):
+        try:
+            document = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+            records = read_source_records(metadata_path)
+        except (OSError, json.JSONDecodeError, ContractError):
+            continue
+        if document.get("schema_version") == SOURCE_SCHEMA_V3:
+            records.extend(document.get("derivations") or [])
+        for record in records:
+            publication_format = record.get("format")
+            sha256 = str((record.get("hashes") or {}).get("sha256") or "")
+            if publication_format not in FORMAT_ORDER or not re.fullmatch(
+                r"[0-9a-f]{64}", sha256
+            ):
+                continue
+            candidates = sorted(metadata_path.parent.glob(f"*.{publication_format}"))
+            matching: list[Path] = []
+            if len(candidates) == 1:
+                matching = candidates
+            else:
+                for candidate in candidates:
+                    try:
+                        if hash_file(candidate).sha256 == sha256:
+                            matching.append(candidate)
+                    except OSError:
+                        continue
+            for candidate in matching:
+                resolved = candidate.resolve()
+                bucket = indexed.setdefault((publication_format, sha256), [])
+                if resolved not in bucket:
+                    bucket.append(resolved)
+    return indexed
+
+
+def validate_unique_asset_sha512(
+    index: dict[tuple[str, str], list[Path]],
+) -> None:
+    """Bloqueia o acervo quando os mesmos bytes ocupam publicações distintas."""
+
+    for (publication_format, _sha256), paths in sorted(index.items()):
+        directories = {path.parent for path in paths}
+        if len(directories) <= 1:
+            continue
+        by_sha512: dict[str, list[Path]] = {}
+        for path in paths:
+            try:
+                validate_file_signature(path, publication_format)
+                digest = hash_file(path).sha512
+            except (OSError, ContractError):
+                continue
+            by_sha512.setdefault(digest, []).append(path)
+        for sha512, identical in by_sha512.items():
+            if len({path.parent for path in identical}) <= 1:
+                continue
+            rendered = ", ".join(str(path) for path in sorted(identical))
+            raise ContractError(
+                f"duplicacao global SHA-512 {publication_format} {sha512}: {rendered}"
+            )
 
 
 def validate_file_signature(path: Path | str, publication_format: str) -> None:

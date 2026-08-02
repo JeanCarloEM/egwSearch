@@ -21,6 +21,7 @@ sys.path.insert(0, str(CONTRACT_ROOT))
 
 from publication_contract import (  # noqa: E402
     ContractError,
+    build_asset_identity_index,
     build_source_document,
     choose_variant_path,
     hash_file,
@@ -28,6 +29,7 @@ from publication_contract import (  # noqa: E402
     read_source_records,
     title_acronym,
     uri_slug,
+    validate_unique_asset_sha512,
     validate_file_signature,
     write_json_atomic,
 )
@@ -75,6 +77,18 @@ class PublicationContractTests(unittest.TestCase):
         self.assertRegex(uri_slug("東京"), r"^u-[0-9a-f]{12}$")
         self.assertLessEqual(len(uri_slug("Título " * 100).encode("ascii")), 180)
 
+    def test_redundant_inverted_article_is_removed_only_when_identical(self) -> None:
+        identity = publication_identity(
+            "egw", "pt-br", "livros", "A CIÊNCIA DO BOM VIVER, A", category="egw"
+        )
+        self.assertEqual(identity.title, "A CIÊNCIA DO BOM VIVER")
+        self.assertEqual(identity.route_slug, "a-ciencia-do-bom-viver")
+        self.assertEqual(identity.acronym, "acdbv")
+        self.assertEqual(uri_slug("Ciência do Bom Viver, A"), "ciencia-do-bom-viver-a")
+        self.assertEqual(
+            uri_slug("A Ciência do Bom Viver, O"), "a-ciencia-do-bom-viver-o"
+        )
+
     def test_single_word_and_unicode_fallback_acronyms(self) -> None:
         self.assertEqual(title_acronym("Maranatha"), "maranatha")
         self.assertRegex(title_acronym("東京"), r"^u[0-9a-f]{12}$")
@@ -109,6 +123,30 @@ class PublicationContractTests(unittest.TestCase):
                     compress_type=zipfile.ZIP_STORED,
                 )
             validate_file_signature(epub, "epub")
+
+    def test_sha512_duplicate_cannot_span_publication_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            first = root / "canonical" / "book.pdf"
+            second = root / "wrong-name" / "other.pdf"
+            first.parent.mkdir()
+            second.parent.mkdir()
+            payload = b"%PDF-1.7\nidentical\n%%EOF"
+            first.write_bytes(payload)
+            second.write_bytes(payload)
+            hashes = hash_file(first)
+            metadata = {
+                "https://example.test/book.pdf": {"sha256": hashes.sha256}
+            }
+            for directory in (first.parent, second.parent):
+                (directory / "book.source.json").write_text(
+                    json.dumps(metadata), encoding="utf-8"
+                )
+            index = build_asset_identity_index(root)
+            with self.assertRaisesRegex(ContractError, "duplicacao global SHA-512"):
+                validate_unique_asset_sha512(index)
+            second.write_bytes(b"%PDF-1.7\ndifferent\n%%EOF")
+            validate_unique_asset_sha512(build_asset_identity_index(root))
 
     def test_invalid_signature_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

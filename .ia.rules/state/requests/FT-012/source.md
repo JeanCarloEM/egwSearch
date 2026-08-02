@@ -171,3 +171,31 @@ filtro e limite persiste catálogo, enriquecimentos e IDs confirmados. Teste de
 interrupção confirmou que o item anterior não é reexecutado; corrupção bloqueia
 sem renomear/apagar; `--restart` é a única operação que descarta o checkpoint
 do escopo. A suíte total passou com 62 testes Python e três Node.
+
+## Complementação de 2026-08-01 — identidade por SHA-512 e artigo repetido
+
+> publicação com mesmo sha512 não podem coexistir = duplicações. Ainda que
+> possuam nomes diferentes. A resolução do conflito de nome deve seguir a
+> lógica, por exemplo: `a-ciencia-do-bom-viver-a` e
+> `a-ciencia-do-bom-viver`; obviamente, o primeiro está errado, pois duplica o
+> artigo `a`.
+
+A auditoria local comprovou que os EPUBs e os PDFs desses dois diretórios têm,
+respectivamente, SHA-512 idênticos. O título remoto `A CIÊNCIA DO BOM VIVER, A`
+repete no final o artigo já presente no início. A identidade canônica deve
+eliminar somente essa repetição editorial inequívoca e projetar o slug
+`a-ciencia-do-bom-viver`. Igualdade SHA-512 integral de um ativo PDF/EPUB em
+diretórios distintos deve impedir a promoção da segunda publicação, mesmo que
+nomes, acrônimos ou slugs difiram; colisão nominal sem regra editorial
+determinística deve bloquear para revisão, nunca escolher ou apagar conteúdo
+silenciosamente.
+
+Implementação concluída no commit material `c3fbb92`: `CatalogItem` aplica a
+canonicalização antes de identidade, slug e checkpoint; o downloader monta um
+índice local por SHA-256 de metadado apenas para reduzir candidatos e recalcula
+SHA-512 integral antes de qualquer decisão. A promoção bloqueia cópia existente
+em outro diretório. A auditoria do acervo removeu nove diretórios rastreados de
+aliases históricos e o diretório não rastreado do exemplo, preservando em cada
+grupo o título declarado dentro do EPUB e mantendo os removidos em quarentena
+local recuperável. O acervo ativo terminou com 1.036 identidades físicas sem
+SHA-512 repetido entre publicações.
