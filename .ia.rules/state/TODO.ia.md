@@ -2019,3 +2019,20 @@
   - [x] Eliminar sentinelas internas do conversor, validar todo XHTML editorial
     com parser XML e regenerar `daniel-e-apocalipse` com o conteúdo integral
     legível, sem `.md` externo e sem reiniciar o checkpoint seguinte.
+
+## FT-013 - Índice global e análise de estratégias de chunking
+
+- [x] Capturar a solicitação e criar contexto mestre próprio.
+- [ ] Evoluir o RCF global e especializado para o índice incremental e o
+  manifesto identificador de estratégias por ativo.
+- [ ] Implementar invocador único do índice global, com modos publicação,
+  subárvore e corpus, e reutilizá-lo no gatilho do downloader.
+- [ ] Implementar analisador EPUB/PDF seguro, explicável e determinístico, com
+  sinais estruturais, parsers candidatos, estratégias comparáveis e correlação
+  de fingerprints do acervo.
+- [ ] Executar análise e indexação sincronamente após cada publicação
+  baixada/atualizada/gerada e antes de confirmar o checkpoint.
+- [ ] Cobrir idempotência, falha sem parcial, escopos de CLI e ausência de rede
+  para reparo estritamente local.
+- [ ] Sincronizar rastreabilidade, validar e integrar sem versionar resultados
+  de coleta, caches, temporários ou perfis.
