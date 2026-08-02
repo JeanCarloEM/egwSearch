@@ -762,6 +762,7 @@ temporários; parcial nunca DEVE ser promovido ou indexado como concluído.
 
 A execução DEVE persistir atomicamente checkpoint de escopo compatível com coleção, filtro e limite, contendo catálogo normalizado, enriquecimentos já comprovados e identidades cujo processamento terminou em estado confirmado. [6cd652b]
 Nova invocação do mesmo escopo DEVE retomar automaticamente o primeiro enriquecimento ou item ainda não confirmado, sem consultar novamente páginas, capas, textos ou ativos já preservados pelo checkpoint. [6cd652b]
+Cada publicação cujo enriquecimento esteja completo DEVE ser processada, validada e promovida imediatamente após a persistência do próprio checkpoint, sem aguardar o enriquecimento integral da coleção; publicação posterior incompleta, bloqueada ou interrompida NÃO PODE impedir a materialização nem desfazer a confirmação das anteriores. [PENDENTE-CODIGO]
 Interrupção por sinal, encerramento do processo, contenção ou falha transitória NÃO DEVE apagar nem avançar o checkpoint além da última transição confirmada. [6cd652b]
 Checkpoint ausente inicia nova execução; checkpoint incompatível, ambíguo ou corrompido DEVE bloquear com diagnóstico e NÃO PODE provocar reinício silencioso. [6cd652b]
 Reinício somente PODE ocorrer por opção explícita `--restart`, limitada ao escopo selecionado; essa opção DEVE descartar apenas checkpoints de runtime aplicáveis, nunca publicação canônica já promovida. [6cd652b]

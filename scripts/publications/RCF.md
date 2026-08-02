@@ -159,6 +159,7 @@ Na retomada, todo item não confirmado DEVE passar novamente pelo preflight vige
 
 O coletor DEVE gravar checkpoint atômico por coleção, filtro e limite depois da normalização do catálogo, depois de cada enriquecimento e depois de cada item confirmado. [6cd652b]
 Retomada DEVE reutilizar catálogo e itens persistidos e continuar somente os enriquecimentos ou itens pendentes; checkpoint textual DEVE continuar da próxima página editorial ainda não confirmada. [6cd652b]
+Item enriquecido e completo DEVE ser entregue ao processamento logo após seu checkpoint atômico, antes de iniciar o enriquecimento seguinte. Item posterior incompleto, bloqueado ou interrompido NÃO DEVE criar bloqueio em cadeia sobre geração, promoção ou confirmação dos itens anteriores. [PENDENTE-CODIGO]
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [6cd652b]
 `--restart` DEVE ser explícito, apagar somente checkpoints de runtime do escopo solicitado e preservar publicações, ledger e ativos canônicos. [6cd652b]
 

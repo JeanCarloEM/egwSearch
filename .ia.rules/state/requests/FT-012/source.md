@@ -258,3 +258,19 @@ substitui atomicamente o item histórico quando a prova local é válida. Teste
 dedicado persiste `b11101` como `local_complete=false`, proíbe
 `_enrich_book()` por sentinela e comprova atualização para
 `PUBLICATION_LOCAL_VALID ... checkpoint=updated network=skipped`.
+
+## Regressão observada de 2026-08-02 — enriquecimento completo sem asset
+
+> BUG: Mostrou e carregou no navegador sem erro no console como aparentemente
+> concluídos, mas não geraram assets (PDF/EPUB) no `src/`; entre outros:
+> `https://text.egwwritings.org/read/14386.2`,
+> `TEXT_DISCOVERY_PROGRESS book=14386 units=1 complete=false` e
+> `https://text.egwwritings.org/read/14382.24`.
+
+O checkpoint real comprova a causa sistêmica: `14386` terminou 45 unidades e
+`complete=true`, mas permaneceu como sexto item não confirmado da coleção;
+`14382`, iniciado depois, ficou incompleto. A descoberta enriquece toda a
+coleção antes de iniciar qualquer processamento, de modo que uma publicação
+posterior interrompida impede a geração das anteriores já completas. A
+correção deve promover cada publicação imediatamente após seu enriquecimento e
+checkpoint, preservando a seguinte como pendente e retomável.

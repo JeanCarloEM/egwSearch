@@ -39,6 +39,8 @@ capa oficialmente declarada para a obra.
    URI adicional do diretório canônico, preservando também seu rótulo original.
 10. posicionar a proveniência ABNT antes do sumário e aplicar cabeçalhos
     contextuais e rodapés numerados por paginação CSS fora do corpo editorial.
+11. eliminar bloqueio em cadeia entre publicações, processando cada item assim
+    que seu próprio enriquecimento completo for persistido.
 
 ## Invariantes
 
@@ -76,6 +78,8 @@ capa oficialmente declarada para a obra.
 - artigo final separado por vírgula somente é removido quando repete o mesmo
   artigo já presente no início do título; demais conflitos nominais ambíguos
   bloqueiam para revisão.
+- publicação posterior incompleta ou interrompida não bloqueia geração,
+  promoção nem confirmação de publicação anterior já enriquecida por inteiro.
 
 ## Aceite global
 
@@ -187,6 +191,9 @@ capa oficialmente declarada para a obra.
 - integração: `dev` incorporada em `main` pelo merge `5fde300`; referências
   remotas publicadas e convergentes.
 - estado: concluída e publicada sem pendência própria.
+- estado: reaberta em 2026-08-02 porque o enriquecimento integral da coleção
+  antecede a geração e cria bloqueio em cadeia; `14386` completo ficou sem
+  asset quando `14382` posterior permaneceu incompleto.
 - integração: `dev` incorporada em `main` pelo merge `c6c7b9d` e referências
   remotas publicadas; alterações alheias permaneceram fora dos commits da FT.
 - estado: concluída e publicada sem pendência própria.
