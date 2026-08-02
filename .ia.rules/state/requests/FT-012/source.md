@@ -239,3 +239,22 @@ O teste `b42` transforma `_enrich_book()` em sentinela proibida e comprova
 `en-books`, 116 de 121 entradas foram comprovadas localmente sem página
 individual; somente cinco unidades sem prova local completa permaneceram
 elegíveis ao enriquecimento necessário.
+
+## Regressão observada de 2026-08-01 — checkpoint legado contorna o gate
+
+> persiste, veja exemplo: `https://text.egwwritings.org/book/b11101`.
+
+O preflight isolado comprova `b11101` com PDF e EPUB locais válidos. Porém, o
+checkpoint de `pt-br-livros` persistiu 84 itens enriquecidos anteriormente com
+`local_complete=false`. Na retomada, a condição `if not item.local_complete:
+continue` impede exatamente esses itens antigos de passar pelo gate novo. Todo
+item não confirmado deve ser reavaliado localmente com a versão corrente do
+contrato, independentemente do booleano armazenado; checkpoint é cache de
+progresso, não autoridade para liberar rede nem invalidar prova local.
+
+Implementação concluída no commit material `dbd8096`: a retomada reaplica o
+preflight a todo item não confirmado, fornece os dados originais do cartão e
+substitui atomicamente o item histórico quando a prova local é válida. Teste
+dedicado persiste `b11101` como `local_complete=false`, proíbe
+`_enrich_book()` por sentinela e comprova atualização para
+`PUBLICATION_LOCAL_VALID ... checkpoint=updated network=skipped`.

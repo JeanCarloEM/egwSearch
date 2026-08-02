@@ -1012,6 +1012,8 @@ Metadado legado sem `remote_id` DEVE participar desse preflight por identidade c
 
 Request HTTP específico da publicação somente PODE ser emitido depois de o gate local registrar causa objetiva que a torne necessária: prova ausente ou inconclusiva, divergência, ambiguidade, corrupção, ativo obrigatório ausente ou `--revalidate` explícito. Caminho feliz local completo DEVE possuir teste que falha diante de qualquer chamada de rede. [b4f7627]
 
+Checkpoint persistido NÃO PODE substituir o gate vigente: antes de processar cada item ainda não confirmado, o coletor DEVE reaplicar o preflight local atual independentemente do valor histórico de `local_complete`, promover no checkpoint a prova local superveniente e impedir que estado antigo falso libere request. [20edd5c]
+
 Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [be82602]
 URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
 término declarado. [be82602]
