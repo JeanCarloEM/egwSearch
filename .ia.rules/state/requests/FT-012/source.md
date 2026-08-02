@@ -274,3 +274,15 @@ coleção antes de iniciar qualquer processamento, de modo que uma publicação
 posterior interrompida impede a geração das anteriores já completas. A
 correção deve promover cada publicação imediatamente após seu enriquecimento e
 checkpoint, preservando a seguinte como pendente e retomável.
+
+## Corrupção observada de 2026-08-02 — XHTML truncado pelo leitor
+
+> o livro `uriah-smith\pt-br\livros\daniel-e-apocalipse` está sem conteúdo
+> real, embora exista conteúdo online.
+
+O checkpoint contém o texto integral, mas o XHTML gerado vazou sentinelas NUL
+do conversor (`STRONG_CLOSE`) entre fragmentos `<strong>` adjacentes. Como NUL
+é proibido em XML, o leitor interrompeu a seção exatamente em “VERSÍCULO 1.
+Vi, na”, ocultando todo o conteúdo posterior. O conversor deve eliminar toda
+sentinela residual e o validador do EPUB deve analisar cada XHTML como XML,
+impedindo promoção de seção truncável.

@@ -194,6 +194,11 @@ capa oficialmente declarada para a obra.
 - estado: reaberta em 2026-08-02 porque o enriquecimento integral da coleção
   antecede a geração e cria bloqueio em cadeia; `14386` completo ficou sem
   asset quando `14382` posterior permaneceu incompleto.
+- evidência subsequente: o EPUB então materializado continha o texto completo
+  em bytes, mas uma sentinela NUL `STRONG_CLOSE` tornou o XHTML inválido e fez
+  o leitor ocultar o conteúdo após “VERSÍCULO 1. Vi, na”.
+- correção requerida: eliminar sentinelas residuais e validar cada documento
+  editorial com parser XML antes de aceitar o EPUB.
 - integração: `dev` incorporada em `main` pelo merge `c6c7b9d` e referências
   remotas publicadas; alterações alheias permaneceram fora dos commits da FT.
 - estado: concluída e publicada sem pendência própria.
