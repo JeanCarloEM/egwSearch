@@ -637,6 +637,10 @@ Tag confirmada DEVE sair do titulo e do acronimo e ser preservada no indice; duv
 
 Colisao de destino DEVE comparar SHA-256 integral: hash igual elimina copia redundante; hash diferente preserva variante como `<acronimo-titulo>.<hash-curto>.<extensao>`.
 
+SHA-512 integral de PDF ou EPUB DEVE ser identidade física global do ativo no acervo: bytes iguais NÃO PODEM coexistir em diretórios de publicação distintos, ainda que título, acrônimo, filename ou slug difiram. A promoção DEVE reutilizar o grupo canônico quando a resolução editorial for determinística; ambiguidade DEVE bloquear para revisão sem apagar nem escolher silenciosamente. [PENDENTE-CODIGO]
+
+Título remoto em forma invertida com artigo final separado por vírgula DEVE remover esse artigo somente quando ele repetir o mesmo artigo já presente no início do título; por exemplo, `A CIÊNCIA DO BOM VIVER, A` projeta `A CIÊNCIA DO BOM VIVER` e `a-ciencia-do-bom-viver`. Título sem repetição inequívoca DEVE permanecer preservado. [PENDENTE-CODIGO]
+
 Hash curto DEVE derivar do SHA-256, ter comprimento minimo desambiguador e expandir somente diante de colisao do prefixo.
 
 Arquivo com hash diferente NÃO DEVE ser sobrescrito ou descartado; contador dependente de ordem NÃO DEVE substituir identificador deterministico.

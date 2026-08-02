@@ -31,6 +31,8 @@ DEVE ser preservado; diferença material de variante DEVE bloquear fusão. [3301
 
 Titulo normalizado DEVE preservar Unicode, caixa, diacriticos, pontuacao e trecho parentetico duvidoso; slug de rota e projecao separada e NÃO DEVE substituir nem servir para reconstruir o titulo. Tag ou edicao somente DEVE sair do titulo com evidencia editorial registrada. [3301a97]
 
+Artigo final separado por vírgula DEVE ser removido somente quando repetir, por equivalência Unicode sem diacríticos e caixa, o artigo já presente no início; essa canonicalização editorial antecede acrônimo, slug, preflight e destino. Demais sufixos ou inversões ambíguas DEVEM ser preservados. [PENDENTE-CODIGO]
+
 O acronimo do titulo DEVE derivar apenas de suas palavras normalizadas: titulo de uma palavra usa seu token ASCII normalizado; titulo de varias palavras usa as iniciais alfanumericas, em minusculas. Ausencia de representacao ASCII DEVE usar identificador causal derivado do titulo Unicode. [3301a97]
 
 ## 2. Paths e colisoes
@@ -48,6 +50,8 @@ no mesmo diretório. [c5c4da6]
 Slug DEVE seguir `[a-z0-9]+(?:-[a-z0-9]+)*`: aplicar minusculas, decomposicao Unicode, transliteracao ASCII deterministica, remocao de acentos, diacriticos e caracteres especiais, substituicao de espacos por hifens, colapso e aparo de hifens; resultado vazio e limite de portabilidade DEVEM usar hash causal. Path e segmento DEVEM permanecer relativos a raiz declarada, sem traversal, path absoluto, controle, nome reservado do Windows ou equivalencia insegura por caixa/normalizacao. [3301a97]
 
 Destino ausente DEVE receber o original. Destino existente com SHA-256 identico DEVE eliminar somente a copia redundante depois da validacao transacional. Destino existente com hash diferente DEVE preservar a variante em `<acronimo>.<prefixo-sha256>.<extensao>`; o prefixo DEVE iniciar com oito caracteres e expandir em pares ate desambiguar. [3301a97]
+
+Antes da promoção, o coletor DEVE comparar o SHA-512 integral do PDF/EPUB com todo o acervo: igualdade em diretórios de publicação distintos caracteriza duplicação física global e proíbe a segunda cópia, quaisquer que sejam nomes ou slugs. Resolução editorial determinística DEVE reutilizar o diretório canônico; sem ela, a operação DEVE bloquear para revisão e preservar ambos os estados anteriores sem promover o temporário. [PENDENTE-CODIGO]
 
 ## 3. Metadado local e estado incremental
 

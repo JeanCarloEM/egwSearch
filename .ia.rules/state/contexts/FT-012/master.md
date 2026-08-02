@@ -70,6 +70,12 @@ capa oficialmente declarada para a obra.
   conteúdo; somente as seções de conteúdo recebem caixas de margem paginada.
 - a primeira página de cada seção não tem cabeçalho; o rodapé numerado permanece
   e nenhum cabeçalho/rodapé integra o corpo XHTML indexável.
+- SHA-512 integral de PDF/EPUB é identidade física global: o mesmo conteúdo não
+  pode coexistir em diretórios de publicação distintos, independentemente do
+  nome; variantes materialmente diferentes continuam preservadas.
+- artigo final separado por vírgula somente é removido quando repete o mesmo
+  artigo já presente no início do título; demais conflitos nominais ambíguos
+  bloqueiam para revisão.
 
 ## Aceite global
 
@@ -164,3 +170,5 @@ capa oficialmente declarada para a obra.
 - validação: 62 testes Python, três Node, `py_compile`, bootstrap e
   `git diff --check` aprovados; publicações reais continuaram fora do Git.
 - estado: concluída e pronta para integração/publicação.
+- estado: reaberta para canonicalizar artigo editorial repetido e impedir
+  duplicação física global por SHA-512.
