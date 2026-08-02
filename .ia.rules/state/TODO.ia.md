@@ -2042,3 +2042,17 @@ Conclusão: correção `e00ca57`; FT `0563749`; norma `718f737`; implementação
 Node, compilação, `publications:check`, geração local de índice com 564 entradas
 e análise EPUB/PDF específica. Resultados gerados de coleta permaneceram fora
 do commit.
+
+## FT-014 - Laboratório experimental de chunking por recurso
+
+- [x] Capturar a reprovação funcional e criar contexto mestre.
+- [ ] Pesquisar literatura acadêmica primária recente e normatizar catálogo de
+  hipóteses, critérios e referências globais, incluindo regex.
+- [ ] Substituir pontuação heurística por experimentos reais e verificáveis em
+  cada EPUB/PDF.
+- [ ] Remover dos manifestos textos e parâmetros globais redundantes.
+- [ ] Medir fidelidade de fronteiras, cobertura, ordem, perda, duplicação e
+  contaminação por cabeçalho, rodapé e paginação.
+- [ ] Agregar aprendizado experimental global deduplicado e sem conteúdo.
+- [ ] Integrar, testar, sincronizar rastreabilidade e validar amostra real sem
+  versionar artefatos gerados.
