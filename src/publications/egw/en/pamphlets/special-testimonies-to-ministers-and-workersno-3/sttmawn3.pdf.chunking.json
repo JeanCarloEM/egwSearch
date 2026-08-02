@@ -1,0 +1,450 @@
+{
+  "schema_version": "publication-chunking-analysis/v2",
+  "generator": {
+    "id": "egwSearch/publication_analysis.py",
+    "version": "2"
+  },
+  "catalog": {
+    "id": "egwSearch/chunking-methods",
+    "schema": "publication-chunking-method-catalog/v1",
+    "version": 1,
+    "path": "config/publication-chunking-methods.json",
+    "sha256": "f1ca35473b0d568393aa43aaee5725716fff4714a39b5d6b0cb94fd3e89f5221"
+  },
+  "asset": {
+    "path": "egw/en/pamphlets/special-testimonies-to-ministers-and-workersno-3/sttmawn3.pdf",
+    "format": "pdf",
+    "size": 369897,
+    "hashes": {
+      "sha1": "acbfa04ca0f901c379629b766b82a1c62b36a175",
+      "sha256": "564af6c5c5afd127e9246107903a877b658b5566eda8663e45d36925cb8767dd",
+      "sha512": "41593d672970bcb02f58a27a435454ed7f7f559da1672a7c77dc93f8e935ebc199b61b60db491fce9fb5d2c52b8b6650ca97b7e2a7ea53c4d73203c8380af0be"
+    }
+  },
+  "publication": {
+    "metadata": "egw/en/pamphlets/special-testimonies-to-ministers-and-workersno-3/sttmawn3.source.json",
+    "remote_id": null,
+    "author_key": null,
+    "language": null,
+    "category": null,
+    "type": null,
+    "generated_epub": false
+  },
+  "parser": {
+    "selected": "pypdfium2",
+    "attempts": [
+      {
+        "id": "pypdfium2",
+        "status": "passed"
+      }
+    ]
+  },
+  "metadata_evidence": {
+    "title": "Special Testimonies to Ministers and Workers—No. 3 (1895)",
+    "creator": "Ellen G. White",
+    "language": ""
+  },
+  "structure": {
+    "pages": 62,
+    "analyzed_pages": 62,
+    "coverage_ppm": 1000000,
+    "words": 20517,
+    "sentences": 866,
+    "paragraphs": 57,
+    "heading_candidates": 1,
+    "noise_patterns": 5,
+    "noise_occurrences": 16,
+    "cross_page_continuations": 3
+  },
+  "fingerprint": "090884462e6e6d6b99098caaea6a90108fe214837f92b9c80ae98a7d65b30d33",
+  "reference": {
+    "complete": true,
+    "characters": 115849,
+    "tokens": 25207,
+    "blocks": 57,
+    "paragraph_boundaries": 56,
+    "sentence_boundaries": 865,
+    "page_boundaries": 61,
+    "noise_patterns_removed": 5,
+    "noise_occurrences_removed": 16,
+    "cross_page_continuations": 3,
+    "tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+    "noise_proof_sha256": "ddafb29f7a7609d48fe43b13985e0cfcbea845bd7c8849f7ba829084c69d2f82",
+    "continuity_proof_sha256": "40a76722a95fd60a3a76d2d421ac6e2dcf6258e081608c8b42d57a2564703a1a"
+  },
+  "experiments": [
+    {
+      "method": "whole-document",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "boundary": "none"
+      },
+      "chunk_count": 1,
+      "efficiency": {
+        "characters_per_chunk": 115849,
+        "tokens_per_chunk": 25207,
+        "boundary_checks": 0
+      },
+      "chunk_words": {
+        "minimum": 20517,
+        "median": 20517,
+        "maximum": 20517
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "hierarchical-structure",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "boundary": "parsed-heading",
+        "preserve_order": true
+      },
+      "chunk_count": 2,
+      "efficiency": {
+        "characters_per_chunk": 57924,
+        "tokens_per_chunk": 12604,
+        "boundary_checks": 1
+      },
+      "chunk_words": {
+        "minimum": 9361,
+        "median": 10258,
+        "maximum": 11156
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "fc924f053aaa9a2ca2c2653516d3ca5a11cc30d728d9db6821ca9ec0723e818c"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "pattern_sha256": "6db718c6d074f2b78e22139d6e049a23319200e387e1c8f1d0e0367bc2d01028",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "chunk_count": 2,
+      "efficiency": {
+        "characters_per_chunk": 57924,
+        "tokens_per_chunk": 12604,
+        "boundary_checks": 1
+      },
+      "chunk_words": {
+        "minimum": 9361,
+        "median": 10258,
+        "maximum": 11156
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "fc924f053aaa9a2ca2c2653516d3ca5a11cc30d728d9db6821ca9ec0723e818c"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "paragraph",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "boundary": "parsed-block"
+      },
+      "chunk_count": 57,
+      "efficiency": {
+        "characters_per_chunk": 2032,
+        "tokens_per_chunk": 442,
+        "boundary_checks": 56
+      },
+      "chunk_words": {
+        "minimum": 13,
+        "median": 401,
+        "maximum": 868
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "2c0630873a38e14144657ed0a22147c287a86dc8aabc81a80bcf70b952bf3a67"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "sentence",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "boundary": "punctuation-regex-v1"
+      },
+      "chunk_count": 866,
+      "efficiency": {
+        "characters_per_chunk": 134,
+        "tokens_per_chunk": 29,
+        "boundary_checks": 865
+      },
+      "chunk_words": {
+        "minimum": 1,
+        "median": 20,
+        "maximum": 188
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "f5dd647977f39e3298d8766c25e4543d34108ce25845a0de4e7c99c89ba27a3d"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "recursive-separator",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "maximum_words": 450,
+        "separators": [
+          "paragraph",
+          "sentence",
+          "token"
+        ]
+      },
+      "chunk_count": 52,
+      "efficiency": {
+        "characters_per_chunk": 2228,
+        "tokens_per_chunk": 485,
+        "boundary_checks": 51
+      },
+      "chunk_words": {
+        "minimum": 26,
+        "median": 408,
+        "maximum": 868
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 910714,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "fcf7024622e8d88653efc69615a81ebd692e04bc1a47addaea0f6af7065eb208"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "sentence-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "sentences": 6,
+        "overlap": 0,
+        "boundary": "punctuation-regex-v1"
+      },
+      "chunk_count": 145,
+      "efficiency": {
+        "characters_per_chunk": 799,
+        "tokens_per_chunk": 174,
+        "boundary_checks": 144
+      },
+      "chunk_words": {
+        "minimum": 20,
+        "median": 142,
+        "maximum": 368
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 166474,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "5e44903bcc38d2aa89fb52ba957151ba8557e141cd8d609eb15919e4f50636a6"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "fixed-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "tokens": 220,
+        "overlap": 0
+      },
+      "chunk_count": 115,
+      "efficiency": {
+        "characters_per_chunk": 1007,
+        "tokens_per_chunk": 219,
+        "boundary_checks": 114
+      },
+      "chunk_words": {
+        "minimum": 17,
+        "median": 192,
+        "maximum": 203
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": null,
+        "boundary_recall_ppm": null,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 3,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "7608794da0d5a6f4ebbb17cf3c981f3e1c9d0eba7644ce48040e5fe0f74949b1"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "page-layout",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "rejected",
+      "tested_parameters": {
+        "boundary": "physical-page"
+      },
+      "chunk_count": 62,
+      "efficiency": {
+        "characters_per_chunk": 1869,
+        "tokens_per_chunk": 407,
+        "boundary_checks": 55
+      },
+      "chunk_words": {
+        "minimum": 0,
+        "median": 392,
+        "maximum": 868
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 3,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 0,
+        "error_ppm": 1000000
+      },
+      "proof": {
+        "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+        "boundaries_sha256": "9cbd521922c3a90578dd1d1a2303308656f638432f5453876eaaa9160aafc2cd"
+      },
+      "diagnostics": [
+        "page-break-crosses-unit"
+      ]
+    }
+  ],
+  "recommendation": {
+    "status": "validated",
+    "method": "hierarchical-structure",
+    "experiment_proof": {
+      "reference_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+      "output_tokens_sha256": "9a025511d417a689e1a1455adc784f903a886da651573070e79f0f1757a13444",
+      "boundaries_sha256": "fc924f053aaa9a2ca2c2653516d3ca5a11cc30d728d9db6821ca9ec0723e818c"
+    }
+  },
+  "knowledge": {
+    "schema": "publication-chunking-learning/v1",
+    "path": "chunking-learning.json",
+    "profile": "ddc1c1713d383bce54c2e6e6de24de704e17206c55820e005740ecba2702c871"
+  },
+  "limitations": [],
+  "chunks_materialized": false,
+  "integrity": "b43ca0cb6247df354724b9fe89aaba1f768567274d7167fa3101030021c9eab2"
+}

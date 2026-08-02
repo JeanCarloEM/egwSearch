@@ -1,0 +1,127 @@
+{
+  "schema_version": "publication-chunking-analysis/v2",
+  "generator": {
+    "id": "egwSearch/publication_analysis.py",
+    "version": "2"
+  },
+  "catalog": {
+    "id": "egwSearch/chunking-methods",
+    "schema": "publication-chunking-method-catalog/v1",
+    "version": 1,
+    "path": "config/publication-chunking-methods.json",
+    "sha256": "f1ca35473b0d568393aa43aaee5725716fff4714a39b5d6b0cb94fd3e89f5221"
+  },
+  "asset": {
+    "path": "egw/en/books/the-impending-conflict/tic.epub",
+    "format": "epub",
+    "size": 972,
+    "hashes": {
+      "sha1": "b39c29c113a2d9bba4a8267dabd87f1dd0af11c1",
+      "sha256": "9cb62aa87da7d3dc9471fa9679a2d82954f395affbabaa2b1ef821d11a9df977",
+      "sha512": "a6be38e79048effbb63678d3a3857f2a8581df144c6f23a6562c0637a05c23067144c15c1c7bc4100a54b53ed297c5eaf7b84c250acdf10759efad52b262d2bb"
+    }
+  },
+  "publication": {
+    "metadata": "egw/en/books/the-impending-conflict/tic.source.json",
+    "remote_id": null,
+    "author_key": null,
+    "language": null,
+    "category": null,
+    "type": null,
+    "generated_epub": false
+  },
+  "parser": {
+    "selected": "binary-epub-structure",
+    "attempts": [
+      {
+        "id": "python-stdlib/zipfile+xml.etree",
+        "status": "failed",
+        "error": "AnalysisError"
+      },
+      {
+        "id": "binary-epub-structure",
+        "status": "passed-structural-only"
+      }
+    ]
+  },
+  "metadata_evidence": {},
+  "structure": {
+    "zip_entries": 4,
+    "named_zip_entries": 3,
+    "empty_zip_entries": 1,
+    "expanded_bytes_declared": 841
+  },
+  "fingerprint": "d553cf80d8fa2b32e6cf5e1225c212db296e4e50e0cacca77b2d58d5c5f47cab",
+  "reference": {
+    "complete": false,
+    "characters": 0,
+    "tokens": 0,
+    "blocks": 0,
+    "paragraph_boundaries": 0,
+    "sentence_boundaries": 0,
+    "page_boundaries": 0,
+    "noise_patterns_removed": 0,
+    "noise_occurrences_removed": 0,
+    "cross_page_continuations": 0,
+    "tokens_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "noise_proof_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "continuity_proof_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "experiments": [
+    {
+      "method": "whole-document",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "inconclusive",
+      "tested_parameters": {
+        "boundary": "document"
+      },
+      "chunk_count": 0,
+      "efficiency": {
+        "characters_per_chunk": 0,
+        "tokens_per_chunk": 0,
+        "boundary_checks": 0
+      },
+      "chunk_words": {
+        "minimum": 0,
+        "median": 0,
+        "maximum": 0
+      },
+      "metrics": {
+        "coverage_ppm": null,
+        "order_ppm": null,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": null,
+        "boundary_recall_ppm": null,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": null,
+        "error_ppm": null
+      },
+      "proof": {
+        "reference_tokens_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "output_tokens_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": [
+        "reference-unavailable"
+      ]
+    }
+  ],
+  "recommendation": {
+    "status": "inconclusive",
+    "method": null,
+    "experiment_proof": null
+  },
+  "knowledge": {
+    "schema": "publication-chunking-learning/v1",
+    "path": "chunking-learning.json",
+    "profile": "e4c0e52af331cd2ad8b22cf9a34b8e12559e31f00653e5a616347838d0f70cb5"
+  },
+  "limitations": [
+    "epub-content-unavailable:EPUB sem pacote OCF inequívoco"
+  ],
+  "chunks_materialized": false,
+  "integrity": "644ee9a40c9308e348f94e0e443fb8e9cc96a687195a6fea3c3a1e8f02749be3"
+}
