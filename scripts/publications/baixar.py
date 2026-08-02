@@ -2859,8 +2859,9 @@ def _process_collection(
         if len(item_remote_ids) != len(set(item_remote_ids)):
             raise ContractError("catálogo retomável possui identificadores duplicados")
         for position, item in enumerate(items):
-            if not item.local_complete or item.remote_id in confirmed:
+            if item.remote_id in confirmed:
                 continue
+            entry = checkpoint["catalog_entries"][position]
             refreshed = None
             if not revalidate:
                 refreshed = preflight_local_publication(
@@ -2869,13 +2870,20 @@ def _process_collection(
                     source_root,
                     local_index or {},
                     download_config,
+                    entry["title"],
+                    entry["url"],
+                    entry["author"],
                 )
-            if refreshed is None:
+            if refreshed is not None and not item.local_complete:
+                print(
+                    f"PUBLICATION_LOCAL_VALID remote_id={item.remote_id} "
+                    "checkpoint=updated network=skipped"
+                )
+            if refreshed is None and item.local_complete:
                 if browser_manager is None or fixture_payload is not None:
                     raise ContractError(
                         "publicação local mudou durante retomada; rede necessária"
                     )
-                entry = checkpoint["catalog_entries"][position]
                 refreshed = browser_manager._enrich_book(
                     collection,
                     entry["url"],
@@ -2884,6 +2892,8 @@ def _process_collection(
                     limiter,
                     restart=restart,
                 )
+            if refreshed is None or refreshed == item:
+                continue
             items[position] = refreshed
             checkpoint["items"] = [_catalog_item_record(value) for value in items]
             checkpoint["_items"] = items

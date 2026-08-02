@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import io
+from dataclasses import replace
 from pathlib import Path
 import sys
 import tempfile
@@ -403,6 +404,58 @@ class DownloaderTests(unittest.TestCase):
             self.assertEqual(process.call_count, 1)
             self.assertEqual(process.call_args.args[0].remote_id, "2")
             self.assertFalse(checkpoint_path.exists())
+
+    def test_stale_false_checkpoint_reapplies_current_local_gate(self) -> None:
+        collection = self._checkpoint_collection()
+        stale = self._checkpoint_item("11101", "Testemunhos para a Igreja 5")
+        local = replace(stale, local_complete=True)
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            state_root = root / "state"
+            source_root = root / "publications"
+            checkpoint_path = baixar._collection_checkpoint_path(
+                state_root, collection, None, None
+            )
+            checkpoint = baixar._new_collection_checkpoint(collection, None, None)
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": stale.title_original,
+                    "url": stale.public_url,
+                    "author": stale.author_name,
+                }
+            ]
+            checkpoint["items"] = [baixar._catalog_item_record(stale)]
+            checkpoint["discovery_complete"] = True
+            baixar._save_collection_checkpoint(checkpoint_path, checkpoint)
+            result = {
+                "state": "skipped",
+                "downloaded": 0,
+                "skipped": 1,
+                "extracted": 0,
+                "converted": 0,
+            }
+            browser = Mock()
+            browser._enrich_book.side_effect = AssertionError(
+                "checkpoint antigo não pode liberar request"
+            )
+            with patch.object(
+                baixar, "preflight_local_publication", return_value=local
+            ) as preflight, patch.object(
+                baixar, "_process_catalog_item", return_value=result
+            ) as process:
+                baixar._process_collection(
+                    collection,
+                    self._checkpoint_config(),
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                    browser_manager=browser,
+                )
+            preflight.assert_called_once()
+            self.assertTrue(process.call_args.args[0].local_complete)
+            browser._enrich_book.assert_not_called()
 
     def test_invalid_checkpoint_blocks_until_explicit_restart(self) -> None:
         collection = self._checkpoint_collection()
