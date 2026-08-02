@@ -8,7 +8,7 @@
 - fonte: `.ia.rules/state/requests/FT-015/source.md`.
 - RCF: §§40-41 e 43-49.
 - prioridade: alta.
-- estado: implementação concluída; validação pública em andamento.
+- estado: concluída.
 
 ## Objetivo
 
@@ -81,7 +81,15 @@ CI, workflow dedicado e validação no destino público real.
 - validação visual local: desktop, viewport móvel e página 404, sem overflow, links ao acervo ou erro de console;
 - dívida normativa preexistente: `agent:rcf` interrompe em `RCF.md:9`, fora das sentenças rastreadas pela FT-015.
 
-## Próximo ponto
+## Publicação e validação real
 
-Integrar em `main`, publicar pelo workflow dedicado, validar o domínio real e
-amostras diretas conhecidas; somente então encerrar a FT.
+- integração `dev` → `main`: fast-forward até `aa311e6`;
+- workflow: execução `30771936028`, build em 1m10s e deployment em 29s;
+- destino: `https://egwsearch.jcem.pro/`, certificado aprovado e HTTPS obrigatório;
+- HTML real: responsivo em desktop e 390×844, sem links/revelações do acervo,
+  overflow, erro ou aviso de console;
+- 404 real: página própria, responsiva, sem links e sem erro de console;
+- `index.json` e metadado amostral: bytes e SHA-256 iguais aos blobs Git;
+- EPUB, PDF e capa amostrais: HTTP 200, MIME correto, tamanho e SHA-256 iguais
+  aos arquivos canônicos;
+- pendências da FT-015: nenhuma.

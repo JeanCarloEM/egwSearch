@@ -2,7 +2,7 @@
 
 - origem: prompt humano no Codex Desktop
 - recebido_em: `2026-08-02T18:59:00-03:00`
-- incorporacao: `implementação concluída; validação pública em andamento`
+- incorporacao: `concluída e validada publicamente`
 - destinos: `RCF.md`, `.ia.rules/continue.ia`, `.ia.rules/state/contexts/FT-015/master.md`
 
 ## Solicitação integral
@@ -17,4 +17,6 @@
 - publicação externa: autorizada explicitamente para o GitHub Pages deste produto.
 - implementação material: `6b7ee06`, `38c59f9` e `f0bde08`;
 - validação local integral: 585 publicações, 3.465 arquivos e 800.157.766 bytes;
-- pendência exclusiva: deployment e validação pública real.
+- deployment: workflow `30771936028` aprovado em `2026-08-02`;
+- destino validado: `https://egwsearch.jcem.pro/`, com HTTPS obrigatório;
+- pendências: nenhuma.
