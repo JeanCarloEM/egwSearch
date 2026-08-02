@@ -1006,6 +1006,194 @@ def _clean_catalog_title(value: str) -> str:
     return lines[0]
 
 
+COLLECTION_CHECKPOINT_SCHEMA = "publication-collection-checkpoint/v1"
+
+
+def _catalog_item_record(item: CatalogItem) -> dict:
+    return {
+        "remote_id": item.remote_id,
+        "collection_id": item.collection_id,
+        "collection_name": item.collection_name,
+        "author_name": item.author_name,
+        "author_key": item.author_key,
+        "language_original": item.language_original,
+        "language": item.language,
+        "language_path": item.language_path,
+        "publication_type": item.publication_type,
+        "title_original": item.title_original,
+        "title_normalized": item.title_normalized,
+        "public_url": item.public_url,
+        "category_name": item.category_name,
+        "category_path": item.category_path,
+        "cover_url": item.cover_url,
+        "edition": item.edition,
+        "assets": [
+            {
+                "format": asset.format,
+                "url": asset.url,
+                "etag": asset.etag,
+                "last_modified": asset.last_modified,
+                "size": asset.size,
+                "remote_hash": asset.remote_hash,
+            }
+            for asset in item.assets
+        ],
+        "segments": [
+            {
+                "remote_id": segment.remote_id,
+                "url": segment.url,
+                "order": segment.order,
+                "title": segment.title,
+                "html": segment.html,
+            }
+            for segment in item.segments
+        ],
+        "local_complete": item.local_complete,
+    }
+
+
+def _catalog_item_from_record(value: object) -> CatalogItem:
+    if not isinstance(value, dict):
+        raise ContractError("item inválido no checkpoint de coleção")
+    try:
+        assets = tuple(CatalogAsset(**asset) for asset in value.get("assets", []))
+        segments = tuple(CatalogSegment(**segment) for segment in value.get("segments", []))
+        return CatalogItem(
+            remote_id=str(value["remote_id"]),
+            collection_id=str(value["collection_id"]),
+            collection_name=str(value["collection_name"]),
+            author_name=str(value["author_name"]),
+            author_key=str(value["author_key"]),
+            language_original=str(value["language_original"]),
+            language=str(value["language"]),
+            language_path=str(value["language_path"]),
+            publication_type=str(value["publication_type"]),
+            title_original=str(value["title_original"]),
+            title_normalized=str(value["title_normalized"]),
+            public_url=str(value["public_url"]),
+            category_name=str(value["category_name"]),
+            category_path=str(value["category_path"]),
+            cover_url=str(value.get("cover_url") or ""),
+            edition=str(value.get("edition") or ""),
+            assets=assets,
+            segments=segments,
+            local_complete=bool(value.get("local_complete", False)),
+        )
+    except (KeyError, TypeError, ValueError) as error:
+        raise ContractError("item inválido no checkpoint de coleção") from error
+
+
+def _collection_checkpoint_path(
+    state_root: Path,
+    collection: dict,
+    limit: int | None,
+    publication_query: str | None,
+) -> Path:
+    scope = json.dumps(
+        {
+            "collection": collection["id"],
+            "limit": limit,
+            "publication_query": (publication_query or "").casefold().strip(),
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    suffix = hashlib.sha256(scope.encode("utf-8")).hexdigest()[:16]
+    return state_root / "collections" / uri_slug(collection["id"]) / f"{suffix}.json"
+
+
+def _new_collection_checkpoint(
+    collection: dict,
+    limit: int | None,
+    publication_query: str | None,
+) -> dict:
+    return {
+        "schema_version": COLLECTION_CHECKPOINT_SCHEMA,
+        "collection_id": collection["id"],
+        "catalog_url": _lightweight_public_url(collection["catalog_url"]),
+        "limit": limit,
+        "publication_query": (publication_query or "").casefold().strip(),
+        "catalog_entries": [],
+        "items": [],
+        "confirmed_remote_ids": [],
+        "discovery_complete": False,
+    }
+
+
+def _load_collection_checkpoint(
+    path: Path,
+    collection: dict,
+    limit: int | None,
+    publication_query: str | None,
+) -> dict | None:
+    if not path.is_file():
+        return None
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ContractError(
+            f"checkpoint de coleção inválido; use --restart: {path}"
+        ) from error
+    expected = _new_collection_checkpoint(collection, limit, publication_query)
+    if not isinstance(value, dict) or any(
+        value.get(key) != expected[key]
+        for key in (
+            "schema_version",
+            "collection_id",
+            "catalog_url",
+            "limit",
+            "publication_query",
+        )
+    ):
+        raise ContractError(f"checkpoint de coleção incompatível; use --restart: {path}")
+    entries = value.get("catalog_entries")
+    items = value.get("items")
+    confirmed = value.get("confirmed_remote_ids")
+    if (
+        not isinstance(entries, list)
+        or not isinstance(items, list)
+        or not isinstance(confirmed, list)
+        or not isinstance(value.get("discovery_complete"), bool)
+        or len(items) > len(entries)
+        or (value.get("discovery_complete") and len(items) != len(entries))
+        or any(
+            not isinstance(entry, dict)
+            or set(entry) != {"title", "url", "author"}
+            or not all(isinstance(entry[key], str) for key in entry)
+            for entry in entries
+        )
+        or any(not isinstance(remote_id, str) or not remote_id for remote_id in confirmed)
+    ):
+        raise ContractError(f"checkpoint de coleção corrompido; use --restart: {path}")
+    parsed_items = [_catalog_item_from_record(item) for item in items]
+    remote_ids = [item.remote_id for item in parsed_items]
+    try:
+        mapping_invalid = any(
+            item.collection_id != collection["id"]
+            or item.remote_id != _book_id_from_url(entries[index]["url"])
+            for index, item in enumerate(parsed_items)
+        )
+    except ContractError:
+        mapping_invalid = True
+    if (
+        len(remote_ids) != len(set(remote_ids))
+        or len(confirmed) != len(set(confirmed))
+        or not set(confirmed).issubset(set(remote_ids))
+        or mapping_invalid
+    ):
+        raise ContractError(f"checkpoint de coleção ambíguo; use --restart: {path}")
+    value["_items"] = parsed_items
+    return value
+
+
+def _save_collection_checkpoint(path: Path, checkpoint: dict) -> None:
+    write_json_atomic(
+        path,
+        {key: value for key, value in checkpoint.items() if not key.startswith("_")},
+    )
+
+
 class BrowserSessionManager:
     """Mantem uma unica sessao/guia Selenium visivel para descoberta remota."""
 
@@ -1055,22 +1243,72 @@ class BrowserSessionManager:
         limit: int | None = None,
         publication_query: str | None = None,
         local_preflight=None,
+        checkpoint_path: Path | None = None,
+        checkpoint: dict | None = None,
+        restart: bool = False,
     ) -> list[CatalogItem]:
         """Enumera todas as obras e as enriquece pela página individual."""
 
-        driver = self._usable_driver()
-        limiter.before_request()
-        print(
-            f"BROWSER_TAB_REUSE collection={collection['id']} "
-            f"profile={self._safe_profile_label()}"
+        active = checkpoint or _new_collection_checkpoint(
+            collection, limit, publication_query
         )
-        catalog_url = _lightweight_public_url(collection["catalog_url"])
-        driver.get(catalog_url)
-        driver = self._wait_for_human_release(collection["id"])
-        if urlsplit(catalog_url).hostname != "text.egwwritings.org":
-            self._accept_cookie_banner()
-        links = self._discover_catalog_links(collection, limiter)
-        if links:
+        stored_entries = active.get("catalog_entries") or []
+        items = list(active.get("_items") or [])
+        if stored_entries:
+            ordered = [
+                (entry["title"], entry["url"], entry["author"])
+                for entry in stored_entries
+            ]
+            print(
+                f"CATALOG_DISCOVERY_RESUME collection={collection['id']} "
+                f"enriched={len(items)} publications={len(ordered)}"
+            )
+        else:
+            driver = self._usable_driver()
+            limiter.before_request()
+            print(
+                f"BROWSER_TAB_REUSE collection={collection['id']} "
+                f"profile={self._safe_profile_label()}"
+            )
+            catalog_url = _lightweight_public_url(collection["catalog_url"])
+            driver.get(catalog_url)
+            driver = self._wait_for_human_release(collection["id"])
+            if urlsplit(catalog_url).hostname != "text.egwwritings.org":
+                self._accept_cookie_banner()
+            links = self._discover_catalog_links(collection, limiter)
+            if not links:
+                # Compatibilidade com a aplicação completa e fixtures Selenium
+                # antigas, sem checkpoint incremental para DOM virtualizado.
+                virtualized: dict[str, CatalogItem] = {}
+                self._harvest_virtualized_cards(collection, virtualized)
+                self._scroll_until_stable(
+                    on_step=lambda: self._harvest_virtualized_cards(
+                        collection, virtualized
+                    )
+                )
+                self._wait_for_catalog_grid(collection["id"])
+                self._harvest_virtualized_cards(collection, virtualized)
+                values = sorted(
+                    virtualized.values(),
+                    key=lambda item: item.title_normalized.casefold(),
+                )
+                values = values[:limit] if limit is not None else values
+                if checkpoint_path is None:
+                    return values
+                active["catalog_entries"] = [
+                    {
+                        "title": item.title_original,
+                        "url": item.public_url,
+                        "author": item.author_name,
+                    }
+                    for item in values
+                ]
+                active["items"] = [_catalog_item_record(item) for item in values]
+                active["_items"] = values
+                active["discovery_complete"] = True
+                if checkpoint_path is not None:
+                    _save_collection_checkpoint(checkpoint_path, active)
+                return values
             print(
                 f"CATALOG_DISCOVERED collection={collection['id']} "
                 f"publications={len(links)} source=lightweight-public"
@@ -1091,32 +1329,53 @@ class BrowserSessionManager:
                     )
             if limit is not None:
                 ordered = ordered[:limit]
-            items: list[CatalogItem] = []
-            for title, url, author in ordered:
-                remote_id = _book_id_from_url(url)
-                local = local_preflight(remote_id) if local_preflight else None
-                if local is not None:
-                    items.append(local)
-                    print(
-                        f"PUBLICATION_LOCAL_VALID remote_id={remote_id} "
-                        "network=skipped"
-                    )
-                    continue
-                items.append(self._enrich_book(collection, url, title, author, limiter))
+            active["catalog_entries"] = [
+                {"title": title, "url": url, "author": author}
+                for title, url, author in ordered
+            ]
+            if checkpoint_path is not None:
+                _save_collection_checkpoint(checkpoint_path, active)
+
+        if active.get("discovery_complete"):
+            if len(items) != len(ordered):
+                raise ContractError("checkpoint concluído com catálogo parcial; use --restart")
             return items
 
-        # Compatibilidade com a aplicação completa e com fixtures Selenium
-        # antigas: a colheita ocorre durante a rolagem para não perder cartões
-        # virtualizados que deixam o DOM.
-        items: dict[str, CatalogItem] = {}
-        self._harvest_virtualized_cards(collection, items)
-        self._scroll_until_stable(
-            on_step=lambda: self._harvest_virtualized_cards(collection, items)
-        )
-        self._wait_for_catalog_grid(collection["id"])
-        self._harvest_virtualized_cards(collection, items)
-        values = sorted(items.values(), key=lambda item: item.title_normalized.casefold())
-        return values[:limit] if limit is not None else values
+        for title, url, author in ordered[len(items) :]:
+            remote_id = _book_id_from_url(url)
+            if restart:
+                self._text_checkpoint_path(remote_id).unlink(missing_ok=True)
+            local = local_preflight(remote_id) if local_preflight else None
+            if local is not None:
+                items.append(local)
+                print(
+                    f"PUBLICATION_LOCAL_VALID remote_id={remote_id} "
+                    "network=skipped"
+                )
+            else:
+                items.append(
+                    self._enrich_book(
+                        collection,
+                        url,
+                        title,
+                        author,
+                        limiter,
+                        restart=restart,
+                    )
+                )
+            active["items"] = [_catalog_item_record(item) for item in items]
+            active["_items"] = items
+            if checkpoint_path is not None:
+                _save_collection_checkpoint(checkpoint_path, active)
+        active["discovery_complete"] = True
+        active["items"] = [_catalog_item_record(item) for item in items]
+        active["_items"] = items
+        if checkpoint_path is not None:
+            _save_collection_checkpoint(checkpoint_path, active)
+        return items
+
+    def _text_checkpoint_path(self, book_id: str) -> Path:
+        return self.state_root / "acquisition" / "text" / f"{book_id}.json"
 
     def _discover_catalog_links(
         self,
@@ -1168,6 +1427,7 @@ class BrowserSessionManager:
         title_candidate: str,
         author_candidate: str,
         limiter: RateLimiter,
+        restart: bool = False,
     ) -> CatalogItem:
         """Usa a página da obra como autoridade de identidade, ativos e leitura."""
 
@@ -1228,7 +1488,9 @@ class BrowserSessionManager:
         if not assets:
             if not read_url:
                 raise ContractError("obra sem ativo nativo e sem URL Read Online")
-            segments = tuple(self._discover_text_segments(read_url, limiter))
+            segments = tuple(
+                self._discover_text_segments(read_url, limiter, restart=restart)
+            )
         canonical_url = _lightweight_public_url(public_url)
         return CatalogItem(
             remote_id=remote_id_from_url(canonical_url),
@@ -1256,47 +1518,52 @@ class BrowserSessionManager:
         self,
         initial_url: str,
         limiter: RateLimiter,
+        *,
+        restart: bool = False,
     ) -> list[CatalogSegment]:
         """Percorre a cadeia editorial real `rel=next` sem saltar páginas."""
 
-        driver = self._usable_driver()
-        by = self.runtime["By"]
         book_id = _book_id_from_url(initial_url)
         current = _lightweight_public_url(initial_url)
         visited: set[str] = set()
         segments: list[CatalogSegment] = []
-        checkpoint_path = (
-            self.state_root / "acquisition" / "text" / f"{book_id}.json"
-        )
+        checkpoint_path = self._text_checkpoint_path(book_id)
+        if restart:
+            checkpoint_path.unlink(missing_ok=True)
         if checkpoint_path.is_file():
             try:
                 checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
                 if (
-                    checkpoint.get("schema_version") == "publication-text-checkpoint/v1"
-                    and checkpoint.get("initial_url") == current
-                    and isinstance(checkpoint.get("segments"), list)
+                    checkpoint.get("schema_version") != "publication-text-checkpoint/v1"
+                    or checkpoint.get("initial_url") != current
+                    or not isinstance(checkpoint.get("segments"), list)
                 ):
-                    segments = [
-                        CatalogSegment(
-                            remote_id=str(value["remote_id"]),
-                            url=str(value["url"]),
-                            order=int(value["order"]),
-                            title=str(value["title"]),
-                            html=str(value["html"]),
-                        )
-                        for value in checkpoint["segments"]
-                    ]
-                    visited = {segment.url for segment in segments}
-                    current = str(checkpoint.get("next_url") or "")
-                    if checkpoint.get("complete"):
-                        return segments
-                    print(
-                        f"TEXT_DISCOVERY_RESUME book={book_id} units={len(segments)}"
+                    raise ContractError("checkpoint textual incompatível; use --restart")
+                segments = [
+                    CatalogSegment(
+                        remote_id=str(value["remote_id"]),
+                        url=str(value["url"]),
+                        order=int(value["order"]),
+                        title=str(value["title"]),
+                        html=str(value["html"]),
                     )
-            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
-                checkpoint_path.rename(
-                    checkpoint_path.with_suffix(f".corrupt-{int(time.time())}.json")
+                    for value in checkpoint["segments"]
+                ]
+                visited = {segment.url for segment in segments}
+                current = str(checkpoint.get("next_url") or "")
+                if checkpoint.get("complete"):
+                    return segments
+                print(
+                    f"TEXT_DISCOVERY_RESUME book={book_id} units={len(segments)}"
                 )
+            except ContractError:
+                raise
+            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
+                raise ContractError(
+                    f"checkpoint textual inválido; use --restart: {checkpoint_path}"
+                ) from error
+        driver = self._usable_driver()
+        by = self.runtime["By"]
         while current:
             if len(segments) >= 10000:
                 raise ContractError("cadeia editorial excedeu o limite seguro")
@@ -2276,6 +2543,7 @@ def _process_collection(
     publisher: GitPublicationPublisher | None = None,
     publication_query: str | None = None,
     local_index: dict[str, list[Path]] | None = None,
+    restart: bool = False,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -2292,6 +2560,24 @@ def _process_collection(
     limiter = shared_limiter or RateLimiter(_rate_policy(download_config))
     download_config["_rate_limiter"] = limiter
     ledger = AcquisitionLedger(state_root / "ledger.json")
+    checkpoint_path = _collection_checkpoint_path(
+        state_root,
+        collection,
+        limit,
+        publication_query,
+    )
+    if restart:
+        checkpoint_path.unlink(missing_ok=True)
+        print(
+            f"COLLECTION_RESTART collection={collection['id']} "
+            f"checkpoint={checkpoint_path.name}"
+        )
+    checkpoint = _load_collection_checkpoint(
+        checkpoint_path,
+        collection,
+        limit,
+        publication_query,
+    )
     session = runtime["requests"].Session() if runtime else None
     if session is not None:
         session.headers["User-Agent"] = download_config["user_agent"]
@@ -2305,10 +2591,48 @@ def _process_collection(
         "review_required": 0,
         "failures": 0,
         "blocked": False,
+        "resumed": 0,
     }
     try:
-        if fixture_payload is not None:
+        if checkpoint is not None and checkpoint.get("discovery_complete"):
+            items = list(checkpoint["_items"])
+            print(
+                f"COLLECTION_RESUME collection={collection['id']} "
+                f"confirmed={len(checkpoint['confirmed_remote_ids'])} "
+                f"publications={len(items)}"
+            )
+        elif fixture_payload is not None:
             items = parse_catalog_payload(fixture_payload, collection)
+            if publication_query:
+                query = publication_query.casefold().strip()
+                items = [
+                    item
+                    for item in items
+                    if query in item.title_original.casefold()
+                    or query in item.public_url.casefold()
+                    or query == item.remote_id.casefold()
+                ]
+                if not items:
+                    raise ContractError(
+                        f"publicação não encontrada na coleção: {publication_query}"
+                    )
+            if limit is not None:
+                items = items[:limit]
+            checkpoint = checkpoint or _new_collection_checkpoint(
+                collection, limit, publication_query
+            )
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": item.title_original,
+                    "url": item.public_url,
+                    "author": item.author_name,
+                }
+                for item in items
+            ]
+            checkpoint["items"] = [_catalog_item_record(item) for item in items]
+            checkpoint["_items"] = items
+            checkpoint["discovery_complete"] = True
+            _save_collection_checkpoint(checkpoint_path, checkpoint)
         else:
             if no_network:
                 raise ContractError("fixture obrigatoria com --no-network")
@@ -2330,7 +2654,18 @@ def _process_collection(
                         download_config,
                     )
                 ),
+                checkpoint_path=checkpoint_path,
+                checkpoint=checkpoint,
+                restart=restart,
             )
+            checkpoint = _load_collection_checkpoint(
+                checkpoint_path,
+                collection,
+                limit,
+                publication_query,
+            )
+            if checkpoint is None:
+                raise ContractError("checkpoint de coleção ausente após descoberta")
         if publication_query and fixture_payload is not None:
             query = publication_query.casefold().strip()
             items = [
@@ -2347,7 +2682,62 @@ def _process_collection(
         if limit is not None:
             items = items[:limit]
         summary["discovered"] = len(items)
+        if checkpoint is None:
+            checkpoint = _new_collection_checkpoint(collection, limit, publication_query)
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": item.title_original,
+                    "url": item.public_url,
+                    "author": item.author_name,
+                }
+                for item in items
+            ]
+            checkpoint["items"] = [_catalog_item_record(item) for item in items]
+            checkpoint["_items"] = items
+            checkpoint["discovery_complete"] = True
+            _save_collection_checkpoint(checkpoint_path, checkpoint)
+        confirmed = set(checkpoint["confirmed_remote_ids"])
+        item_remote_ids = [item.remote_id for item in items]
+        if len(item_remote_ids) != len(set(item_remote_ids)):
+            raise ContractError("catálogo retomável possui identificadores duplicados")
+        for position, item in enumerate(items):
+            if not item.local_complete or item.remote_id in confirmed:
+                continue
+            refreshed = None
+            if not revalidate:
+                refreshed = preflight_local_publication(
+                    item.remote_id,
+                    collection,
+                    source_root,
+                    local_index or {},
+                    download_config,
+                )
+            if refreshed is None:
+                if browser_manager is None or fixture_payload is not None:
+                    raise ContractError(
+                        "publicação local mudou durante retomada; rede necessária"
+                    )
+                entry = checkpoint["catalog_entries"][position]
+                refreshed = browser_manager._enrich_book(
+                    collection,
+                    entry["url"],
+                    entry["title"],
+                    entry["author"],
+                    limiter,
+                    restart=restart,
+                )
+            items[position] = refreshed
+            checkpoint["items"] = [_catalog_item_record(value) for value in items]
+            checkpoint["_items"] = items
+            _save_collection_checkpoint(checkpoint_path, checkpoint)
         for index, item in enumerate(items, 1):
+            if item.remote_id in confirmed:
+                summary["resumed"] += 1
+                print(
+                    f"ITEM_RESUMED collection={collection['id']} item={index} "
+                    f"remote_id={item.remote_id}"
+                )
+                continue
             try:
                 if publisher is not None:
                     previous = ledger.get(item.stable_key()) or {}
@@ -2382,6 +2772,10 @@ def _process_collection(
                     f"item={index} remote_id={item.remote_id} "
                     f"title={json.dumps(item.title_original, ensure_ascii=False)}"
                 )
+                if result["state"] in {"completed", "skipped", "review_required"}:
+                    confirmed.add(item.remote_id)
+                    checkpoint["confirmed_remote_ids"] = sorted(confirmed)
+                    _save_collection_checkpoint(checkpoint_path, checkpoint)
             except OriginBlocked as error:
                 summary["blocked"] = True
                 summary["failures"] += 1
@@ -2397,6 +2791,13 @@ def _process_collection(
                     f"error={type(error).__name__}:{error}",
                     file=sys.stderr,
                 )
+        if (
+            not summary["failures"]
+            and not summary["blocked"]
+            and confirmed == set(item_remote_ids)
+        ):
+            checkpoint_path.unlink(missing_ok=True)
+            print(f"COLLECTION_CHECKPOINT_CLOSED collection={collection['id']}")
         return summary
     except OriginBlocked as error:
         summary["blocked"] = True
@@ -2483,6 +2884,7 @@ def run(
     output_root: Path | None = None,
     no_network: bool = False,
     revalidate: bool = False,
+    restart: bool = False,
     commit_per_publication: bool = False,
     publication_query: str | None = None,
 ) -> int:
@@ -2571,6 +2973,7 @@ def run(
                         publisher=publisher,
                         publication_query=publication_query,
                         local_index=local_index,
+                        restart=restart,
                     )
                 )
         else:
@@ -2595,6 +2998,7 @@ def run(
                         publisher=publisher,
                         publication_query=publication_query,
                         local_index=local_index,
+                        restart=restart,
                     ): collection["id"]
                     for collection in collections
                 }
@@ -2641,6 +3045,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Usa ETag/Last-Modified persistidos para revalidacao condicional.",
     )
     parser.add_argument(
+        "--restart",
+        action="store_true",
+        help="Descarta checkpoints do escopo selecionado e inicia nova execução.",
+    )
+    parser.add_argument(
         "--publication",
         help="ID remoto, URL ou trecho de título para uma publicação específica.",
     )
@@ -2669,6 +3078,7 @@ def main(argv: list[str] | None = None) -> int:
             output_root=arguments.output_root.resolve() if arguments.output_root else None,
             no_network=arguments.no_network,
             revalidate=arguments.revalidate,
+            restart=arguments.restart,
             commit_per_publication=arguments.commit,
             publication_query=arguments.publication,
         )
