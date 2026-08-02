@@ -271,7 +271,10 @@ class DownloaderTests(unittest.TestCase):
             url="https://text.egwwritings.org/read/14623.2",
             order=1,
             title="A vitória da esperança",
-            html="<p>Texto</p>",
+            html=(
+                '<h1 id="14623.11">A vitória da esperança</h1>'
+                "<p id='14623.20'>Texto</p>"
+            ),
         )
         self.assertTrue(
             baixar._previous_segment_matches(
@@ -285,10 +288,37 @@ class DownloaderTests(unittest.TestCase):
                 {"https://text.egwwritings.org/read/14623.2?origem=reader#top"},
             )
         )
+        self.assertTrue(
+            baixar._previous_segment_matches(
+                previous,
+                {"https://text.egwwritings.org/read/14623.20"},
+            )
+        )
         self.assertFalse(
             baixar._previous_segment_matches(
                 previous,
                 {"https://text.egwwritings.org/read/14623.30"},
+            )
+        )
+        self.assertFalse(
+            baixar._previous_segment_matches(
+                previous,
+                {"https://text.egwwritings.org/read/999.20"},
+            )
+        )
+
+    def test_previous_navigation_accepts_real_1269_checkpoint_transition(self) -> None:
+        previous = CatalogSegment(
+            remote_id="1269.2000003",
+            url="https://text.egwwritings.org/read/1269.2",
+            order=1,
+            title="1886",
+            html='<h2 id="1269.2000003">1886</h2><h3 id="1269.3">January 1886</h3>',
+        )
+        self.assertTrue(
+            baixar._previous_segment_matches(
+                previous,
+                {"https://text.egwwritings.org/read/1269.3"},
             )
         )
 

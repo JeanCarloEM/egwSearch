@@ -1025,17 +1025,26 @@ def _previous_segment_matches(
     segment: CatalogSegment,
     previous_urls: set[str],
 ) -> bool:
-    """Aceita a rota acessada ou o identificador do primeiro bloco da página."""
+    """Aceita a rota acessada ou um identificador editorial contido na página."""
 
     if not previous_urls:
         return True
     aliases = {_reader_navigation_url(segment.url)}
-    if re.fullmatch(
-        rf"{re.escape(_book_id_from_url(segment.url))}\.\d+",
-        segment.remote_id,
-    ):
-        parsed = urlsplit(_reader_navigation_url(segment.url))
-        aliases.add(parsed._replace(path=f"/read/{segment.remote_id}").geturl())
+    book_id = _book_id_from_url(segment.url)
+    parsed = urlsplit(_reader_navigation_url(segment.url))
+    editorial_ids = {segment.remote_id}
+    # FIX-BUG: o leitor pode apontar para qualquer bloco da página anterior,
+    # não somente para o primeiro bloco capturado no checkpoint.
+    editorial_ids.update(
+        re.findall(
+            rf"\bid\s*=\s*['\"]({re.escape(book_id)}\.\d+)['\"]",
+            segment.html,
+            flags=re.IGNORECASE,
+        )
+    )
+    for editorial_id in editorial_ids:
+        if re.fullmatch(rf"{re.escape(book_id)}\.\d+", editorial_id):
+            aliases.add(parsed._replace(path=f"/read/{editorial_id}").geturl())
     normalized_previous = {_reader_navigation_url(url) for url in previous_urls}
     return bool(aliases.intersection(normalized_previous))
 
