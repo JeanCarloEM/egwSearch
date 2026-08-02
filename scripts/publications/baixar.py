@@ -1284,8 +1284,9 @@ class BrowserSessionManager:
         checkpoint_path: Path | None = None,
         checkpoint: dict | None = None,
         restart: bool = False,
+        on_item_ready=None,
     ) -> list[CatalogItem]:
-        """Enumera todas as obras e as enriquece pela página individual."""
+        """Enumera as obras e entrega cada enriquecimento completo imediatamente."""
 
         active = checkpoint or _new_collection_checkpoint(
             collection, limit, publication_query
@@ -1379,6 +1380,10 @@ class BrowserSessionManager:
                 raise ContractError("checkpoint concluído com catálogo parcial; use --restart")
             return items
 
+        if on_item_ready is not None:
+            for position, item in enumerate(items, 1):
+                on_item_ready(item, position, active)
+
         for title, url, author in ordered[len(items) :]:
             remote_id = _book_id_from_url(url)
             if restart:
@@ -1409,6 +1414,8 @@ class BrowserSessionManager:
             active["_items"] = items
             if checkpoint_path is not None:
                 _save_collection_checkpoint(checkpoint_path, active)
+            if on_item_ready is not None:
+                on_item_ready(items[-1], len(items), active)
         active["discovery_complete"] = True
         active["items"] = [_catalog_item_record(item) for item in items]
         active["_items"] = items
@@ -2748,6 +2755,122 @@ def _process_collection(
         "blocked": False,
         "resumed": 0,
     }
+    confirmed_at_start = set(
+        checkpoint.get("confirmed_remote_ids", []) if checkpoint is not None else []
+    )
+    resumed_reported: set[str] = set()
+    attempted_this_run: set[str] = set()
+
+    def process_ready_item(item: CatalogItem, position: int, active: dict) -> None:
+        """Valida e promove uma obra completa antes de enriquecer a seguinte."""
+
+        nonlocal checkpoint
+        checkpoint = active
+        confirmed = set(active["confirmed_remote_ids"])
+        if item.remote_id in confirmed:
+            if (
+                item.remote_id in confirmed_at_start
+                and item.remote_id not in resumed_reported
+            ):
+                summary["resumed"] += 1
+                resumed_reported.add(item.remote_id)
+                print(
+                    f"ITEM_RESUMED collection={collection['id']} item={position} "
+                    f"remote_id={item.remote_id}"
+                )
+            return
+        if item.remote_id in attempted_this_run:
+            return
+
+        values = active["_items"]
+        entry = active["catalog_entries"][position - 1]
+        refreshed = None
+        if not revalidate:
+            refreshed = preflight_local_publication(
+                item.remote_id,
+                collection,
+                source_root,
+                local_index or {},
+                download_config,
+                entry["title"],
+                entry["url"],
+                entry["author"],
+            )
+        if refreshed is not None and not item.local_complete:
+            print(
+                f"PUBLICATION_LOCAL_VALID remote_id={item.remote_id} "
+                "checkpoint=updated network=skipped"
+            )
+        if refreshed is None and item.local_complete:
+            if browser_manager is None or fixture_payload is not None:
+                raise ContractError(
+                    "publicação local mudou durante retomada; rede necessária"
+                )
+            refreshed = browser_manager._enrich_book(
+                collection,
+                entry["url"],
+                entry["title"],
+                entry["author"],
+                limiter,
+                restart=restart,
+            )
+        if refreshed is not None and refreshed != item:
+            item = refreshed
+            values[position - 1] = item
+            active["items"] = [_catalog_item_record(value) for value in values]
+            active["_items"] = values
+            _save_collection_checkpoint(checkpoint_path, active)
+
+        attempted_this_run.add(item.remote_id)
+        summary["discovered"] = max(summary["discovered"], position)
+        try:
+            if publisher is not None:
+                previous = ledger.get(item.stable_key()) or {}
+                publisher.preflight(
+                    item,
+                    resume=previous.get("git_state") == "commit_pending",
+                )
+            result = _process_catalog_item(
+                item,
+                source_root,
+                session,
+                download_config,
+                runtime["tqdm"] if runtime else (lambda **_kwargs: _NullProgress()),
+                ledger,
+                no_network=no_network,
+                revalidate=revalidate,
+            )
+            for key in ("downloaded", "skipped", "extracted", "converted"):
+                summary[key] += result[key]
+            if result["state"] == "review_required":
+                summary["review_required"] += 1
+            if publisher is not None and result["state"] in {"completed", "skipped"}:
+                allowlist = validate_complete_publication(item, source_root)
+                commit = publisher.commit(item, allowlist, ledger)
+                if commit:
+                    result["commit"] = commit
+                    print(
+                        f"PUBLICATION_COMMITTED remote_id={item.remote_id} commit={commit}"
+                    )
+            print(
+                f"ITEM_{result['state'].upper()} collection={collection['id']} "
+                f"item={position} remote_id={item.remote_id} "
+                f"title={json.dumps(item.title_original, ensure_ascii=False)}"
+            )
+            if result["state"] in {"completed", "skipped", "review_required"}:
+                confirmed.add(item.remote_id)
+                active["confirmed_remote_ids"] = sorted(confirmed)
+                _save_collection_checkpoint(checkpoint_path, active)
+        except OriginBlocked:
+            raise
+        except Exception as error:
+            summary["failures"] += 1
+            print(
+                f"ITEM_FAIL collection={collection['id']} item={position} "
+                f"error={type(error).__name__}:{error}",
+                file=sys.stderr,
+            )
+
     try:
         if checkpoint is not None and checkpoint.get("discovery_complete"):
             items = list(checkpoint["_items"])
@@ -2815,6 +2938,7 @@ def _process_collection(
                 checkpoint_path=checkpoint_path,
                 checkpoint=checkpoint,
                 restart=restart,
+                on_item_ready=process_ready_item,
             )
             checkpoint = _load_collection_checkpoint(
                 checkpoint_path,
@@ -2854,111 +2978,12 @@ def _process_collection(
             checkpoint["_items"] = items
             checkpoint["discovery_complete"] = True
             _save_collection_checkpoint(checkpoint_path, checkpoint)
-        confirmed = set(checkpoint["confirmed_remote_ids"])
         item_remote_ids = [item.remote_id for item in items]
         if len(item_remote_ids) != len(set(item_remote_ids)):
             raise ContractError("catálogo retomável possui identificadores duplicados")
-        for position, item in enumerate(items):
-            if item.remote_id in confirmed:
-                continue
-            entry = checkpoint["catalog_entries"][position]
-            refreshed = None
-            if not revalidate:
-                refreshed = preflight_local_publication(
-                    item.remote_id,
-                    collection,
-                    source_root,
-                    local_index or {},
-                    download_config,
-                    entry["title"],
-                    entry["url"],
-                    entry["author"],
-                )
-            if refreshed is not None and not item.local_complete:
-                print(
-                    f"PUBLICATION_LOCAL_VALID remote_id={item.remote_id} "
-                    "checkpoint=updated network=skipped"
-                )
-            if refreshed is None and item.local_complete:
-                if browser_manager is None or fixture_payload is not None:
-                    raise ContractError(
-                        "publicação local mudou durante retomada; rede necessária"
-                    )
-                refreshed = browser_manager._enrich_book(
-                    collection,
-                    entry["url"],
-                    entry["title"],
-                    entry["author"],
-                    limiter,
-                    restart=restart,
-                )
-            if refreshed is None or refreshed == item:
-                continue
-            items[position] = refreshed
-            checkpoint["items"] = [_catalog_item_record(value) for value in items]
-            checkpoint["_items"] = items
-            _save_collection_checkpoint(checkpoint_path, checkpoint)
         for index, item in enumerate(items, 1):
-            if item.remote_id in confirmed:
-                summary["resumed"] += 1
-                print(
-                    f"ITEM_RESUMED collection={collection['id']} item={index} "
-                    f"remote_id={item.remote_id}"
-                )
-                continue
-            try:
-                if publisher is not None:
-                    previous = ledger.get(item.stable_key()) or {}
-                    publisher.preflight(
-                        item,
-                        resume=previous.get("git_state") == "commit_pending",
-                    )
-                result = _process_catalog_item(
-                    item,
-                    source_root,
-                    session,
-                    download_config,
-                    runtime["tqdm"] if runtime else (lambda **_kwargs: _NullProgress()),
-                    ledger,
-                    no_network=no_network,
-                    revalidate=revalidate,
-                )
-                for key in ("downloaded", "skipped", "extracted", "converted"):
-                    summary[key] += result[key]
-                if result["state"] == "review_required":
-                    summary["review_required"] += 1
-                if publisher is not None and result["state"] in {"completed", "skipped"}:
-                    allowlist = validate_complete_publication(item, source_root)
-                    commit = publisher.commit(item, allowlist, ledger)
-                    if commit:
-                        result["commit"] = commit
-                        print(
-                            f"PUBLICATION_COMMITTED remote_id={item.remote_id} commit={commit}"
-                        )
-                print(
-                    f"ITEM_{result['state'].upper()} collection={collection['id']} "
-                    f"item={index} remote_id={item.remote_id} "
-                    f"title={json.dumps(item.title_original, ensure_ascii=False)}"
-                )
-                if result["state"] in {"completed", "skipped", "review_required"}:
-                    confirmed.add(item.remote_id)
-                    checkpoint["confirmed_remote_ids"] = sorted(confirmed)
-                    _save_collection_checkpoint(checkpoint_path, checkpoint)
-            except OriginBlocked as error:
-                summary["blocked"] = True
-                summary["failures"] += 1
-                print(
-                    f"COLLECTION_BLOCKED collection={collection['id']} error={error}",
-                    file=sys.stderr,
-                )
-                break
-            except Exception as error:
-                summary["failures"] += 1
-                print(
-                    f"ITEM_FAIL collection={collection['id']} item={index} "
-                    f"error={type(error).__name__}:{error}",
-                    file=sys.stderr,
-                )
+            process_ready_item(item, index, checkpoint)
+        confirmed = set(checkpoint["confirmed_remote_ids"])
         if (
             not summary["failures"]
             and not summary["blocked"]

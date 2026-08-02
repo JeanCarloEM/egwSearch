@@ -39,6 +39,8 @@ capa oficialmente declarada para a obra.
    URI adicional do diretório canônico, preservando também seu rótulo original.
 10. posicionar a proveniência ABNT antes do sumário e aplicar cabeçalhos
     contextuais e rodapés numerados por paginação CSS fora do corpo editorial.
+11. eliminar bloqueio em cadeia entre publicações, processando cada item assim
+    que seu próprio enriquecimento completo for persistido.
 
 ## Invariantes
 
@@ -76,6 +78,8 @@ capa oficialmente declarada para a obra.
 - artigo final separado por vírgula somente é removido quando repete o mesmo
   artigo já presente no início do título; demais conflitos nominais ambíguos
   bloqueiam para revisão.
+- publicação posterior incompleta ou interrompida não bloqueia geração,
+  promoção nem confirmação de publicação anterior já enriquecida por inteiro.
 
 ## Aceite global
 
@@ -187,6 +191,29 @@ capa oficialmente declarada para a obra.
 - integração: `dev` incorporada em `main` pelo merge `5fde300`; referências
   remotas publicadas e convergentes.
 - estado: concluída e publicada sem pendência própria.
+- estado: reaberta em 2026-08-02 porque o enriquecimento integral da coleção
+  antecede a geração e cria bloqueio em cadeia; `14386` completo ficou sem
+  asset quando `14382` posterior permaneceu incompleto.
+- evidência subsequente: o EPUB então materializado continha o texto completo
+  em bytes, mas uma sentinela NUL `STRONG_CLOSE` tornou o XHTML inválido e fez
+  o leitor ocultar o conteúdo após “VERSÍCULO 1. Vi, na”.
+- correção requerida: eliminar sentinelas residuais e validar cada documento
+  editorial com parser XML antes de aceitar o EPUB.
+- implementação incremental: `f80bbb3` entrega e confirma cada item completo
+  antes do enriquecimento seguinte; interrupção simulada no `14382` preservou
+  o `14386` processado.
+- implementação XHTML: `0744b0b` remove sentinelas residuais e rejeita seção
+  que não passe por parser XML; `c04702c` funde ênfases adjacentes sem perder
+  os espaços editoriais.
+- prova real: `daniel-e-apocalipse` foi regenerado localmente a partir das 45
+  unidades completas e da capa oficial já preservada; seção 23 contém 24.116
+  caracteres analisáveis, começa com o versículo integral, não contém NUL nem
+  marcador interno, e a unidade possui EPUB de 1.566.458 bytes, 45 fontes
+  reversíveis internas e zero `.md` externo.
+- preservação: `14382` permaneceu incompleto com 39 unidades e cursor
+  `https://text.egwwritings.org/read/14382.1175`, sem `--restart`.
+- validação: 69 testes Python e três testes Node aprovados; parser XML, round
+  trip Markdown e validação transacional real aprovados.
 - integração: `dev` incorporada em `main` pelo merge `c6c7b9d` e referências
   remotas publicadas; alterações alheias permaneceram fora dos commits da FT.
 - estado: concluída e publicada sem pendência própria.

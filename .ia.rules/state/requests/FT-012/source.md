@@ -258,3 +258,38 @@ substitui atomicamente o item histórico quando a prova local é válida. Teste
 dedicado persiste `b11101` como `local_complete=false`, proíbe
 `_enrich_book()` por sentinela e comprova atualização para
 `PUBLICATION_LOCAL_VALID ... checkpoint=updated network=skipped`.
+
+## Regressão observada de 2026-08-02 — enriquecimento completo sem asset
+
+> BUG: Mostrou e carregou no navegador sem erro no console como aparentemente
+> concluídos, mas não geraram assets (PDF/EPUB) no `src/`; entre outros:
+> `https://text.egwwritings.org/read/14386.2`,
+> `TEXT_DISCOVERY_PROGRESS book=14386 units=1 complete=false` e
+> `https://text.egwwritings.org/read/14382.24`.
+
+O checkpoint real comprova a causa sistêmica: `14386` terminou 45 unidades e
+`complete=true`, mas permaneceu como sexto item não confirmado da coleção;
+`14382`, iniciado depois, ficou incompleto. A descoberta enriquece toda a
+coleção antes de iniciar qualquer processamento, de modo que uma publicação
+posterior interrompida impede a geração das anteriores já completas. A
+correção deve promover cada publicação imediatamente após seu enriquecimento e
+checkpoint, preservando a seguinte como pendente e retomável.
+
+## Corrupção observada de 2026-08-02 — XHTML truncado pelo leitor
+
+> o livro `uriah-smith\pt-br\livros\daniel-e-apocalipse` está sem conteúdo
+> real, embora exista conteúdo online.
+
+O checkpoint contém o texto integral, mas o XHTML gerado vazou sentinelas NUL
+do conversor (`STRONG_CLOSE`) entre fragmentos `<strong>` adjacentes. Como NUL
+é proibido em XML, o leitor interrompeu a seção exatamente em “VERSÍCULO 1.
+Vi, na”, ocultando todo o conteúdo posterior. O conversor deve eliminar toda
+sentinela residual e o validador do EPUB deve analisar cada XHTML como XML,
+impedindo promoção de seção truncável.
+
+Implementação concluída nos commits `0744b0b` e `c04702c`: todo marcador
+residual é removido, ênfases adjacentes são recompostas e cada seção passa por
+parser XML. O EPUB real foi regenerado sem rede a partir do checkpoint completo
+e da capa já preservada; a seção denunciada contém o versículo e os parágrafos
+posteriores integralmente legíveis, sem NUL, sem marcador interno e sem `.md`
+externo.

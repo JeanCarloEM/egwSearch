@@ -405,6 +405,70 @@ class DownloaderTests(unittest.TestCase):
             self.assertEqual(process.call_args.args[0].remote_id, "2")
             self.assertFalse(checkpoint_path.exists())
 
+    def test_completed_enrichment_is_promoted_before_later_interruption(self) -> None:
+        collection = self._checkpoint_collection()
+        first = self._checkpoint_item("14386", "Primeira obra completa")
+        second = self._checkpoint_item("14382", "Segunda obra incompleta")
+        completed = {
+            "state": "completed",
+            "downloaded": 0,
+            "skipped": 0,
+            "extracted": 1,
+            "converted": 1,
+        }
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            state_root = root / "state"
+            source_root = root / "publications"
+            checkpoint_path = baixar._collection_checkpoint_path(
+                state_root, collection, None, None
+            )
+
+            def discover(*_args, **kwargs):
+                active = kwargs["checkpoint"] or baixar._new_collection_checkpoint(
+                    collection, None, None
+                )
+                active["catalog_entries"] = [
+                    {
+                        "title": item.title_original,
+                        "url": item.public_url,
+                        "author": item.author_name,
+                    }
+                    for item in (first, second)
+                ]
+                active["items"] = [baixar._catalog_item_record(first)]
+                active["_items"] = [first]
+                baixar._save_collection_checkpoint(checkpoint_path, active)
+                kwargs["on_item_ready"](first, 1, active)
+                raise KeyboardInterrupt()
+
+            browser = Mock()
+            browser.discover_catalog_items.side_effect = discover
+            with patch.object(
+                baixar, "_validate_network_url"
+            ), patch.object(
+                baixar, "preflight_local_publication", return_value=None
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ) as process:
+                with self.assertRaises(KeyboardInterrupt):
+                    baixar._process_collection(
+                        collection,
+                        self._checkpoint_config(),
+                        source_root,
+                        state_root,
+                        None,
+                        browser_manager=browser,
+                    )
+
+            interrupted = baixar._load_collection_checkpoint(
+                checkpoint_path, collection, None, None
+            )
+            self.assertEqual(interrupted["confirmed_remote_ids"], ["14386"])
+            self.assertFalse(interrupted["discovery_complete"])
+            process.assert_called_once()
+            self.assertEqual(process.call_args.args[0].remote_id, "14386")
+
     def test_stale_false_checkpoint_reapplies_current_local_gate(self) -> None:
         collection = self._checkpoint_collection()
         stale = self._checkpoint_item("11101", "Testemunhos para a Igreja 5")

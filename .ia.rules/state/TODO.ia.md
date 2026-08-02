@@ -2011,3 +2011,11 @@
   - [x] Reaplicar o gate vigente a itens não confirmados de checkpoint antigo,
     inclusive quando armazenados com `local_complete=false`, impedindo que cache
     histórico contorne a prova local atual e libere request desnecessário.
+
+  - [x] Processar e confirmar cada enriquecimento completo antes de iniciar o
+    seguinte, impedindo que uma publicação posterior incompleta deixe as
+    anteriores sem PDF/EPUB materializado.
+
+  - [x] Eliminar sentinelas internas do conversor, validar todo XHTML editorial
+    com parser XML e regenerar `daniel-e-apocalipse` com o conteúdo integral
+    legível, sem `.md` externo e sem reiniciar o checkpoint seguinte.
