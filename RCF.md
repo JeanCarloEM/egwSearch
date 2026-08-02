@@ -591,23 +591,23 @@ Catalogo de estrategias DEVE registrar aprovadas, rejeitadas e experimentais, pa
 
 ## 40. Publicacao institucional estatica
 
-O produto DEVE possuir pagina institucional ultrassucinta publicada no GitHub Pages por workflow proprio, sem depender implicitamente de tema, build automatico ou convencao padrao da plataforma.
+O produto DEVE possuir pagina institucional ultrassucinta publicada no GitHub Pages por workflow proprio, sem depender implicitamente de tema, build automatico ou convencao padrao da plataforma. [9edbb26]
 
-A pagina DEVE explicar finalidade, natureza das publicacoes, formatos e forma geral de acesso, sem promocao excessiva, documentacao longa ou secao redundante.
+A pagina DEVE explicar finalidade, natureza das publicacoes, formatos e forma geral de acesso, sem promocao excessiva, documentacao longa ou secao redundante. [9edbb26]
 
-A pagina DEVE ser profissional, elegante, responsiva, acessivel e coerente, sem poluicao visual, animacao excessiva ou dependencia desproporcional.
+A pagina DEVE ser profissional, elegante, responsiva, acessivel e coerente, sem poluicao visual, animacao excessiva ou dependencia desproporcional. [9edbb26]
 
-Logica cliente nova DEVE usar TypeScript; estilização processada DEVE usar Sass.
+Logica cliente nova DEVE usar TypeScript; estilização processada DEVE usar Sass. [9edbb26]
 
 Font Awesome e WebAwesome PODEM ser priorizados quando agregarem valor e somente o subconjunto usado DEVE integrar build ou runtime.
 
-HTML, CSS, JavaScript, fontes, icones e imagens DEVEM ser reduzidos ao necessario, cacheados, comprimidos, minificados e invalidados de forma coerente.
+HTML, CSS, JavaScript, fontes, icones e imagens DEVEM ser reduzidos ao necessario, cacheados, comprimidos, minificados e invalidados de forma coerente. [9edbb26]
 
-A pagina NÃO DEVE listar, expor ou vincular o indice global, arquivos de publicacao, URLs diretas ou diretorios de distribuicao, inclusive por botao, ancora oculta, metadado visual ou lista gerada.
+A pagina NÃO DEVE listar, expor ou vincular o indice global, arquivos de publicacao, URLs diretas ou diretorios de distribuicao, inclusive por botao, ancora oculta, metadado visual ou lista gerada. [9edbb26]
 
-A ausencia de links na pagina NÃO DEVE impedir que indice, publicacoes e assets integrem o artefato e permaneçam acessiveis diretamente por URL publica conhecida.
+A ausencia de links na pagina NÃO DEVE impedir que indice, publicacoes e assets integrem o artefato e permaneçam acessiveis diretamente por URL publica conhecida. [9edbb26]
 
-Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio proprio e em subdiretorio de projeto do GitHub Pages.
+Paths de scripts, estilos, fontes, imagens e assets DEVEM funcionar em dominio proprio e em subdiretorio de projeto do GitHub Pages. [9edbb26]
 
 ## 41. Estrutura canonica do acervo
 
@@ -1460,29 +1460,29 @@ Validacao DEVE comprovar existencia, path, origem, precedencia, formato, dimenso
 
 ## 46. Scripts, workflow, build e publicacao
 
-Indexador, capas, dados formativos, ativos web e demais derivados DEVEM ser produzidos por script reexecutavel, deterministico, incremental e equivalente em local/CI.
+Indexador, capas, dados formativos, ativos web e demais derivados DEVEM ser produzidos por script reexecutavel, deterministico, incremental e equivalente em local/CI. [9edbb26]
 
-Script Node.js novo DEVE usar TypeScript como fonte e artefato conforme o contrato operacional; Python PODE permanecer quando adequado ao ecossistema real.
+Script Node.js novo DEVE usar TypeScript como fonte e artefato conforme o contrato operacional; Python PODE permanecer quando adequado ao ecossistema real. [9edbb26]
 
 Biblioteca de EPUB, PDF, OCR, imagem, YAML, JSON ou compactacao DEVE ser mantida, licenciada, segura e proporcional.
 
 Cache DEVE incluir identidade das fontes, configuracao, parser, extrator e gerador para invalidacao correta.
 
-Workflow dedicado DEVE obter fonte, instalar dependencias necessarias, descobrir/agrupar publicacoes, validar formatos, preservar originais, calcular hashes, extrair `book`, comprovar identidade, gerar capas, montar dados formativos, gerar indice/pagina, preparar artefato, validar e publicar.
+Workflow dedicado DEVE obter fonte, instalar dependencias necessarias, descobrir/agrupar publicacoes, validar formatos, preservar originais, calcular hashes, extrair `book`, comprovar identidade, gerar capas, montar dados formativos, gerar indice/pagina, preparar artefato, validar e publicar. [9edbb26]
 
-Workflow DEVE reagir a mudanca de pagina, publicacao, capa, indice, dado, script, estilo, asset, parser, RCF ou configuracao e DEVE permitir disparo manual.
+Workflow DEVE reagir a mudanca de pagina, publicacao, capa, indice, dado, script, estilo, asset, parser, RCF ou configuracao e DEVE permitir disparo manual. [9edbb26]
 
-Permissoes DEVEM ser minimas; concorrencia DEVE serializar ou cancelar com seguranca para impedir execucao antiga sobre resultado novo.
+Permissoes DEVEM ser minimas; concorrencia DEVE serializar ou cancelar com seguranca para impedir execucao antiga sobre resultado novo. [9edbb26]
 
 Processo longo DEVE emitir progresso ultrassucinto por etapa e publicacao sem inundar logs ou aparentar congelamento.
 
-Build DEVE copiar integralmente `./src/publications/` para `/publications/`, independentemente de importacao ou link na interface.
+Build DEVE copiar integralmente `./src/publications/` para `/publications/`, independentemente de importacao ou link na interface. [9edbb26]
 
-Tree shaking, limpeza e otimizacao NÃO DEVEM remover publicacao ou asset pertencente ao acervo canônico.
+Tree shaking, limpeza e otimizacao NÃO DEVEM remover publicacao ou asset pertencente ao acervo canônico. [9edbb26]
 
-Build DEVE falhar por arquivo ausente, path invalido, colisao, perda, sobrescrita, indice invalido, URL sem artefato, hash divergente, capa invalida ou grupo incompleto.
+Build DEVE falhar por arquivo ausente, path invalido, colisao, perda, sobrescrita, indice invalido, URL sem artefato, hash divergente, capa invalida ou grupo incompleto. [9edbb26]
 
-Release publico NÃO DEVE conter fonte de desenvolvimento, cache, teste, log, source map, configuracao de desenvolvimento, dependencia inutil, intermediario, temporario, evidencia interna ou OCR transitório.
+Release publico NÃO DEVE conter fonte de desenvolvimento, cache, teste, log, source map, configuracao de desenvolvimento, dependencia inutil, intermediario, temporario, evidencia interna ou OCR transitório. [9edbb26]
 
 Derivado DEVE ser identificavel como gerado e NÃO DEVE receber edicao manual quando houver fonte canônica.
 
@@ -1490,15 +1490,15 @@ Derivado DEVE ser identificavel como gerado e NÃO DEVE receber edicao manual qu
 
 Validador do indice DEVE rejeitar JSON invalido, envelope divergente, publicacao sem campos obrigatorios, URL invalida, `formative_data` divergente, chave extra/ausente, hash incorreto, formato duplicado ou item sem autor.
 
-Validador publico DEVE confirmar que cada URL direta corresponde a arquivo publicado, cada diretorio possui capa, cada hash corresponde ao original e cada `book` corresponde ao grupo.
+Validador publico DEVE confirmar que cada URL direta corresponde a arquivo publicado, cada diretorio possui capa, cada hash corresponde ao original e cada `book` corresponde ao grupo. [9edbb26]
 
-Pagina DEVE ser validada por HTML real, assets carregados, base path real, responsividade, acessibilidade, ausencia de dependencia ociosa e ausencia de links ao indice/acervo.
+Pagina DEVE ser validada por HTML real, assets carregados, base path real, responsividade, acessibilidade, ausencia de dependencia ociosa e ausencia de links ao indice/acervo. [9edbb26]
 
 Teste de capa DEVE remover `cover.png`, regenerar e comparar origem, validade, dimensoes e determinismo.
 
 Teste de migracao DEVE comparar inventario pre/post, bytes, hashes, contagens, metadados, paths, colisoes e retomada.
 
-Execucao local DEVE reproduzir as mesmas etapas, schemas e resultados do CI tanto quanto tecnicamente possivel.
+Execucao local DEVE reproduzir as mesmas etapas, schemas e resultados do CI tanto quanto tecnicamente possivel. [9edbb26]
 
 Nenhuma publicacao DEVE ocorrer com artefato obsoleto, divergente ou parcial.
 
