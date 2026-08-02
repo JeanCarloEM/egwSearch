@@ -1099,17 +1099,76 @@ A escrita DEVE ser atômica e determinística. Identidade, configuração e fing
 
 ### 43.2 Manifesto de análise de chunking
 
-Cada EPUB/PDF incorporado ou gerado DEVE possuir manifesto derivado próprio, identificado pelo path e hashes integrais do ativo, que descreva sinais estruturais, parsers avaliados, estratégia recomendada e alternativas ordenadas para experimentação futura, sem duplicar obrigatoriamente o texto ou materializar chunks. [0f85f08]
+Cada EPUB/PDF incorporado ou gerado DEVE possuir manifesto derivado próprio, identificado pelo path e hashes integrais do ativo, contendo somente observações, experimentos, métricas, provas e decisões específicas daquele recurso; descrição, benefício, risco, parâmetro genérico, justificativa didática e hipótese ainda não executada pertencem ao catálogo normativo global e NÃO DEVEM ser repetidos no manifesto. [PENDENTE-CODIGO]
 
-A análise DEVE considerar, conforme sinais reais: seção hierárquica e tópico, parágrafo, sentença com janela, página, dia de meditação, seção/artigo de periódico e documento inteiro; estratégia inaplicável DEVE permanecer diagnosticável com pontuação e fundamento, nunca desaparecer silenciosamente. [0f85f08]
+O manifesto DEVE referenciar por ID, versão e hash o catálogo global e a base agregada de aprendizado, registrar exatamente os parâmetros executados e omitir de sua lista de resultados qualquer método não executado; contagens globais PODEM permanecer somente na base agregada, sem texto editorial. [PENDENTE-CODIGO]
+
+Hipótese documentada, prática difundida, disponibilidade de biblioteca, tipo declarado da publicação, correlação do corpus ou resultado de outro ativo NÃO DEVEM produzir recomendação; recomendação por recurso exige experimento local `passed`, prova reprodutível e critérios integrais aprovados no próprio ativo. [PENDENTE-CODIGO]
 
 EPUB DEVE ser lido como ZIP OCF não confiável, com limites e paths seguros, respeitando `container.xml`, pacote, manifesto, spine, `nav`, NCX, landmarks, page list, XHTML, headings e fonte Markdown reversível quando presente. PDF DEVE ser analisado sem modificar o original, preferindo parser mantido capaz de obter páginas, texto e metadados, com fallback estrutural explicitamente diagnosticado. [0f85f08]
 
-O analisador DEVE produzir fingerprint de formato/estrutura e correlacioná-lo com manifestos válidos do corpus completo, ainda quando o alvo for um arquivo, uma publicação ou uma subárvore; correlação informa padrões compartilhados, mas NÃO PODE alterar metadado editorial nem modificar outra publicação. [0f85f08]
+O analisador DEVE construir referência canônica normalizada a partir da ordem editorial efetivamente extraída, detectar ruído de cabeçalho, rodapé e paginação somente por repetição posicional mensurável e testar reconstrução de frases e parágrafos que atravessem páginas; nenhum texto da referência ou dos chunks DEVE ser persistido no manifesto. [PENDENTE-CODIGO]
+
+Cada experimento DEVE executar o segmentador real sobre a referência do recurso e medir ao menos cobertura, ordem, perda, duplicação, contaminação, precisão de fronteira, recuperação de fronteira e continuidade entre páginas, armazenando contagens, proporções em ppm e hashes de prova; métrica inaplicável DEVE ser `null` com código causal, nunca pontuação inventada. [PENDENTE-CODIGO]
+
+Resultado DEVE ser `passed`, `rejected` ou `inconclusive`; `passed` exige reconstrução normalizada integral, sem perda, duplicação indevida ou ruído comprovado, fronteiras compatíveis com a unidade alegada e cobertura experimental declarada, enquanto amostragem parcial ou camada textual insuficiente NÃO PODEM fundamentar recomendação integral do ativo. [PENDENTE-CODIGO]
+
+O analisador DEVE produzir fingerprint de formato/estrutura e atualizar uma base global deduplicada a partir de manifestos válidos do corpus completo, ainda quando o alvo for um arquivo, uma publicação ou uma subárvore; a base agrega somente assinaturas, versões, parâmetros testados, estados e distribuições métricas, e NÃO PODE copiar conteúdo, transformar correlação em verdade nem modificar metadado editorial. [PENDENTE-CODIGO]
 
 Invocação DEVE aceitar exatamente um escopo entre ativo, publicação, diretório/subárvore e corpus integral. O resultado por ativo DEVE ser idempotente, versionado, explicável e invalidado quando bytes, parser, algoritmo, configuração ou sinais causais mudarem. [0f85f08]
 
 O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da unidade e a atualização compartilhada do índice depois de validar/promover os ativos e antes de confirmar o checkpoint; falha preserva a publicação material, impede confirmação e permite retomada estritamente local sem nova requisição à origem. [0f85f08]
+
+### 43.2.1 Catálogo global de hipóteses experimentais
+
+O catálogo fechado desta versão DEVE manter como hipóteses separadas, nunca como soluções presumidas: janela fixa por caractere/token; separadores recursivos; regex estrutural inferida ou declarada; sentença e janela de sentenças; parágrafo; página/layout; seção hierárquica, capítulo e tópico; unidade editorial específica, incluindo dia de meditação e artigo de periódico; coesão semântica ou lexical; mudança de tópico; meta-chunking por perplexidade/lógica; proposição ou unidade atômica; segmentação variável assistida por LLM; múltiplas granularidades/mixture of chunkers; late chunking; recuperação sem chunking; e documento inteiro como controle. [PENDENTE-CODIGO]
+
+Janela fixa, separadores recursivos, sentença, parágrafo e chunking semântico DEVEM ser tratados como baselines comparáveis cuja eficiência e qualidade variam por corpus e configuração, conforme avaliação RAG multifatorial de Wang et al.[^chunk-rag-best-practices] [PENDENTE-CODIGO]
+
+Seção hierárquica, capítulo, tópico, dia, artigo e demais unidades editoriais DEVEM ser hipóteses estruturais testadas contra fronteiras extraídas; MC-indexing reporta ganhos de recuperação ao respeitar estrutura em documentos longos, sem autorizar extrapolação automática para este acervo.[^chunk-mc-indexing] [PENDENTE-CODIGO]
+
+Regex estrutural DEVE ser executável, limitada e aferida como qualquer outro segmentador; MoC demonstra geração de expressões regulares e avaliação por Boundary Clarity e Chunk Stickiness, mas também evidencia que regras e semântica isoladas têm limitações contextuais.[^chunk-moc] [PENDENTE-CODIGO]
+
+Coesão lexical/semântica e mudança de tópico DEVEM permanecer opcionais e dependentes de modelo/versionamento; CoNLL 2024 avalia coesão por palavras-chave com Pk e WindowDiff, enquanto Meta-Chunking avalia fronteiras lógicas por perplexidade e fusão dinâmica.[^chunk-cohesion][^chunk-meta] [PENDENTE-CODIGO]
+
+Segmentação variável assistida por LLM DEVE ser hipótese de custo e privacidade maiores, executada somente por opt-in e dados previamente minimizados; LumberChunker encontrou ganho em narrativas longas, domínio que NÃO DEVE ser presumido equivalente a livros, periódicos ou meditações deste corpus.[^chunk-lumber] [PENDENTE-CODIGO]
+
+Proposição/unidade atômica DEVE ser avaliada quanto a fidelidade, autocontenção e custo de reescrita, pois Dense X Retrieval encontrou vantagem de granularidade fina em recuperação e QA sob orçamento específico, sem provar universalidade documental.[^chunk-dense-x] [PENDENTE-CODIGO]
+
+Múltiplas granularidades e misturas DEVEM poder conservar resultados paralelos por tipo de consulta; MoG e MoC apresentam roteamento/combinação experimental, não um tamanho único universal.[^chunk-mog][^chunk-moc] [PENDENTE-CODIGO]
+
+Late chunking DEVE ser considerado somente quando existir embedding de contexto longo compatível, pois aplica pooling após contextualização e sua validade depende do modelo e da janela efetivamente usados.[^chunk-late] [PENDENTE-CODIGO]
+
+Recuperação sem chunking e documento inteiro DEVEM integrar controles negativos/alternativos quando o runtime suportar contexto e decodificação correspondentes; CFIC relata recuperação de evidência sem segmentação convencional, mas requer arquitetura própria e NÃO substitui ensaio local.[^chunk-cfic] [PENDENTE-CODIGO]
+
+Página/layout DEVE distinguir paginação autoritativa de quebra física e reconstruir continuidade antes de segmentar; Docling e OmniDocBench demonstram a relevância de layout, ordem de leitura e avaliação por tipos documentais diversos, sem tornar parser visual obrigatório para PDF com camada textual suficiente.[^chunk-docling][^chunk-omnidoc] [PENDENTE-CODIGO]
+
+Método dependente de embedding, LLM, API ou modelo local somente PODE ser executado quando dependência, versão, licença, custo, privacidade, determinismo e limite estiverem declarados; antes de qualquer inferência, a entrada DEVE ser normalizada, deduplicada, condensada em sinais/fronteiras e minimizada quanto a tokens e conteúdo, e o caminho offline determinístico DEVE permanecer funcional. [PENDENTE-CODIGO]
+
+### 43.2.2 Apresentação experimental e composição de etapas
+
+Analisador, indexador e downloader DEVEM usar uma única camada de apresentação humana baseada em Rich ou equivalente mantido, com tabelas compactas, cor sem significado exclusivo, fallback sem ANSI e preservação da saída de máquina determinística. [PENDENTE-CODIGO]
+
+A camada DEVE calcular previamente largura útil limitada, impedir wrap acidental de células variáveis e truncar path/título de forma determinística preservando prefixo identificador e basename/sufixo; terminal estreito DEVE reduzir colunas secundárias antes de quebrar linhas. [PENDENTE-CODIGO]
+
+Cada ativo analisado DEVE produzir uma tabela curta que compare somente experimentos executados por método, exibindo estado, quantidade de chunks, tempo/eficiência, acerto, erro e códigos causais relevantes; métricas integrais permanecem no manifesto e NÃO DEVEM inundar o console. [PENDENTE-CODIGO]
+
+Cada publicação iterada DEVE possuir identidade visual inequívoca e ser separada da seguinte por duas linhas em branco ou separador equivalente consistente; progresso interno NÃO DEVE apagar, reescrever ou misturar publicação anterior. [PENDENTE-CODIGO]
+
+Execução isolada DEVE emitir título de etapa, corpo e resumo suficientes; composição pelo downloader DEVE compartilhar o mesmo contexto visual, manter limites explícitos de análise e indexação e suprimir cabeçalhos, separadores e resumos equivalentes já apresentados pelo pai. [PENDENTE-CODIGO]
+
+[^chunk-rag-best-practices]: Wang et al. *Searching for Best Practices in Retrieval-Augmented Generation*. EMNLP 2024. DOI: [10.18653/v1/2024.emnlp-main.981](https://doi.org/10.18653/v1/2024.emnlp-main.981).
+[^chunk-mc-indexing]: Dong et al. *MC-indexing: Effective Long Document Retrieval via Multi-view Content-aware Indexing*. Findings of EMNLP 2024. DOI: [10.18653/v1/2024.findings-emnlp.150](https://doi.org/10.18653/v1/2024.findings-emnlp.150).
+[^chunk-moc]: Zhao et al. *MoC: Mixtures of Text Chunking Learners for Retrieval-Augmented Generation System*. ACL 2025. DOI: [10.18653/v1/2025.acl-long.258](https://doi.org/10.18653/v1/2025.acl-long.258).
+[^chunk-cohesion]: Maraj, Vargas Martin e Makrehchi. *Words That Stick: Using Keyword Cohesion to Improve Text Segmentation*. CoNLL 2024. DOI: [10.18653/v1/2024.conll-1.1](https://doi.org/10.18653/v1/2024.conll-1.1).
+[^chunk-meta]: Zhao et al. *Meta-Chunking: Learning Efficient Text Segmentation via Logical Perception*. 2024. [arXiv:2410.12788](https://arxiv.org/abs/2410.12788).
+[^chunk-lumber]: Duarte et al. *LumberChunker: Long-Form Narrative Document Segmentation*. Findings of EMNLP 2024. DOI: [10.18653/v1/2024.findings-emnlp.377](https://doi.org/10.18653/v1/2024.findings-emnlp.377).
+[^chunk-dense-x]: Chen et al. *Dense X Retrieval: What Retrieval Granularity Should We Use?* EMNLP 2024. DOI: [10.18653/v1/2024.emnlp-main.845](https://doi.org/10.18653/v1/2024.emnlp-main.845).
+[^chunk-mog]: Zhong et al. *Mix-of-Granularity: Optimize the Chunking Granularity for Retrieval-Augmented Generation*. COLING 2025. [ACL Anthology](https://aclanthology.org/2025.coling-main.384/).
+[^chunk-late]: Günther et al. *Late Chunking: Contextual Chunk Embeddings Using Long-Context Embedding Models*. 2024. [arXiv:2409.04701](https://arxiv.org/abs/2409.04701).
+[^chunk-cfic]: Qian et al. *Grounding Language Model with Chunking-Free In-Context Retrieval*. ACL 2024. DOI: [10.18653/v1/2024.acl-long.71](https://doi.org/10.18653/v1/2024.acl-long.71).
+[^chunk-docling]: Auer et al. *Docling Technical Report*. 2024. [arXiv:2408.09869](https://arxiv.org/abs/2408.09869).
+[^chunk-omnidoc]: Ouyang et al. *OmniDocBench: Benchmarking Diverse PDF Document Parsing with Comprehensive Annotations*. 2024. [arXiv:2412.07626](https://arxiv.org/abs/2412.07626).
 
 ## 44. NORMA-IF-SIL-001 - autoridade e estrutura
 

@@ -406,13 +406,25 @@ O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte
 
 `publication_analysis.py` DEVE ser a capacidade única de análise de EPUB/PDF e `publication_index.py` a capacidade única do índice global; seus `main()` são invocadores finos das mesmas funções usadas pelo downloader, sem reimplementação de schema ou regra de negócio. [0f85f08]
 
-O manifesto de cada ativo DEVE usar schema versionado, registrar path relativo, formato, tamanho, SHA-1/SHA-256/SHA-512, parser selecionado e candidatos, estrutura observada, fingerprint, correlação do corpus, limitações e estratégias ordenadas com identificador, granularidade, pontuação, sinais, vantagens, riscos e parâmetros sugeridos. [0f85f08]
+O manifesto de cada ativo DEVE usar schema versionado e registrar somente identidade/hashes, parser realmente executado, estrutura observada, referência normalizada sem texto, experimentos executados, métricas, hashes de prova e recomendação comprovada; benefícios, riscos, descrições, parâmetros genéricos e hipóteses não executadas DEVEM permanecer no catálogo global versionado referenciado por ID/versão/hash. [PENDENTE-CODIGO]
 
 Para EPUB gerado pelo produto, a análise DEVE reconhecer o manifesto Markdown reversível, separar capa/proveniência/sumário do spine editorial e aproveitar headings, IDs, unidades e source map já conhecidos; Markdown embutido serve de evidência estrutural e NÃO DEVE ser extraído persistentemente. [0f85f08]
 
-Para PDF, `pypdfium2` DEVE ser o parser preferencial já preparado pelo bootstrap para contagem de páginas e amostragem textual distribuída; indisponibilidade ou falha PODE acionar inspeção binária limitada, registrada como fallback de menor confiança, sem OCR implícito. [0f85f08]
+Para PDF, `pypdfium2` DEVE ser o parser preferencial já preparado pelo bootstrap para extrair integralmente, dentro dos limites declarados, páginas e camada textual; amostragem parcial ou fallback binário PODEM diagnosticar estrutura, mas NÃO PODEM recomendar estratégia integral do ativo nem acionar OCR implícito. [PENDENTE-CODIGO]
 
-Manifestos compatíveis existentes no corpus DEVEM formar perfis agregados por fingerprint, tipo, idioma e categoria. A unidade analisada DEVE declarar tamanho do grupo e padrões compartilhados, sem copiar conteúdo textual de terceiros nem depender da ordem física da varredura. [0f85f08]
+Cada método localmente disponível DEVE ser executado sobre a mesma referência canônica e aferido por cobertura, ordem, perda, duplicação, contaminação, fronteiras e continuidade entre páginas; recomendação exige `passed`, e insuficiência de prova gera `inconclusive`, nunca pontuação heurística. [PENDENTE-CODIGO]
+
+Manifestos compatíveis existentes no corpus DEVEM alimentar uma base global deduplicada por perfil estrutural, método, implementação, parâmetros e versão. Essa base DEVE agregar somente estados e distribuições métricas, sem conteúdo textual, explicação repetida, inferência editorial ou conversão automática de frequência em recomendação. [PENDENTE-CODIGO]
+
+O catálogo global DEVE enumerar hipóteses fixas, recursivas, regex, sentença, parágrafo, página/layout, hierarquia/tópico, unidades editoriais, coesão semântica, perplexidade, proposição, LLM, múltiplas granularidades, late chunking, chunk-free e documento inteiro, com referências e condições definidas em `RCF.md` §43.2.1. [PENDENTE-CODIGO]
+
+Integração opcional com IA DEVE receber somente representação previamente normalizada, condensada, deduplicada e minimizada; conteúdo bruto, cabeçalho/rodapé comprovado e elemento irrelevante NÃO DEVEM ser enviados, e o laboratório offline determinístico permanece obrigatório. [PENDENTE-CODIGO]
+
+`publication_console.py` DEVE ser a camada visual compartilhada de `baixar.py`, `publication_analysis.py` e `publication_index.py`; modo isolado possui cabeçalho/resumo próprios e modo embutido reutiliza o contexto pai sem duplicá-los. [PENDENTE-CODIGO]
+
+Rich DEVE renderizar tabelas sem wrap acidental, com largura limitada e truncamento previsível de paths/títulos; ambiente não TTY, `NO_COLOR` ou indisponibilidade controlada DEVE usar fallback textual sem ANSI e com os mesmos dados essenciais. [PENDENTE-CODIGO]
+
+Tabela experimental por ativo DEVE sintetizar método, estado, chunks, duração/throughput, acerto, erro e códigos de diagnóstico, preservando métricas completas somente no JSON. Publicações consecutivas DEVEM manter duas linhas em branco ou separador visual inequívoco. [PENDENTE-CODIGO]
 
 O índice `publication-global-index/v1` DEVE conter envelope de geração e lista ordenada de publicações; cada item DEVE expor identidade, autoria, localização, rotas públicas, ativos, capa, manifestos de análise, hashes e estado/dados formativos elegíveis. [0f85f08]
 
