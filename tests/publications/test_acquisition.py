@@ -123,6 +123,13 @@ class IdentityAndCatalogTests(unittest.TestCase):
         identifiers = {item["id"] for item in config["collections"]}
         self.assertIn("pt-br-pioneiros", identifiers)
         self.assertIn("en-pioneers", identifiers)
+        en_pioneers = next(
+            item for item in config["collections"] if item["id"] == "en-pioneers"
+        )
+        self.assertEqual(
+            en_pioneers["catalog_url"],
+            "https://text.egwwritings.org/allCollection/en/16",
+        )
         self.assertEqual(config["download"]["workers"], 1)
         self.assertLessEqual(config["download"]["max_workers"], 2)
         source_root = REPOSITORY_ROOT / config["source_root"]
