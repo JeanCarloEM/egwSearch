@@ -8,7 +8,7 @@
 - fonte: `.ia.rules/state/requests/FT-015/source.md`.
 - RCF: §§40-41 e 43-49.
 - prioridade: alta.
-- estado: em andamento.
+- estado: implementação concluída; validação pública em andamento.
 
 ## Objetivo
 
@@ -69,3 +69,19 @@ CI, workflow dedicado e validação no destino público real.
 - página e amostras conhecidas de metadados, EPUB, PDF e capa respondem no
   GitHub Pages com conteúdo correspondente ao repositório;
 - branch `dev` e branch primária convergem ao final, conforme a Norma.
+
+## Implementação e evidências locais
+
+- correção antecedente isolada: `99e1c7b`;
+- site, build, validador e workflow: `6b7ee06`;
+- fallback editorial de capa PDF: `38c59f9`;
+- ausência de fonte editorial bloqueia geração: `f0bde08`;
+- testes direcionados: 3 testes de site e 3 de capa aprovados em menos de um segundo por suíte;
+- build e validação integrais: 585 publicações, 3.465 arquivos e 800.157.766 bytes, com resultados idênticos;
+- validação visual local: desktop, viewport móvel e página 404, sem overflow, links ao acervo ou erro de console;
+- dívida normativa preexistente: `agent:rcf` interrompe em `RCF.md:9`, fora das sentenças rastreadas pela FT-015.
+
+## Próximo ponto
+
+Integrar em `main`, publicar pelo workflow dedicado, validar o domínio real e
+amostras diretas conhecidas; somente então encerrar a FT.

@@ -2,7 +2,7 @@
 
 - origem: prompt humano no Codex Desktop
 - recebido_em: `2026-08-02T18:59:00-03:00`
-- incorporacao: `em andamento`
+- incorporacao: `implementação concluída; validação pública em andamento`
 - destinos: `RCF.md`, `.ia.rules/continue.ia`, `.ia.rules/state/contexts/FT-015/master.md`
 
 ## Solicitação integral
@@ -15,3 +15,6 @@
 - FT proprietária da cadeia pública: `FT-015`;
 - restrição de testes: somente testes pequenos e rápidos, cada comando com timeout máximo de cinco minutos;
 - publicação externa: autorizada explicitamente para o GitHub Pages deste produto.
+- implementação material: `6b7ee06`, `38c59f9` e `f0bde08`;
+- validação local integral: 585 publicações, 3.465 arquivos e 800.157.766 bytes;
+- pendência exclusiva: deployment e validação pública real.
