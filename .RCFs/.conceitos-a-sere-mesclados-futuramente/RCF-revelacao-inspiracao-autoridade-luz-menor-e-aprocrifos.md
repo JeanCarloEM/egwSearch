@@ -10,7 +10,7 @@
 1. Deus É eterno, onisciente, verdadeiro, fiel e imutável em caráter, verdade e propósito; NÃO mente, improvisa doutrina nem se contradiz (Nm 23:19; Ml 3:6; Is 46:9-10; Hb 6:18; Ap 1:8; 22:13).
 2. O plano redentor precede a história humana; a cruz NÃO foi contingência desconhecida por Deus (1Pe 1:19-20; cf. Ap 13:8).
 3. Deus revela progressivamente o que conhece integralmente; progresso revelacional É ampliação da compreensão humana, NÃO evolução, correção ou arrependimento intelectual divino (Hb 1:1-3; Jo 16:12-13).
-4. Deus PODE alterar atos históricos anunciados quando a própria mensagem estabelece condição humana; isso NÃO altera Seu caráter nem torna falsa a profecia condicional (Jr 18:7-10; Jn 3; Ez 18).
+4. Deus PODE alterar atos históricos anunciados quando a própria mensagem estabelece condição humana (ainda que de forma não explícita); isso NÃO altera Seu caráter nem torna falsa a profecia condicional (Jr 18:7-10; Jn 3; Ez 18).
 5. Amós 3:7 fundamenta a revelação profética prévia de atos divinos com impacto significativamente amplo, decisivo de juízo e redenção; NÃO autoriza presumir previsão pública de cada microato providencial.
 
 ## 2. Definições
