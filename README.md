@@ -21,6 +21,23 @@ White, `Biblioteca dos Pioneiros Adventistas` e `Adventist Pioneer Library`,
 restritos a `pt-BR`, `en`, PDF, EPUB e texto editorial verificavel. Busca,
 interface e etapas publicas remanescentes seguem as FTs registradas.
 
+## Site público
+
+A página institucional e o acervo estático são construídos localmente pela
+mesma cadeia usada no GitHub Pages:
+
+```powershell
+npm run site:refresh
+npm run site:build
+npm run site:validate
+```
+
+O artefato fica em `dist/`. A página apresenta somente a finalidade do produto;
+ela não lista nem vincula o índice ou os arquivos. Metadados, capas, EPUBs e
+PDFs permanecem no artefato público sob rotas estáveis conhecidas pelos
+consumidores. O workflow dedicado publica a branch primária e também admite
+acionamento manual, sem Jekyll ou tema implícito.
+
 ## Coletor de publicacoes
 
 O comando abaixo valida descoberta, persistencia temporaria, repeticao e

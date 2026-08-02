@@ -32,6 +32,11 @@
     "publications:baixar": "node scripts/publications/run-baixar.ts",
     "publications:analyze": "node scripts/publications/run-baixar.ts --tool=publication_analysis.py",
     "publications:index": "node scripts/publications/run-baixar.ts --tool=publication_index.py",
+    "publications:covers": "node scripts/publications/run-baixar.ts --tool=publication_covers.py",
+    "site:compile": "tsc -p tsconfig.site.json",
+    "site:refresh": "npm run publications:covers -- --write && npm run publications:index -- --all",
+    "site:build": "npm run site:compile && node scripts/site/build-site.js build",
+    "site:validate": "node scripts/site/build-site.js validate",
     "test:publications:bootstrap": "node --test tests/publications/test_bootstrap_runtime.mjs",
     "release": "npm run shared:lifecycle:release --",
     "publish": "npm run shared:lifecycle:publish --",
@@ -172,5 +177,10 @@
     ],
     "dependencies": [],
     "optionalDependencies": []
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "sass": "^1.93.3",
+    "typescript": "^5.9.3"
   }
 }

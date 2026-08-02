@@ -23,7 +23,12 @@ const python = process.platform === "win32"
 const rawArguments = process.argv.slice(2);
 const toolArgument = rawArguments[0]?.startsWith("--tool=") ? rawArguments.shift() : "";
 const tool = toolArgument ? toolArgument.slice("--tool=".length) : "baixar.py";
-const allowedTools = new Set(["baixar.py", "publication_analysis.py", "publication_index.py"]);
+const allowedTools = new Set([
+  "baixar.py",
+  "publication_analysis.py",
+  "publication_covers.py",
+  "publication_index.py",
+]);
 
 if (!allowedTools.has(tool)) {
   process.stderr.write("Ferramenta de publicações inválida.\n");
