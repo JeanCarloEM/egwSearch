@@ -54,6 +54,7 @@ from publication_contract import (
     ContractError,
     DEFAULT_CONFIG_PATH,
     REPOSITORY_ROOT,
+    build_asset_identity_index,
     build_source_document,
     choose_variant_path,
     format_from_url,
@@ -64,6 +65,7 @@ from publication_contract import (
     resolve_repository_path,
     runtime_paths,
     uri_slug,
+    validate_unique_asset_sha512,
     validate_file_signature,
     validate_source_url,
     write_json_atomic,
@@ -792,12 +794,47 @@ def download_asset(
         return existing[0], existing[1], False
     base_path = destination_directory / identity.asset_name(publication_format)
     try:
-        target, duplicate = choose_variant_path(base_path, evidence["sha256"])
-        installed = not duplicate
-        if duplicate:
-            temporary.unlink()
+        asset_index = download_config.get("_asset_identity_index")
+        if isinstance(asset_index, dict):
+            candidates = list(
+                asset_index.get((publication_format, evidence["sha256"]), [])
+            )
+            matches = [
+                Path(path)
+                for path in candidates
+                if hash_file(path).sha512 == evidence["sha512"]
+            ]
+            foreign = [
+                path
+                for path in matches
+                if Path(path).parent.resolve() != destination_directory.resolve()
+            ]
+            if foreign:
+                raise ContractError(
+                    "ativo duplicaria publicacao por SHA-512: "
+                    + ", ".join(str(path) for path in sorted(foreign))
+                )
+            if matches:
+                temporary.unlink()
+                target = Path(sorted(matches)[0])
+                installed = False
+            else:
+                target, duplicate = choose_variant_path(base_path, evidence["sha256"])
+                installed = not duplicate
+                if duplicate:
+                    temporary.unlink()
+                else:
+                    os.replace(temporary, target)
+                    asset_index.setdefault(
+                        (publication_format, evidence["sha256"]), []
+                    ).append(target.resolve())
         else:
-            os.replace(temporary, target)
+            target, duplicate = choose_variant_path(base_path, evidence["sha256"])
+            installed = not duplicate
+            if duplicate:
+                temporary.unlink()
+            else:
+                os.replace(temporary, target)
         record = {
             "format": publication_format,
             "url": url,
@@ -2923,6 +2960,9 @@ def run(
         raise ContractError("limit deve ser positivo")
     results = []
     local_index = build_local_publication_index(source_root)
+    asset_identity_index = build_asset_identity_index(source_root)
+    validate_unique_asset_sha512(asset_identity_index)
+    config["download"]["_asset_identity_index"] = asset_identity_index
     shared_limiter = RateLimiter(_rate_policy(config["download"]))
     needs_browser = fixture is None and not no_network
     browser_manager = None

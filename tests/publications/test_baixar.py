@@ -886,6 +886,50 @@ class DownloaderTests(unittest.TestCase):
             self.assertNotEqual(target, original)
             self.assertEqual(original.read_bytes(), b"%PDF-1.7\noriginal\n%%EOF")
 
+    def test_download_blocks_same_sha512_in_another_publication(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            source_root = Path(temporary)
+            identity = publication_identity(
+                "egw", "pt-br", "livros", "Nova", category="egw"
+            )
+            existing = (
+                source_root / "egw" / "pt-br" / "livros" / "canonica" / "c.pdf"
+            )
+            existing.parent.mkdir(parents=True)
+            existing.write_bytes(b"%PDF-1.7\nidentical\n%%EOF")
+            evidence = hash_file(existing)
+
+            def fake_stream(*_args, **_kwargs):
+                destination = source_root / identity.relative_directory()
+                destination.mkdir(parents=True, exist_ok=True)
+                partial = destination / ".fixture.pdf.partial"
+                partial.write_bytes(existing.read_bytes())
+                return (
+                    partial,
+                    {**evidence.as_dict(), "size": evidence.size},
+                    "https://media2.egwwritings.org/pdf/nova.pdf",
+                    "pdf",
+                )
+
+            index = {("pdf", evidence.sha256): [existing.resolve()]}
+            with patch.object(baixar, "_stream_to_temporary", side_effect=fake_stream):
+                with self.assertRaisesRegex(baixar.ContractError, "duplicaria publicacao"):
+                    baixar.download_asset(
+                        object(),
+                        "https://media2.egwwritings.org/pdf/nova.pdf",
+                        identity,
+                        source_root,
+                        {"_asset_identity_index": index},
+                        lambda **_kwargs: _Progress(),
+                    )
+            self.assertFalse(
+                (
+                    source_root
+                    / identity.relative_directory()
+                    / identity.asset_name("pdf")
+                ).exists()
+            )
+
     def test_429_respects_retry_after(self) -> None:
         session = Mock()
         session.get.side_effect = [
