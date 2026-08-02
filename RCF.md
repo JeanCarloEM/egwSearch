@@ -1444,7 +1444,7 @@ Sem capa EPUB utilizavel, gerador DEVE renderizar a primeira pagina PDF editoria
 
 Pagina vazia, tecnica, corrompida, de erro, ilegivel ou nao representativa NÃO DEVE ser aceita. [443f133]
 
-Ausencia de ambas as fontes DEVE bloquear o grupo.
+Ausencia de ambas as fontes DEVE bloquear o grupo. [d50a68f]
 
 `cover.png` DEVE possuir no maximo 800 px em cada eixo, preservar proporcao/nitidez/legibilidade, nao ampliar sem justificativa e remover EXIF, comentario, miniatura e metadado inutil. [443f133]
 
