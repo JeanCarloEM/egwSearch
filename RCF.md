@@ -1008,6 +1008,10 @@ A dispensa de rede específica da obra somente PODE ocorrer quando identidade, m
 Essa verificação DEVE abranger a publicação inteira, inclusive todos os PDF e EPUB registrados, `cover.png`, metadados e derivados, e registrar `skipped` sem alterar seus bytes. [d52b5eb]
 O catálogo da coleção PODE ser acessado uma vez para conhecer o conjunto vigente, mas uma publicação local válida NÃO DEVE provocar requisição de sua página, texto, capa, PDF ou EPUB, salvo opção humana explícita de revalidação. [d52b5eb]
 
+Metadado legado sem `remote_id` DEVE participar desse preflight por identidade composta exclusivamente de dados já presentes na listagem da coleção — ID/URL pública, título normalizado, autor, categoria, idioma e tipo — e do path canônico ou alias local oficialmente admitido. Havendo PDF e EPUB registrados, íntegros e inequivocamente pareados, a ausência de schema v3 NÃO autoriza abrir a página individual. [PENDENTE-CODIGO]
+
+Request HTTP específico da publicação somente PODE ser emitido depois de o gate local registrar causa objetiva que a torne necessária: prova ausente ou inconclusiva, divergência, ambiguidade, corrupção, ativo obrigatório ausente ou `--revalidate` explícito. Caminho feliz local completo DEVE possuir teste que falha diante de qualquer chamada de rede. [PENDENTE-CODIGO]
+
 Quando PDF e EPUB estiverem ambos ausentes, a leitura textual DEVE começar na [be82602]
 URL oficial declarada pela obra e seguir a navegação editorial `rel=next` até o
 término declarado. [be82602]

@@ -187,3 +187,11 @@ capa oficialmente declarada para a obra.
 - integração: `dev` incorporada em `main` pelo merge `92994c6`; referências
   remotas publicadas e arquivos gerados/quarentena preservados fora do Git.
 - estado: concluída e publicada sem pendência própria.
+- estado: reaberta por evidência de request individual desnecessário para o
+  acervo legado completo.
+- causa: o índice local anterior reconhece somente três metadados v3 por
+  `remote_id`; 518 grupos legados, dos quais 515 com PDF+EPUB, não participam do
+  preflight anterior ao enriquecimento.
+- correção autorizada: compor identidade a partir da única listagem da coleção
+  e validar localmente o path/metadado legado e os dois assets antes de decidir
+  por `_enrich_book()`.
