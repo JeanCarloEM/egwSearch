@@ -184,6 +184,9 @@ capa oficialmente declarada para a obra.
   `git diff --check` e auditoria de 1.036 identidades físicas aprovados, sem
   SHA-512 repetido entre diretórios de publicação.
 - estado: concluída; integração e publicação pendentes.
+- integração: `dev` incorporada em `main` pelo merge `5fde300`; referências
+  remotas publicadas e convergentes.
+- estado: concluída e publicada sem pendência própria.
 - integração: `dev` incorporada em `main` pelo merge `c6c7b9d` e referências
   remotas publicadas; alterações alheias permaneceram fora dos commits da FT.
 - estado: concluída e publicada sem pendência própria.
