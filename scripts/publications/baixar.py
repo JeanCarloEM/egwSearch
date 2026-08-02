@@ -72,6 +72,7 @@ from publication_contract import (
     write_json_atomic,
 )
 from publication_analysis import analyze_publication
+from publication_console import PublicationReporter
 from publication_index import configured_index_path, update_global_index
 from publication_transaction import (
     GitPublicationPublisher,
@@ -2699,6 +2700,7 @@ def finalize_publication_intelligence(
     item: CatalogItem,
     source_root: Path,
     config: dict,
+    reporter: PublicationReporter | None = None,
 ) -> dict:
     """Analisa ativos e atualiza o índice antes de confirmar a publicação.
 
@@ -2708,7 +2710,8 @@ def finalize_publication_intelligence(
     """
 
     directory = source_root / item.publication_identity().relative_directory()
-    manifests = analyze_publication(directory, source_root)
+    analysis_reporter = reporter.child("Análise") if reporter is not None else None
+    manifests = analyze_publication(directory, source_root, analysis_reporter)
     canonical_root = resolve_repository_path(
         str(config["source_root"]), REPOSITORY_ROOT
     ).resolve()
@@ -2723,10 +2726,20 @@ def finalize_publication_intelligence(
         config,
         publication=directory,
     )
-    print(
-        f"PUBLICATION_INTELLIGENCE_UPDATED remote_id={item.remote_id} "
-        f"manifests={len(manifests)} index={index_path.name}"
-    )
+    if reporter is not None:
+        reporter.result(
+            "Indexação",
+            {
+                "publicação": item.remote_id,
+                "manifestos": len(manifests),
+                "índice": index_path.name,
+            },
+        )
+    else:
+        print(
+            f"PUBLICATION_INTELLIGENCE_UPDATED remote_id={item.remote_id} "
+            f"manifests={len(manifests)} index={index_path.name}"
+        )
     return {"manifests": manifests, "index": index_path}
 
 
@@ -2747,6 +2760,7 @@ def _process_collection(
     publication_query: str | None = None,
     local_index: dict[str, list[Path]] | None = None,
     restart: bool = False,
+    reporter: PublicationReporter | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -2864,6 +2878,11 @@ def _process_collection(
 
         attempted_this_run.add(item.remote_id)
         summary["discovered"] = max(summary["discovered"], position)
+        if reporter is not None:
+            reporter.section(
+                f"Publicação {position}",
+                f"{item.remote_id} · {item.title_original}",
+            )
         try:
             if publisher is not None:
                 previous = ledger.get(item.stable_key()) or {}
@@ -2890,6 +2909,7 @@ def _process_collection(
                         item,
                         source_root,
                         config,
+                        reporter,
                     )
                 except Exception as error:
                     ledger.transition(
@@ -2916,11 +2936,24 @@ def _process_collection(
                     print(
                         f"PUBLICATION_COMMITTED remote_id={item.remote_id} commit={commit}"
                     )
-            print(
-                f"ITEM_{result['state'].upper()} collection={collection['id']} "
-                f"item={position} remote_id={item.remote_id} "
-                f"title={json.dumps(item.title_original, ensure_ascii=False)}"
-            )
+            if reporter is None:
+                print(
+                    f"ITEM_{result['state'].upper()} collection={collection['id']} "
+                    f"item={position} remote_id={item.remote_id} "
+                    f"title={json.dumps(item.title_original, ensure_ascii=False)}"
+                )
+            if reporter is not None:
+                reporter.result(
+                    "Publicação concluída",
+                    {
+                        "estado": result["state"],
+                        "baixados": result["downloaded"],
+                        "reutilizados": result["skipped"],
+                        "extraídos": result["extracted"],
+                        "convertidos": result["converted"],
+                    },
+                )
+                reporter.publication_gap()
             if result["state"] in {"completed", "skipped", "review_required"}:
                 confirmed.add(item.remote_id)
                 active["confirmed_remote_ids"] = sorted(confirmed)
@@ -3145,6 +3178,8 @@ def run(
     commit_per_publication: bool = False,
     publication_query: str | None = None,
 ) -> int:
+    reporter = PublicationReporter("Downloader de publicações")
+    reporter.start(str(config_path))
     config = load_config(config_path)
     canonical_source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
     paths = runtime_paths(config, REPOSITORY_ROOT)
@@ -3234,6 +3269,7 @@ def run(
                         publication_query=publication_query,
                         local_index=local_index,
                         restart=restart,
+                        reporter=reporter,
                     )
                 )
         else:
@@ -3259,6 +3295,7 @@ def run(
                         publication_query=publication_query,
                         local_index=local_index,
                         restart=restart,
+                        reporter=reporter,
                     ): collection["id"]
                     for collection in collections
                 }
@@ -3268,7 +3305,13 @@ def run(
         if browser_manager is not None:
             browser_manager.close()
     results.sort(key=lambda item: item["collection"])
-    print(json.dumps({"collections": results}, ensure_ascii=False, sort_keys=True))
+    totals = {
+        key: sum(int(item.get(key) or 0) for item in results)
+        for key in ("discovered", "downloaded", "skipped", "converted", "failures")
+    }
+    reporter.result("Resumo", totals)
+    if not reporter.terminal:
+        print(json.dumps({"collections": results}, ensure_ascii=False, sort_keys=True))
     return 1 if any(item["failures"] or item["blocked"] for item in results) else 0
 
 

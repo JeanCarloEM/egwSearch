@@ -21,6 +21,8 @@ import threading
 from typing import Iterable
 from urllib.parse import quote, urlsplit
 
+from publication_console import PublicationReporter
+
 from publication_analysis import (
     MANIFEST_SCHEMA,
     extract_metadata_evidence,
@@ -533,6 +535,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Iterable[str] | None = None) -> int:
+    reporter = PublicationReporter("Indexador global")
     try:
         arguments = _parser().parse_args(list(argv) if argv is not None else None)
         config = load_config(arguments.config)
@@ -542,6 +545,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             if arguments.output is not None
             else configured_index_path(config)
         )
+        reporter.start(str(output))
         if arguments.scope is not None:
             if arguments.output is None:
                 raise IndexError("--scope exige --output para não substituir o índice global")
@@ -553,10 +557,18 @@ def main(argv: Iterable[str] | None = None) -> int:
                 config,
                 publication=arguments.publication,
             )
-        print(f"PUBLICATION_INDEX_OK path={output}")
+        indexed = json.loads(output.read_text(encoding="utf-8"))
+        reporter.result(
+            "Índice concluído",
+            {
+                "publicações": len(indexed.get("publications") or []),
+                "arquivo": output,
+                "fingerprint": str((indexed.get("generation") or {}).get("source_fingerprint") or "—")[:16],
+            },
+        )
         return 0
     except (IndexError, ContractError, OSError) as error:
-        print(f"ERRO_INDICE: {error}", file=sys.stderr)
+        reporter.error("Índice", error)
         return 4
 
 

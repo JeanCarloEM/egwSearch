@@ -207,8 +207,10 @@ def validate_complete_publication(
             manifest.get("schema_version") != MANIFEST_SCHEMA
             or declared.get("size") != evidence.size
             or (declared.get("hashes") or {}).get("sha512") != evidence.sha512
-            or not isinstance(manifest.get("strategies"), list)
-            or not manifest["strategies"]
+            or not isinstance(manifest.get("experiments"), list)
+            or not isinstance(manifest.get("reference"), dict)
+            or not isinstance(manifest.get("recommendation"), dict)
+            or not isinstance(manifest.get("catalog"), dict)
         ):
             raise PublicationTransactionError(
                 f"manifesto de chunking divergente: {asset.name}"

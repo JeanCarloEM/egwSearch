@@ -1,0 +1,140 @@
+{
+  "schema_version": "publication-chunking-method-catalog/v1",
+  "catalog_id": "egwSearch/chunking-methods",
+  "version": 1,
+  "methods": [
+    {
+      "id": "fixed-window",
+      "family": "lexical",
+      "hypothesis": "Janelas de tamanho fixo formam um controle de custo previsível, mas podem cortar unidades editoriais.",
+      "risks": ["boundary-cut", "context-fragmentation"],
+      "references": ["wang-2024-rag-practices"]
+    },
+    {
+      "id": "recursive-separator",
+      "family": "lexical",
+      "hypothesis": "Separadores ordenados podem preservar a maior fronteira disponível dentro de um limite.",
+      "risks": ["separator-bias", "uneven-size"],
+      "references": ["wang-2024-rag-practices"]
+    },
+    {
+      "id": "regex-structural",
+      "family": "rules",
+      "hypothesis": "Expressões regulares limitadas podem reconhecer fronteiras recorrentes comprovadas pelo próprio recurso.",
+      "risks": ["overfit", "false-boundary"],
+      "references": ["zhao-2025-moc"]
+    },
+    {
+      "id": "sentence",
+      "family": "linguistic",
+      "hypothesis": "Sentenças extraídas sem reescrita podem funcionar como unidades finas quando suas fronteiras são recuperáveis.",
+      "risks": ["abbreviation-split", "rhetorical-fragmentation"],
+      "references": ["wang-2024-rag-practices"]
+    },
+    {
+      "id": "sentence-window",
+      "family": "linguistic",
+      "hypothesis": "Janelas de sentenças podem controlar contexto sem cortar sentenças quando a segmentação de base é válida.",
+      "risks": ["intentional-overlap", "rhetorical-fragmentation"],
+      "references": ["wang-2024-rag-practices"]
+    },
+    {
+      "id": "paragraph",
+      "family": "structural",
+      "hypothesis": "Parágrafos podem ser fronteiras editoriais reversíveis quando reconstruídos integralmente.",
+      "risks": ["short-unit", "layout-paragraph-confusion"],
+      "references": ["wang-2024-rag-practices"]
+    },
+    {
+      "id": "page-layout",
+      "family": "layout",
+      "hypothesis": "Páginas podem preservar localização quando a quebra é autoritativa e não rompe continuidade textual.",
+      "risks": ["physical-break", "header-footer-contamination"],
+      "references": ["auer-2024-docling", "ouyang-2024-omnidocbench"]
+    },
+    {
+      "id": "hierarchical-structure",
+      "family": "structural",
+      "hypothesis": "Spine, headings, capítulos, seções e tópicos podem definir unidades hierárquicas recuperáveis.",
+      "risks": ["oversized-section", "missing-heading"],
+      "references": ["dong-2024-mc-indexing"]
+    },
+    {
+      "id": "editorial-unit",
+      "family": "structural",
+      "hypothesis": "Dias, artigos e outras unidades tipadas podem ser preservados quando suas fronteiras existem no recurso.",
+      "risks": ["type-assumption", "ambiguous-boundary"],
+      "references": ["dong-2024-mc-indexing"]
+    },
+    {
+      "id": "semantic-cohesion",
+      "family": "semantic",
+      "hypothesis": "Mudanças de coesão lexical ou semântica podem indicar transição de tópico.",
+      "risks": ["model-dependence", "domain-shift"],
+      "references": ["maraj-2024-cohesion"]
+    },
+    {
+      "id": "perplexity-meta-chunking",
+      "family": "model",
+      "hypothesis": "Distribuição de perplexidade e fusão dinâmica podem localizar fronteiras lógicas entre sentenças.",
+      "risks": ["model-dependence", "compute-cost"],
+      "references": ["zhao-2024-meta-chunking"]
+    },
+    {
+      "id": "proposition",
+      "family": "model",
+      "hypothesis": "Proposições autocontidas podem melhorar recuperação fina sob orçamento compatível.",
+      "risks": ["rewrite-drift", "generation-cost"],
+      "references": ["chen-2024-dense-x"]
+    },
+    {
+      "id": "llm-topic-shift",
+      "family": "model",
+      "hypothesis": "Um LLM pode localizar mudança de assunto em passagens sequenciais quando o domínio e o custo forem adequados.",
+      "risks": ["privacy", "nondeterminism", "domain-shift"],
+      "references": ["duarte-2024-lumberchunker"]
+    },
+    {
+      "id": "multi-granularity",
+      "family": "ensemble",
+      "hypothesis": "Granularidades paralelas podem ser roteadas por consulta quando há avaliação downstream.",
+      "risks": ["router-dependence", "index-cost"],
+      "references": ["zhong-2025-mog", "zhao-2025-moc"]
+    },
+    {
+      "id": "late-chunking",
+      "family": "embedding",
+      "hypothesis": "Pooling posterior à contextualização longa pode preservar contexto nos embeddings dos segmentos.",
+      "risks": ["model-window", "embedding-dependence"],
+      "references": ["gunther-2024-late-chunking"]
+    },
+    {
+      "id": "chunk-free",
+      "family": "retrieval",
+      "hypothesis": "Recuperação diretamente no contexto pode servir de alternativa quando a arquitetura suporta evidência sem chunks.",
+      "risks": ["architecture-dependence", "context-cost"],
+      "references": ["qian-2024-cfic"]
+    },
+    {
+      "id": "whole-document",
+      "family": "control",
+      "hypothesis": "Documento inteiro é controle sem fronteiras intermediárias para recursos compatíveis com a janela downstream.",
+      "risks": ["context-cost", "retrieval-noise"],
+      "references": ["qian-2024-cfic"]
+    }
+  ],
+  "references": {
+    "auer-2024-docling": "https://arxiv.org/abs/2408.09869",
+    "chen-2024-dense-x": "https://doi.org/10.18653/v1/2024.emnlp-main.845",
+    "dong-2024-mc-indexing": "https://doi.org/10.18653/v1/2024.findings-emnlp.150",
+    "duarte-2024-lumberchunker": "https://doi.org/10.18653/v1/2024.findings-emnlp.377",
+    "gunther-2024-late-chunking": "https://arxiv.org/abs/2409.04701",
+    "maraj-2024-cohesion": "https://doi.org/10.18653/v1/2024.conll-1.1",
+    "ouyang-2024-omnidocbench": "https://arxiv.org/abs/2412.07626",
+    "qian-2024-cfic": "https://doi.org/10.18653/v1/2024.acl-long.71",
+    "wang-2024-rag-practices": "https://doi.org/10.18653/v1/2024.emnlp-main.981",
+    "zhao-2024-meta-chunking": "https://arxiv.org/abs/2410.12788",
+    "zhao-2025-moc": "https://doi.org/10.18653/v1/2025.acl-long.258",
+    "zhong-2025-mog": "https://aclanthology.org/2025.coling-main.384/"
+  }
+}

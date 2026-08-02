@@ -12,6 +12,7 @@ import tempfile
 import time
 import unittest
 from unittest.mock import patch
+import zipfile
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
@@ -20,13 +21,61 @@ sys.path.insert(0, str(MODULE_ROOT))
 
 from acquisition import CatalogAsset, CatalogItem, build_source_v3, generate_epub  # noqa: E402
 from publication_analysis import (  # noqa: E402
+    AnalysisError,
+    CATALOG_SCHEMA,
+    LEARNING_SCHEMA,
     MANIFEST_SCHEMA,
+    _measure_experiment,
+    _reference_model,
+    _safe_zip_entries,
     analyze_publication,
     analyze_scope,
+    inspect_asset,
+    learning_path_for,
     manifest_path_for,
 )
 from publication_contract import hash_file, write_json_atomic  # noqa: E402
 import publication_index  # noqa: E402
+
+
+class SafeEpubEntryTests(unittest.TestCase):
+    def test_empty_zip_record_is_ignored_without_relaxing_validation(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            epub = Path(temporary) / "empty-record.epub"
+            with zipfile.ZipFile(epub, "w") as archive:
+                archive.writestr("", b"")
+                archive.writestr("mimetype", b"application/epub+zip")
+            with zipfile.ZipFile(epub) as archive:
+                self.assertEqual(
+                    [entry.filename for entry in _safe_zip_entries(archive)],
+                    ["mimetype"],
+                )
+
+    def test_zip_traversal_remains_rejected_with_entry_diagnostic(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            epub = Path(temporary) / "traversal.epub"
+            with zipfile.ZipFile(epub, "w") as archive:
+                archive.writestr("../escape.xhtml", b"unsafe")
+            with zipfile.ZipFile(epub) as archive:
+                with self.assertRaisesRegex(AnalysisError, "escape.xhtml"):
+                    _safe_zip_entries(archive)
+
+    def test_malformed_epub_is_measured_as_structural_only(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            epub = Path(temporary) / "malformed.epub"
+            with zipfile.ZipFile(epub, "w") as archive:
+                archive.writestr("mimetype", b"application/epub+zip")
+                archive.writestr("", b"<p>orphan content</p>")
+                archive.writestr(
+                    "META-INF/container.xml",
+                    b'<?xml version="1.0"?><container><rootfiles>'
+                    b'<rootfile full-path="missing.opf"/></rootfiles></container>',
+                )
+            report = inspect_asset(epub)
+            self.assertEqual(report["parser"]["selected"], "binary-epub-structure")
+            self.assertFalse(report["_model"]["complete"])
+            self.assertEqual(report["structure"]["empty_zip_entries"], 1)
+            self.assertIn("EPUB sem pacote OCF", report["limitations"][0])
 
 
 def _config(root: Path) -> dict:
@@ -134,25 +183,68 @@ class PublicationIntelligenceTests(unittest.TestCase):
             self.assertEqual(epub_manifest["asset"]["hashes"], hash_file(epub).as_dict())
             self.assertTrue(epub_manifest["publication"]["generated_epub"])
             self.assertGreater(epub_manifest["structure"]["headings"], 0)
-            strategy_ids = {entry["id"] for entry in epub_manifest["strategies"]}
-            self.assertEqual(
-                strategy_ids,
-                {
-                    "hierarchical-topic",
-                    "paragraph",
-                    "sentence-window",
-                    "page",
-                    "devotional-day",
-                    "periodical-article",
-                    "whole-document",
-                },
+            self.assertEqual(epub_manifest["catalog"]["schema"], CATALOG_SCHEMA)
+            experiment_ids = {entry["method"] for entry in epub_manifest["experiments"]}
+            self.assertTrue({"paragraph", "sentence", "regex-structural"} <= experiment_ids)
+            self.assertNotIn("strategies", epub_manifest)
+            self.assertNotIn("benefit", json.dumps(epub_manifest, ensure_ascii=False))
+            self.assertNotIn("risk", json.dumps(epub_manifest, ensure_ascii=False))
+            self.assertTrue(
+                all(
+                    entry["proof"]["reference_tokens_sha256"]
+                    == epub_manifest["reference"]["tokens_sha256"]
+                    for entry in epub_manifest["experiments"]
+                )
             )
             pdf_manifest = json.loads(manifests[1].read_text(encoding="utf-8"))
             self.assertIn(pdf_manifest["parser"]["selected"], {"pypdfium2", "binary-pdf-structure"})
+            learning = json.loads(learning_path_for(root).read_text(encoding="utf-8"))
+            self.assertEqual(learning["schema_version"], LEARNING_SCHEMA)
+            self.assertGreaterEqual(learning["manifests"], 2)
             before = {path: path.stat().st_mtime_ns for path in manifests}
+            learning_before = learning_path_for(root).stat().st_mtime_ns
             time.sleep(0.01)
             analyze_publication(directory, root)
             self.assertEqual(before, {path: path.stat().st_mtime_ns for path in manifests})
+            self.assertEqual(learning_before, learning_path_for(root).stat().st_mtime_ns)
+
+    def test_real_experiment_measures_boundaries_noise_and_cross_page_continuity(self) -> None:
+        blocks = [
+            {"kind": "heading", "text": "Capítulo 1", "page": 1},
+            {"kind": "paragraph", "text": "Uma frase atravessa a página sem perder conteúdo.", "page": 1},
+            {"kind": "paragraph", "text": "Segundo parágrafo completo.", "page": 2},
+        ]
+        pages = [
+            ["Capítulo 1", "Uma frase atravessa a página sem perder conteúdo."],
+            ["Segundo parágrafo completo."],
+        ]
+        model = _reference_model(
+            blocks,
+            pages,
+            complete=True,
+            noise=[{"signature": "a" * 64, "position": -1, "occurrences": 2}],
+            cross_page=[{"from": 1, "to": 2, "proof": "b" * 64}],
+        )
+        paragraph = _measure_experiment(
+            "paragraph",
+            [block["text"] for block in blocks],
+            {"boundary": "parsed-block"},
+            "paragraph",
+            model,
+        )
+        self.assertEqual(paragraph["status"], "passed")
+        self.assertEqual(paragraph["metrics"]["lost_tokens"], 0)
+        self.assertEqual(paragraph["metrics"]["duplicated_tokens"], 0)
+        self.assertEqual(paragraph["metrics"]["accuracy_ppm"], 1_000_000)
+        page = _measure_experiment(
+            "page-layout",
+            model["pages"],
+            {"boundary": "physical-page"},
+            "page",
+            model,
+        )
+        self.assertEqual(page["status"], "rejected")
+        self.assertIn("page-break-crosses-unit", page["diagnostics"])
 
     def test_scope_can_target_asset_publication_subtree_or_corpus(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
@@ -162,6 +254,25 @@ class PublicationIntelligenceTests(unittest.TestCase):
             self.assertEqual(len(analyze_scope(directory, root)), 2)
             self.assertEqual(len(analyze_scope(root / "egw", root)), 2)
             self.assertEqual(len(analyze_scope(root, root)), 2)
+
+    def test_resume_reuses_only_verified_current_manifests(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, epub, _pdf = _materialize(root, _item())
+            analyze_publication(directory, root)
+            with patch("publication_analysis.inspect_asset") as inspector:
+                self.assertEqual(
+                    len(analyze_scope(root, root, reuse_existing=True)),
+                    2,
+                )
+            inspector.assert_not_called()
+            epub.write_bytes(epub.read_bytes() + b"changed")
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_scope(root, root, reuse_existing=True)
+            self.assertEqual(inspector.call_count, 1)
 
     def test_global_index_preserves_public_urls_hashes_and_formative_boundary(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
