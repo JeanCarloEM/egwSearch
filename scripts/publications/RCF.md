@@ -24,9 +24,7 @@ além das coleções de Ellen G. White já suportadas. O catálogo real DEVE [33
 descobrir autores, tipos e obras; enumeração fixa somente PODE ser fixture ou [3301a97]
 fallback incompleto explicitamente marcado.
 
-O agrupador inglês `/allCollection/en/15`, que encaminha para autores,
-periódicos e títulos diversos, NÃO constitui grade de obras e NÃO DEVE ser
-aguardado como catálogo de `en-pioneers`. [e00ca57]
+O agrupador inglês `/allCollection/en/15`, que encaminha para autores, periódicos e títulos diversos, NÃO constitui grade de obras e NÃO DEVE ser aguardado como catálogo de `en-pioneers`. [ba7016b]
 
 Somente `pt-BR` e `en` são idiomas elegíveis. `pt`, `pt_BR` e equivalentes
 comprovados DEVEM normalizar para `pt-BR`; inglês sem diferença material, [3301a97]
@@ -406,51 +404,23 @@ O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte
 
 ## 10. Inteligência estrutural e índice global
 
-`publication_analysis.py` DEVE ser a capacidade única de análise de EPUB/PDF e
-`publication_index.py` a capacidade única do índice global; seus `main()` são
-invocadores finos das mesmas funções usadas pelo downloader, sem reimplementação
-de schema ou regra de negócio. [PENDENTE-CODIGO]
+`publication_analysis.py` DEVE ser a capacidade única de análise de EPUB/PDF e `publication_index.py` a capacidade única do índice global; seus `main()` são invocadores finos das mesmas funções usadas pelo downloader, sem reimplementação de schema ou regra de negócio. [0f85f08]
 
-O manifesto de cada ativo DEVE usar schema versionado, registrar path relativo,
-formato, tamanho, SHA-1/SHA-256/SHA-512, parser selecionado e candidatos,
-estrutura observada, fingerprint, correlação do corpus, limitações e estratégias
-ordenadas com identificador, granularidade, pontuação, sinais, vantagens,
-riscos e parâmetros sugeridos. [PENDENTE-CODIGO]
+O manifesto de cada ativo DEVE usar schema versionado, registrar path relativo, formato, tamanho, SHA-1/SHA-256/SHA-512, parser selecionado e candidatos, estrutura observada, fingerprint, correlação do corpus, limitações e estratégias ordenadas com identificador, granularidade, pontuação, sinais, vantagens, riscos e parâmetros sugeridos. [0f85f08]
 
-Para EPUB gerado pelo produto, a análise DEVE reconhecer o manifesto Markdown
-reversível, separar capa/proveniência/sumário do spine editorial e aproveitar
-headings, IDs, unidades e source map já conhecidos; Markdown embutido serve de
-evidência estrutural e NÃO DEVE ser extraído persistentemente. [PENDENTE-CODIGO]
+Para EPUB gerado pelo produto, a análise DEVE reconhecer o manifesto Markdown reversível, separar capa/proveniência/sumário do spine editorial e aproveitar headings, IDs, unidades e source map já conhecidos; Markdown embutido serve de evidência estrutural e NÃO DEVE ser extraído persistentemente. [0f85f08]
 
-Para PDF, `pypdfium2` DEVE ser o parser preferencial já preparado pelo bootstrap
-para contagem de páginas e amostragem textual distribuída; indisponibilidade ou
-falha PODE acionar inspeção binária limitada, registrada como fallback de menor
-confiança, sem OCR implícito. [PENDENTE-CODIGO]
+Para PDF, `pypdfium2` DEVE ser o parser preferencial já preparado pelo bootstrap para contagem de páginas e amostragem textual distribuída; indisponibilidade ou falha PODE acionar inspeção binária limitada, registrada como fallback de menor confiança, sem OCR implícito. [0f85f08]
 
-Manifestos compatíveis existentes no corpus DEVEM formar perfis agregados por
-fingerprint, tipo, idioma e categoria. A unidade analisada DEVE declarar tamanho
-do grupo e padrões compartilhados, sem copiar conteúdo textual de terceiros nem
-depender da ordem física da varredura. [PENDENTE-CODIGO]
+Manifestos compatíveis existentes no corpus DEVEM formar perfis agregados por fingerprint, tipo, idioma e categoria. A unidade analisada DEVE declarar tamanho do grupo e padrões compartilhados, sem copiar conteúdo textual de terceiros nem depender da ordem física da varredura. [0f85f08]
 
-O índice `publication-global-index/v1` DEVE conter envelope de geração e lista
-ordenada de publicações; cada item DEVE expor identidade, autoria, localização,
-rotas públicas, ativos, capa, manifestos de análise, hashes e estado/dados
-formativos elegíveis. [PENDENTE-CODIGO]
+O índice `publication-global-index/v1` DEVE conter envelope de geração e lista ordenada de publicações; cada item DEVE expor identidade, autoria, localização, rotas públicas, ativos, capa, manifestos de análise, hashes e estado/dados formativos elegíveis. [0f85f08]
 
-Atualização `--publication` DEVE substituir somente a identidade alvo quando o
-índice existente cobrir integralmente os metadados válidos do corpus; índice
-ausente, incompatível ou incompleto DEVE acionar reconstrução integral local.
-`--scope` analisa/regenera somente a subárvore solicitada, e `--all` cobre o
-corpus, sempre com resolução a partir da raiz configurada. [PENDENTE-CODIGO]
+Atualização `--publication` DEVE substituir somente a identidade alvo quando o índice existente cobrir integralmente os metadados válidos do corpus; índice ausente, incompatível ou incompleto DEVE acionar reconstrução integral local. `--scope` analisa/regenera somente a subárvore solicitada, e `--all` cobre o corpus, sempre com resolução a partir da raiz configurada. [0f85f08]
 
-Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o
-orquestrador DEVE chamar um único fechamento síncrono que analisa todos os
-EPUB/PDF, valida os manifestos e atualiza o índice. Somente então PODE marcar o
-remote ID como confirmado ou iniciar commit opt-in. [PENDENTE-CODIGO]
+Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB/PDF, valida os manifestos e atualiza o índice. Somente então PODE marcar o remote ID como confirmado ou iniciar commit opt-in. [0f85f08]
 
-Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos;
-na retomada, o preflight editorial válido DEVE permitir reparar análise/índice
-somente com arquivos locais, mantendo `network=skipped`. [PENDENTE-CODIGO]
+Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos; na retomada, o preflight editorial válido DEVE permitir reparar análise/índice somente com arquivos locais, mantendo `network=skipped`. [0f85f08]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação
 pertence à FT-006 e exige nova autorização humana explícita após a conclusão

@@ -1085,74 +1085,31 @@ Alteracao de publicacao DEVE regenerar item, hashes, capa, indice e artefato dep
 
 ### 43.1 Geração incremental e multilocalizada
 
-Uma única capacidade canônica DEVE gerar o índice integral e atualizar um item
-específico; CLI, downloader e eventual workflow DEVEM invocar essa capacidade
-por parâmetro/gatilho declarado, sem manter serializadores paralelos.
-[PENDENTE-CODIGO]
+Uma única capacidade canônica DEVE gerar o índice integral e atualizar um item específico; CLI, downloader e eventual workflow DEVEM invocar essa capacidade por parâmetro/gatilho declarado, sem manter serializadores paralelos. [0f85f08]
 
-O índice canônico DEVE residir na raiz pública das publicações, usar paths URI
-relativos e projetar idioma, categoria, autor, tipo e título de forma suficiente
-para consumidores multilocalizados, sem traduzir título, nome ou crédito
-editorial. [PENDENTE-CODIGO]
+O índice canônico DEVE residir na raiz pública das publicações, usar paths URI relativos e projetar idioma, categoria, autor, tipo e título de forma suficiente para consumidores multilocalizados, sem traduzir título, nome ou crédito editorial. [0f85f08]
 
-Cada entrada DEVE registrar identidade remota e local, metadados editoriais,
-URL da ficha oficial, URLs públicas dos ativos e derivados, capa, manifesto de
-análise, tamanho e SHA-1/SHA-256/SHA-512 dos EPUB/PDF efetivamente publicados.
-[PENDENTE-CODIGO]
+Cada entrada DEVE registrar identidade remota e local, metadados editoriais, URL da ficha oficial, URLs públicas dos ativos e derivados, capa, manifesto de análise, tamanho e SHA-1/SHA-256/SHA-512 dos EPUB/PDF efetivamente publicados. [0f85f08]
 
-`formative_data` somente DEVE ser emitido quando ao menos um PDF/EPUB editorial
-original possuir URL de aquisição válida e matriz integral comprovada conforme
-`NORMA-IF-SIL-001`; publicação exclusivamente textual com EPUB local derivado
-DEVE declarar estado formativo `not-applicable-local-derivation`, sem fabricar
-URL ou promover derivado a original. [PENDENTE-CODIGO]
+`formative_data` somente DEVE ser emitido quando ao menos um PDF/EPUB editorial original possuir URL de aquisição válida e matriz integral comprovada conforme `NORMA-IF-SIL-001`; publicação exclusivamente textual com EPUB local derivado DEVE declarar estado formativo `not-applicable-local-derivation`, sem fabricar URL ou promover derivado a original. [0f85f08]
 
-Na primeira atualização incremental, índice ausente ou incompatível DEVE ser
-reconstruído do corpus local; nas seguintes, somente o item afetado PODE ser
-substituído se a integridade e a cobertura do envelope forem preservadas.
-[PENDENTE-CODIGO]
+Na primeira atualização incremental, índice ausente ou incompatível DEVE ser reconstruído do corpus local; nas seguintes, somente o item afetado PODE ser substituído se a integridade e a cobertura do envelope forem preservadas. [0f85f08]
 
-A escrita DEVE ser atômica e determinística. Identidade, configuração e
-fingerprint das entradas DEVEM integrar a geração; relógio, ordem de varredura,
-cwd e estado de rede NÃO PODEM alterar bytes para o mesmo corpus.
-[PENDENTE-CODIGO]
+A escrita DEVE ser atômica e determinística. Identidade, configuração e fingerprint das entradas DEVEM integrar a geração; relógio, ordem de varredura, cwd e estado de rede NÃO PODEM alterar bytes para o mesmo corpus. [0f85f08]
 
 ### 43.2 Manifesto de análise de chunking
 
-Cada EPUB/PDF incorporado ou gerado DEVE possuir manifesto derivado próprio,
-identificado pelo path e hashes integrais do ativo, que descreva sinais
-estruturais, parsers avaliados, estratégia recomendada e alternativas ordenadas
-para experimentação futura, sem duplicar obrigatoriamente o texto ou
-materializar chunks. [PENDENTE-CODIGO]
+Cada EPUB/PDF incorporado ou gerado DEVE possuir manifesto derivado próprio, identificado pelo path e hashes integrais do ativo, que descreva sinais estruturais, parsers avaliados, estratégia recomendada e alternativas ordenadas para experimentação futura, sem duplicar obrigatoriamente o texto ou materializar chunks. [0f85f08]
 
-A análise DEVE considerar, conforme sinais reais: seção hierárquica e tópico,
-parágrafo, sentença com janela, página, dia de meditação, seção/artigo de
-periódico e documento inteiro; estratégia inaplicável DEVE permanecer
-diagnosticável com pontuação e fundamento, nunca desaparecer silenciosamente.
-[PENDENTE-CODIGO]
+A análise DEVE considerar, conforme sinais reais: seção hierárquica e tópico, parágrafo, sentença com janela, página, dia de meditação, seção/artigo de periódico e documento inteiro; estratégia inaplicável DEVE permanecer diagnosticável com pontuação e fundamento, nunca desaparecer silenciosamente. [0f85f08]
 
-EPUB DEVE ser lido como ZIP OCF não confiável, com limites e paths seguros,
-respeitando `container.xml`, pacote, manifesto, spine, `nav`, NCX, landmarks,
-page list, XHTML, headings e fonte Markdown reversível quando presente. PDF
-DEVE ser analisado sem modificar o original, preferindo parser mantido capaz de
-obter páginas, texto e metadados, com fallback estrutural explicitamente
-diagnosticado. [PENDENTE-CODIGO]
+EPUB DEVE ser lido como ZIP OCF não confiável, com limites e paths seguros, respeitando `container.xml`, pacote, manifesto, spine, `nav`, NCX, landmarks, page list, XHTML, headings e fonte Markdown reversível quando presente. PDF DEVE ser analisado sem modificar o original, preferindo parser mantido capaz de obter páginas, texto e metadados, com fallback estrutural explicitamente diagnosticado. [0f85f08]
 
-O analisador DEVE produzir fingerprint de formato/estrutura e correlacioná-lo
-com manifestos válidos do corpus completo, ainda quando o alvo for um arquivo,
-uma publicação ou uma subárvore; correlação informa padrões compartilhados,
-mas NÃO PODE alterar metadado editorial nem modificar outra publicação.
-[PENDENTE-CODIGO]
+O analisador DEVE produzir fingerprint de formato/estrutura e correlacioná-lo com manifestos válidos do corpus completo, ainda quando o alvo for um arquivo, uma publicação ou uma subárvore; correlação informa padrões compartilhados, mas NÃO PODE alterar metadado editorial nem modificar outra publicação. [0f85f08]
 
-Invocação DEVE aceitar exatamente um escopo entre ativo, publicação,
-diretório/subárvore e corpus integral. O resultado por ativo DEVE ser
-idempotente, versionado, explicável e invalidado quando bytes, parser,
-algoritmo, configuração ou sinais causais mudarem. [PENDENTE-CODIGO]
+Invocação DEVE aceitar exatamente um escopo entre ativo, publicação, diretório/subárvore e corpus integral. O resultado por ativo DEVE ser idempotente, versionado, explicável e invalidado quando bytes, parser, algoritmo, configuração ou sinais causais mudarem. [0f85f08]
 
-O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da
-unidade e a atualização compartilhada do índice depois de validar/promover os
-ativos e antes de confirmar o checkpoint; falha preserva a publicação material,
-impede confirmação e permite retomada estritamente local sem nova requisição à
-origem. [PENDENTE-CODIGO]
+O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da unidade e a atualização compartilhada do índice depois de validar/promover os ativos e antes de confirmar o checkpoint; falha preserva a publicação material, impede confirmação e permite retomada estritamente local sem nova requisição à origem. [0f85f08]
 
 ## 44. NORMA-IF-SIL-001 - autoridade e estrutura
 
