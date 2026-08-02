@@ -286,3 +286,10 @@ do conversor (`STRONG_CLOSE`) entre fragmentos `<strong>` adjacentes. Como NUL
 Vi, na”, ocultando todo o conteúdo posterior. O conversor deve eliminar toda
 sentinela residual e o validador do EPUB deve analisar cada XHTML como XML,
 impedindo promoção de seção truncável.
+
+Implementação concluída nos commits `0744b0b` e `c04702c`: todo marcador
+residual é removido, ênfases adjacentes são recompostas e cada seção passa por
+parser XML. O EPUB real foi regenerado sem rede a partir do checkpoint completo
+e da capa já preservada; a seção denunciada contém o versículo e os parágrafos
+posteriores integralmente legíveis, sem NUL, sem marcador interno e sem `.md`
+externo.

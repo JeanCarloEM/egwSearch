@@ -1,7 +1,7 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-01T23:21:53-03:00`.
+Atualizado_em: `2026-08-02T01:05:29-03:00`.
 Branch_operacional: `dev`.
 Escopo_atual: FT-012 concluída, integrada e publicada com gate de retomada.
 Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
@@ -378,4 +378,13 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   67 testes Python e três Node passaram.
 - integracao_retomada: `dev` incorporada em `main` pelo merge `5fde300` e ambas
   as referências remotas foram publicadas.
+- promocao_incremental: commit `f80bbb3`; cada item enriquecido é materializado
+  antes do seguinte, e o teste interrompe `14382` após confirmar `14386`.
+- xhtml_integro: commits `0744b0b` e `c04702c`; sentinelas NUL são proibidas,
+  cada seção passa por parser XML e ênfases adjacentes preservam texto/espaços.
+- validacao_real_xhtml: `daniel-e-apocalipse` regenerado com 45 seções, EPUB de
+  1.566.458 bytes, seção denunciada com 24.116 caracteres XML analisáveis,
+  zero NUL/marcador interno e zero `.md` externo; 69 testes Python e três Node.
+- retomada_preservada: `14382` permanece com 39 unidades e cursor `.1175`, sem
+  reinício nem perda do checkpoint.
 - proximo_ponto: nenhuma pendência da FT-012.

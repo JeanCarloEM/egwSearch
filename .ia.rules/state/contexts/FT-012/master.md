@@ -199,6 +199,21 @@ capa oficialmente declarada para a obra.
   o leitor ocultar o conteúdo após “VERSÍCULO 1. Vi, na”.
 - correção requerida: eliminar sentinelas residuais e validar cada documento
   editorial com parser XML antes de aceitar o EPUB.
+- implementação incremental: `f80bbb3` entrega e confirma cada item completo
+  antes do enriquecimento seguinte; interrupção simulada no `14382` preservou
+  o `14386` processado.
+- implementação XHTML: `0744b0b` remove sentinelas residuais e rejeita seção
+  que não passe por parser XML; `c04702c` funde ênfases adjacentes sem perder
+  os espaços editoriais.
+- prova real: `daniel-e-apocalipse` foi regenerado localmente a partir das 45
+  unidades completas e da capa oficial já preservada; seção 23 contém 24.116
+  caracteres analisáveis, começa com o versículo integral, não contém NUL nem
+  marcador interno, e a unidade possui EPUB de 1.566.458 bytes, 45 fontes
+  reversíveis internas e zero `.md` externo.
+- preservação: `14382` permaneceu incompleto com 39 unidades e cursor
+  `https://text.egwwritings.org/read/14382.1175`, sem `--restart`.
+- validação: 69 testes Python e três testes Node aprovados; parser XML, round
+  trip Markdown e validação transacional real aprovados.
 - integração: `dev` incorporada em `main` pelo merge `c6c7b9d` e referências
   remotas publicadas; alterações alheias permaneceram fora dos commits da FT.
 - estado: concluída e publicada sem pendência própria.

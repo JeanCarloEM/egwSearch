@@ -159,7 +159,7 @@ Na retomada, todo item não confirmado DEVE passar novamente pelo preflight vige
 
 O coletor DEVE gravar checkpoint atômico por coleção, filtro e limite depois da normalização do catálogo, depois de cada enriquecimento e depois de cada item confirmado. [6cd652b]
 Retomada DEVE reutilizar catálogo e itens persistidos e continuar somente os enriquecimentos ou itens pendentes; checkpoint textual DEVE continuar da próxima página editorial ainda não confirmada. [6cd652b]
-Item enriquecido e completo DEVE ser entregue ao processamento logo após seu checkpoint atômico, antes de iniciar o enriquecimento seguinte. Item posterior incompleto, bloqueado ou interrompido NÃO DEVE criar bloqueio em cadeia sobre geração, promoção ou confirmação dos itens anteriores. [f80bbb3]
+Item enriquecido e completo DEVE ser entregue ao processamento logo após seu checkpoint atômico, antes de iniciar o enriquecimento seguinte. Item posterior incompleto, bloqueado ou interrompido NÃO DEVE criar bloqueio em cadeia sobre geração, promoção ou confirmação dos itens anteriores. [7f4fc78]
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [6cd652b]
 `--restart` DEVE ser explícito, apagar somente checkpoints de runtime do escopo solicitado e preservar publicações, ledger e ativos canônicos. [6cd652b]
 
@@ -357,7 +357,7 @@ A página `cover.xhtml` DEVE ser o primeiro item do spine e conter exclusivament
 Metadado v3 DEVE registrar separadamente a fonte remota e o derivado normalizado, com URL, método, path, tamanho e hashes verificáveis. [3c94152]
 Reexecução sem mudança DEVE validar e reutilizar capa e EPUB; `--revalidate` DEVE readquirir ou revalidar a capa antes de concluir. [3c94152]
 O EPUB textual DEVE manter documentos XHTML semânticos no spine e armazenar fora dele os bytes Markdown intermediários, acompanhados de manifesto versionado com nome, ordem e SHA-256. [3c94152]
-O conversor NÃO DEVE emitir bytes NUL, caracteres de controle ou sentinelas internas no Markdown/XHTML; cada documento do spine DEVE passar por parser XML antes da promoção, e falha de análise DEVE invalidar o derivado local. [PENDENTE-CODIGO]
+O conversor NÃO DEVE emitir bytes NUL, caracteres de controle ou sentinelas internas no Markdown/XHTML; cada documento do spine DEVE passar por parser XML antes da promoção, e falha de análise DEVE invalidar o derivado local. [cd8a102]
 Uma operação de restauração DEVE validar paths, cardinalidade, ordem e hashes do manifesto e recriar os `.md` byte a byte sem interpretar o XHTML. [3c94152]
 Os `.md` externos somente PODEM ser removidos após validação integral do EPUB e round trip de restauração em runtime temporário; qualquer falha DEVE preservar os arquivos e bloquear conclusão. [3c94152]
 A página `provenance.xhtml` DEVE suceder imediatamente à capa no spine e anteceder o sumário e qualquer conteúdo, usar `epub:type="frontmatter acknowledgments"` e permanecer separada das fontes Markdown e do corpo editorial. [616e131]
