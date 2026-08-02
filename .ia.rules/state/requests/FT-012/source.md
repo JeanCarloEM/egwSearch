@@ -165,3 +165,9 @@ A retomada passa a abranger descoberta e processamento da coleção, além do
 checkpoint textual já existente. Reinício será uma operação separada e
 explícita por `--restart`; reexecução normal e `--revalidate` não podem apagar
 progresso confirmado.
+
+Implementação concluída no commit `51edffb`: checkpoint versionado por coleção,
+filtro e limite persiste catálogo, enriquecimentos e IDs confirmados. Teste de
+interrupção confirmou que o item anterior não é reexecutado; corrupção bloqueia
+sem renomear/apagar; `--restart` é a única operação que descarta o checkpoint
+do escopo. A suíte total passou com 62 testes Python e três Node.

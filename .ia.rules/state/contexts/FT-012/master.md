@@ -153,3 +153,14 @@ capa oficialmente declarada para a obra.
 - decisão humana: reexecução deve retomar automaticamente do último estado
   confirmado; somente `--restart` explícito pode descartar checkpoints do
   escopo, preservando publicações e ledger canônicos.
+- implementação: commit material
+  `51edffba75adb673042978e0c1b1e86c56cd652b`; checkpoint
+  `publication-collection-checkpoint/v1` persiste catálogo normalizado,
+  enriquecimentos e IDs confirmados por coleção/filtro/limite.
+- provas: interrupção depois do item 1 conservou seu estado; retomada emitiu
+  `ITEM_RESUMED` para ele e processou somente o item 2; descoberta parcial
+  retomou sem recarregar catálogo; checkpoint inválido permaneceu intacto e
+  bloqueou até `--restart`.
+- validação: 62 testes Python, três Node, `py_compile`, bootstrap e
+  `git diff --check` aprovados; publicações reais continuaram fora do Git.
+- estado: concluída e pronta para integração/publicação.

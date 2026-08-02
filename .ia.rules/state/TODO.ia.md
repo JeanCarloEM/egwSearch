@@ -1993,7 +1993,7 @@
   catálogo, registrou `PUBLICATION_LOCAL_VALID`/`ITEM_SKIPPED` e não abriu a
   página, texto, capa, EPUB ou PDF da obra.
 
-  - [ ] Complementar a FT-012 com checkpoint atômico de catálogo,
+  - [x] Complementar a FT-012 com checkpoint atômico de catálogo,
     enriquecimentos e itens confirmados; retomar automaticamente do ponto de
     interrupção; bloquear checkpoint inválido; e reiniciar somente mediante
     `--restart` explícito e limitado ao escopo.

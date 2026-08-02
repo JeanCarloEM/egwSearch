@@ -756,13 +756,13 @@ Execução interrompida DEVE preservar ativos promovidos e estado confirmado.
 `processing` abandonado DEVE ser retomado como unidade incompleta após validar
 temporários; parcial nunca DEVE ser promovido ou indexado como concluído.
 
-A execução DEVE persistir atomicamente checkpoint de escopo compatível com coleção, filtro e limite, contendo catálogo normalizado, enriquecimentos já comprovados e identidades cujo processamento terminou em estado confirmado. [PENDENTE-CODIGO]
-Nova invocação do mesmo escopo DEVE retomar automaticamente o primeiro enriquecimento ou item ainda não confirmado, sem consultar novamente páginas, capas, textos ou ativos já preservados pelo checkpoint. [PENDENTE-CODIGO]
-Interrupção por sinal, encerramento do processo, contenção ou falha transitória NÃO DEVE apagar nem avançar o checkpoint além da última transição confirmada. [PENDENTE-CODIGO]
-Checkpoint ausente inicia nova execução; checkpoint incompatível, ambíguo ou corrompido DEVE bloquear com diagnóstico e NÃO PODE provocar reinício silencioso. [PENDENTE-CODIGO]
-Reinício somente PODE ocorrer por opção explícita `--restart`, limitada ao escopo selecionado; essa opção DEVE descartar apenas checkpoints de runtime aplicáveis, nunca publicação canônica já promovida. [PENDENTE-CODIGO]
-`--revalidate` NÃO equivale a reinício e DEVE preservar a posição retomável, alterando somente a política de validação remota dos itens ainda pendentes. [PENDENTE-CODIGO]
-Checkpoint de coleção concluída sem falha DEVE ser removido atomicamente, pois a próxima invocação constitui nova execução e precisa observar novamente o catálogo vigente. [PENDENTE-CODIGO]
+A execução DEVE persistir atomicamente checkpoint de escopo compatível com coleção, filtro e limite, contendo catálogo normalizado, enriquecimentos já comprovados e identidades cujo processamento terminou em estado confirmado. [6cd652b]
+Nova invocação do mesmo escopo DEVE retomar automaticamente o primeiro enriquecimento ou item ainda não confirmado, sem consultar novamente páginas, capas, textos ou ativos já preservados pelo checkpoint. [6cd652b]
+Interrupção por sinal, encerramento do processo, contenção ou falha transitória NÃO DEVE apagar nem avançar o checkpoint além da última transição confirmada. [6cd652b]
+Checkpoint ausente inicia nova execução; checkpoint incompatível, ambíguo ou corrompido DEVE bloquear com diagnóstico e NÃO PODE provocar reinício silencioso. [6cd652b]
+Reinício somente PODE ocorrer por opção explícita `--restart`, limitada ao escopo selecionado; essa opção DEVE descartar apenas checkpoints de runtime aplicáveis, nunca publicação canônica já promovida. [6cd652b]
+`--revalidate` NÃO equivale a reinício e DEVE preservar a posição retomável, alterando somente a política de validação remota dos itens ainda pendentes. [6cd652b]
+Checkpoint de coleção concluída sem falha DEVE ser removido atomicamente, pois a próxima invocação constitui nova execução e precisa observar novamente o catálogo vigente. [6cd652b]
 
 ### 42.5 Acesso responsável e contenção
 
