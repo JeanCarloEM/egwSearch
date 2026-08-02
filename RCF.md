@@ -1432,31 +1432,31 @@ O projeto NÃO DEVE declarar vinculo com editoras nem responder pelo conteudo de
 
 ## 45. Capas
 
-Cada diretorio publico de publicacao DEVE conter arquivo decodificavel chamado exatamente `cover.png`.
+Cada diretorio publico de publicacao DEVE conter arquivo decodificavel chamado exatamente `cover.png`. [443f133]
 
-Grupo PDF/EPUB no mesmo diretorio DEVE compartilhar uma capa canônica; grupo em diretorios distintos DEVE possuir copia gerada correspondente.
+Grupo PDF/EPUB no mesmo diretorio DEVE compartilhar uma capa canônica; grupo em diretorios distintos DEVE possuir copia gerada correspondente. [443f133]
 
-Capa DEVE vir primeiro da capa EPUB editorialmente identificada, incluindo `cover-image`; fallback legado exige referencia valida.
+Capa DEVE vir primeiro da capa EPUB editorialmente identificada, incluindo `cover-image`; fallback legado exige referencia valida. [443f133]
 
-Maior imagem arbitraria NÃO DEVE ser presumida capa.
+Maior imagem arbitraria NÃO DEVE ser presumida capa. [443f133]
 
-Sem capa EPUB utilizavel, gerador DEVE renderizar a primeira pagina PDF editorialmente adequada sem modificar o original.
+Sem capa EPUB utilizavel, gerador DEVE renderizar a primeira pagina PDF editorialmente adequada sem modificar o original. [443f133]
 
-Pagina vazia, tecnica, corrompida, de erro, ilegivel ou nao representativa NÃO DEVE ser aceita.
+Pagina vazia, tecnica, corrompida, de erro, ilegivel ou nao representativa NÃO DEVE ser aceita. [443f133]
 
 Ausencia de ambas as fontes DEVE bloquear o grupo.
 
-`cover.png` DEVE possuir no maximo 800 px em cada eixo, preservar proporcao/nitidez/legibilidade, nao ampliar sem justificativa e remover EXIF, comentario, miniatura e metadado inutil.
+`cover.png` DEVE possuir no maximo 800 px em cada eixo, preservar proporcao/nitidez/legibilidade, nao ampliar sem justificativa e remover EXIF, comentario, miniatura e metadado inutil. [443f133]
 
-Capa DEVE ser otimizada para navegador e regeneravel a partir das fontes e configuracao versionada.
+Capa DEVE ser otimizada para navegador e regeneravel a partir das fontes e configuracao versionada. [443f133]
 
 Remocao da capa DEVE causar regeneracao na execucao seguinte; mudanca de EPUB, PDF, parser, extrator, configuracao ou gerador DEVE invalidar derivado afetado.
 
-Imagem externa NÃO DEVE ser escolhida por similaridade de nome, titulo ou arquivo.
+Imagem externa NÃO DEVE ser escolhida por similaridade de nome, titulo ou arquivo. [443f133]
 
-Intermediarios de renderizacao, conversao ou extracao NÃO DEVEM integrar `dist/` ou site.
+Intermediarios de renderizacao, conversao ou extracao NÃO DEVEM integrar `dist/` ou site. [443f133]
 
-Validacao DEVE comprovar existencia, path, origem, precedencia, formato, dimensoes, proporcao, legibilidade, metadados removidos e regeneracao deterministica.
+Validacao DEVE comprovar existencia, path, origem, precedencia, formato, dimensoes, proporcao, legibilidade, metadados removidos e regeneracao deterministica. [443f133]
 
 ## 46. Scripts, workflow, build e publicacao
 
