@@ -2046,16 +2046,20 @@ do commit.
 ## FT-014 - Laboratório experimental de chunking por recurso
 
 - [x] Capturar a reprovação funcional e criar contexto mestre.
-- [ ] Pesquisar literatura acadêmica primária recente e normatizar catálogo de
+- [x] Pesquisar literatura acadêmica primária recente e normatizar catálogo de
   hipóteses, critérios e referências globais, incluindo regex.
-- [ ] Substituir pontuação heurística por experimentos reais e verificáveis em
+- [x] Substituir pontuação heurística por experimentos reais e verificáveis em
   cada EPUB/PDF.
-- [ ] Remover dos manifestos textos e parâmetros globais redundantes.
-- [ ] Medir fidelidade de fronteiras, cobertura, ordem, perda, duplicação e
+- [x] Remover dos manifestos textos e parâmetros globais redundantes.
+- [x] Medir fidelidade de fronteiras, cobertura, ordem, perda, duplicação e
   contaminação por cabeçalho, rodapé e paginação.
-- [ ] Agregar aprendizado experimental global deduplicado e sem conteúdo.
-- [ ] Implementar saída Rich tabular compartilhada no analisador, indexador e
+- [x] Agregar aprendizado experimental global deduplicado e sem conteúdo.
+- [x] Implementar saída Rich tabular compartilhada no analisador, indexador e
   downloader, com truncamento previsível, síntese de eficiência/acerto/erro e
   composição isolada/encadeada sem redundância.
-- [ ] Integrar, testar, sincronizar rastreabilidade e validar amostra real sem
+- [x] Integrar, testar, sincronizar rastreabilidade e validar amostra real sem
   versionar artefatos gerados.
+
+Conclusão: commits materiais `6b0bc6d` e `8bc5ab7`; 1.103 recursos analisados,
+índice global com 564 publicações e validações finais aprovadas. O diagnóstico
+`RCF_SENTENCA_NAO_MAPEADA:RCF.md:9` permanece como débito preexistente.

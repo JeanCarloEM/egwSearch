@@ -2,7 +2,7 @@
 
 - origem: solicitação humana desta conversa.
 - recebido em: `2026-08-02`.
-- incorporação: em andamento.
+- incorporação: concluída.
 - precedente: FT-013 concluída, porém reprovada por evidência funcional superveniente.
 
 ## Solicitação integral

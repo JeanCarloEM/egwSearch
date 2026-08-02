@@ -5,7 +5,7 @@
 - FT: `FT-014`.
 - tipo: `implementacao_codigo` com correção normativa causal.
 - fonte: `.ia.rules/state/requests/FT-014/source.md`.
-- estado: em andamento; implementação integral autorizada no pedido humano.
+- estado: concluída; implementação integral validada e rastreada.
 - escopo: laboratório experimental de chunking por EPUB/PDF e conhecimento
   global deduplicado.
 
@@ -64,3 +64,15 @@
 - execução isolada mostra identidade e resumo próprios; composição pelo
   downloader suprime cabeçalhos/resumos equivalentes do analisador/indexador;
 - suítes offline, compilação, contrato, rastreabilidade e amostra real passam.
+
+## Conclusão
+
+- implementação material: `6b0bc6d6413bec7c8069beb9c6df986cac960c0f`;
+- rastreabilidade sincronizada: `8bc5ab7`;
+- corpus local: 1.103 EPUB/PDF e 1.103 manifestos v2, mantidos fora do Git;
+- índice global: 564 publicações, fingerprint `4a844d7e0cae0c85`;
+- validação: 84 testes Python, 3 testes Node, `py_compile`,
+  `publications:check` e `git diff --check` aprovados;
+- débito preexistente preservado: `agent:rcf` acusa exclusivamente
+  `RCF_SENTENCA_NAO_MAPEADA:RCF.md:9`, já herdado da FT-013;
+- pendências: nenhuma nesta FT.
