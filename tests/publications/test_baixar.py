@@ -175,6 +175,57 @@ class DownloaderTests(unittest.TestCase):
             "browser_profile": root / "profiles" / "egwwritings",
         }
 
+    @staticmethod
+    def _checkpoint_item(remote_id: str, title: str) -> CatalogItem:
+        return CatalogItem(
+            remote_id=remote_id,
+            collection_id="pt-br-livros",
+            collection_name="Escritos de Ellen White - Livros",
+            author_name="Ellen G. White",
+            author_key="egw",
+            language_original="pt-BR",
+            language="pt-BR",
+            language_path="pt-br",
+            publication_type="livros",
+            title_original=title,
+            title_normalized=title,
+            public_url=f"https://text.egwwritings.org/book/b{remote_id}",
+            category_name="Escritos de Ellen White",
+            category_path="egw",
+            assets=(
+                CatalogAsset(
+                    "epub",
+                    f"https://media2.egwwritings.org/epub/pt_{remote_id}.epub",
+                ),
+            ),
+        )
+
+    @staticmethod
+    def _checkpoint_collection() -> dict:
+        return {
+            "id": "pt-br-livros",
+            "name": "Escritos de Ellen White - Livros",
+            "catalog_url": "https://egwwritings.org/allCollection/pt/4",
+            "language": "pt-BR",
+            "type": "livros",
+            "category_name": "Escritos de Ellen White",
+            "category": "egw",
+        }
+
+    @staticmethod
+    def _checkpoint_config() -> dict:
+        return {
+            "download": {
+                "allowed_catalog_hosts": [
+                    "egwwritings.org",
+                    "text.egwwritings.org",
+                ],
+                "delay_seconds": 2,
+                "jitter_min_seconds": 0,
+                "jitter_max_seconds": 0,
+            }
+        }
+
     def test_private_dns_is_blocked(self) -> None:
         with patch.object(
             baixar.socket,
@@ -233,6 +284,192 @@ class DownloaderTests(unittest.TestCase):
                 {"https://text.egwwritings.org/read/14623.30"},
             )
         )
+
+    def test_collection_discovery_resumes_without_reloading_catalog(self) -> None:
+        collection = self._checkpoint_collection()
+        first = self._checkpoint_item("1", "Primeiro")
+        second = self._checkpoint_item("2", "Segundo")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            checkpoint_path = baixar._collection_checkpoint_path(
+                root, collection, None, None
+            )
+            checkpoint = baixar._new_collection_checkpoint(collection, None, None)
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": first.title_original,
+                    "url": first.public_url,
+                    "author": first.author_name,
+                },
+                {
+                    "title": second.title_original,
+                    "url": second.public_url,
+                    "author": second.author_name,
+                },
+            ]
+            checkpoint["items"] = [baixar._catalog_item_record(first)]
+            baixar._save_collection_checkpoint(checkpoint_path, checkpoint)
+            loaded = baixar._load_collection_checkpoint(
+                checkpoint_path, collection, None, None
+            )
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock()),
+                {"delay_seconds": 2, "browser_visible": True},
+                self._runtime_paths(root),
+            )
+            with patch.object(
+                manager, "_discover_catalog_links"
+            ) as catalog, patch.object(
+                manager, "_enrich_book", return_value=second
+            ) as enrich:
+                items = manager.discover_catalog_items(
+                    collection,
+                    Mock(before_request=Mock()),
+                    checkpoint_path=checkpoint_path,
+                    checkpoint=loaded,
+                )
+            self.assertEqual(items, [first, second])
+            catalog.assert_not_called()
+            enrich.assert_called_once()
+            completed = baixar._load_collection_checkpoint(
+                checkpoint_path, collection, None, None
+            )
+            self.assertTrue(completed["discovery_complete"])
+
+    def test_collection_processing_resumes_only_unconfirmed_item(self) -> None:
+        collection = self._checkpoint_collection()
+        items = [
+            self._checkpoint_item("1", "Primeiro"),
+            self._checkpoint_item("2", "Segundo"),
+        ]
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            state_root = root / "state"
+            source_root = root / "publications"
+            checkpoint_path = baixar._collection_checkpoint_path(
+                state_root, collection, None, None
+            )
+            checkpoint = baixar._new_collection_checkpoint(collection, None, None)
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": item.title_original,
+                    "url": item.public_url,
+                    "author": item.author_name,
+                }
+                for item in items
+            ]
+            checkpoint["items"] = [baixar._catalog_item_record(item) for item in items]
+            checkpoint["discovery_complete"] = True
+            baixar._save_collection_checkpoint(checkpoint_path, checkpoint)
+            completed = {
+                "state": "completed",
+                "downloaded": 1,
+                "skipped": 0,
+                "extracted": 0,
+                "converted": 0,
+            }
+            with patch.object(
+                baixar,
+                "_process_catalog_item",
+                side_effect=[completed, KeyboardInterrupt()],
+            ):
+                with self.assertRaises(KeyboardInterrupt):
+                    baixar._process_collection(
+                        collection,
+                        self._checkpoint_config(),
+                        source_root,
+                        state_root,
+                        None,
+                        no_network=True,
+                        fixture_payload={"publications": []},
+                    )
+            interrupted = baixar._load_collection_checkpoint(
+                checkpoint_path, collection, None, None
+            )
+            self.assertEqual(interrupted["confirmed_remote_ids"], ["1"])
+            with patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ) as process:
+                summary = baixar._process_collection(
+                    collection,
+                    self._checkpoint_config(),
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                )
+            self.assertEqual(summary["resumed"], 1)
+            self.assertEqual(process.call_count, 1)
+            self.assertEqual(process.call_args.args[0].remote_id, "2")
+            self.assertFalse(checkpoint_path.exists())
+
+    def test_invalid_checkpoint_blocks_until_explicit_restart(self) -> None:
+        collection = self._checkpoint_collection()
+        item = self._checkpoint_item("1", "Primeiro")
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            state_root = root / "state"
+            source_root = root / "publications"
+            checkpoint_path = baixar._collection_checkpoint_path(
+                state_root, collection, None, None
+            )
+            checkpoint_path.parent.mkdir(parents=True)
+            checkpoint_path.write_text("{invalido", encoding="utf-8")
+            with self.assertRaisesRegex(baixar.ContractError, "use --restart"):
+                baixar._process_collection(
+                    collection,
+                    self._checkpoint_config(),
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                )
+            completed = {
+                "state": "completed",
+                "downloaded": 1,
+                "skipped": 0,
+                "extracted": 0,
+                "converted": 0,
+            }
+            with patch.object(
+                baixar, "parse_catalog_payload", return_value=[item]
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ):
+                summary = baixar._process_collection(
+                    collection,
+                    self._checkpoint_config(),
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                    restart=True,
+                )
+            self.assertEqual(summary["failures"], 0)
+            self.assertFalse(checkpoint_path.exists())
+            self.assertTrue(baixar.build_parser().parse_args(["--restart"]).restart)
+
+    def test_invalid_text_checkpoint_is_preserved_and_blocks(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            checkpoint = root / "acquisition" / "text" / "14623.json"
+            checkpoint.parent.mkdir(parents=True)
+            checkpoint.write_text("{invalido", encoding="utf-8")
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock()),
+                {"delay_seconds": 2, "browser_visible": True},
+                self._runtime_paths(root),
+            )
+            with self.assertRaisesRegex(baixar.ContractError, "use --restart"):
+                manager._discover_text_segments(
+                    "https://text.egwwritings.org/read/14623.2",
+                    Mock(before_request=Mock()),
+                )
+            self.assertTrue(checkpoint.is_file())
+            self.assertIsNone(manager._driver)
 
     def test_detail_page_discovers_every_enabled_native_asset(self) -> None:
         def element(
