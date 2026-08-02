@@ -172,3 +172,15 @@ capa oficialmente declarada para a obra.
 - estado: concluída e pronta para integração/publicação.
 - estado: reaberta para canonicalizar artigo editorial repetido e impedir
   duplicação física global por SHA-512.
+- implementação material: `c3fbb923d4b70db29f263c9c6aa395e9610cb602`;
+  normalização elimina `A CIÊNCIA DO BOM VIVER, A` para o destino canônico,
+  índice local estreita candidatos por SHA-256 e toda identidade é decidida por
+  SHA-512 integral recalculado.
+- saneamento: nove diretórios rastreados de aliases históricos e o diretório
+  não rastreado `a-ciencia-do-bom-viver-a` foram retirados do acervo ativo; os
+  nomes canônicos foram comprovados pelo `dc:title` interno dos EPUBs e as
+  cópias removidas permanecem em quarentena local recuperável.
+- validação: 65 testes Python, três testes Node, `py_compile`, bootstrap/check,
+  `git diff --check` e auditoria de 1.036 identidades físicas aprovados, sem
+  SHA-512 repetido entre diretórios de publicação.
+- estado: concluída; integração e publicação pendentes.

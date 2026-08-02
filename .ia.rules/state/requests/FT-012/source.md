@@ -189,3 +189,13 @@ diretórios distintos deve impedir a promoção da segunda publicação, mesmo q
 nomes, acrônimos ou slugs difiram; colisão nominal sem regra editorial
 determinística deve bloquear para revisão, nunca escolher ou apagar conteúdo
 silenciosamente.
+
+Implementação concluída no commit material `c3fbb92`: `CatalogItem` aplica a
+canonicalização antes de identidade, slug e checkpoint; o downloader monta um
+índice local por SHA-256 de metadado apenas para reduzir candidatos e recalcula
+SHA-512 integral antes de qualquer decisão. A promoção bloqueia cópia existente
+em outro diretório. A auditoria do acervo removeu nove diretórios rastreados de
+aliases históricos e o diretório não rastreado do exemplo, preservando em cada
+grupo o título declarado dentro do EPUB e mantendo os removidos em quarentena
+local recuperável. O acervo ativo terminou com 1.036 identidades físicas sem
+SHA-512 repetido entre publicações.
