@@ -155,6 +155,8 @@ Depois da listagem única, o preflight DEVE receber também título, URL e autor
 
 O adaptador NÃO DEVE chamar `_enrich_book`, capa, leitura ou ativo enquanto o gate local puder comprovar a unidade. A liberação da rede DEVE decorrer somente de motivo objetivo de insuficiência local ou `--revalidate`, e o teste do caminho completo legado DEVE usar sentinela que reprova qualquer chamada HTTP. [b4f7627]
 
+Na retomada, todo item não confirmado DEVE passar novamente pelo preflight vigente antes do processamento, inclusive quando o checkpoint registrar `local_complete=false`. Prova local válida DEVE substituir atomicamente o item armazenado e produzir `network=skipped`; somente a insuficiência atual, não o booleano histórico, mantém o fluxo remoto. [PENDENTE-CODIGO]
+
 O coletor DEVE gravar checkpoint atômico por coleção, filtro e limite depois da normalização do catálogo, depois de cada enriquecimento e depois de cada item confirmado. [6cd652b]
 Retomada DEVE reutilizar catálogo e itens persistidos e continuar somente os enriquecimentos ou itens pendentes; checkpoint textual DEVE continuar da próxima página editorial ainda não confirmada. [6cd652b]
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [6cd652b]

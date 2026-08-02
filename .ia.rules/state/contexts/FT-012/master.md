@@ -187,6 +187,11 @@ capa oficialmente declarada para a obra.
 - integração: `dev` incorporada em `main` pelo merge `c6c7b9d` e referências
   remotas publicadas; alterações alheias permaneceram fora dos commits da FT.
 - estado: concluída e publicada sem pendência própria.
+- estado: reaberta porque checkpoint anterior com `local_complete=false`
+  contorna o gate legado apesar de `b11101` ser comprovadamente completo.
+- correção: reexecutar o preflight atual para todo item não confirmado antes do
+  processamento, promover o item local válido no checkpoint e somente manter
+  informação remota anterior quando a prova local continuar insuficiente.
 - integração: `dev` incorporada em `main` pelo merge `92994c6`; referências
   remotas publicadas e arquivos gerados/quarentena preservados fora do Git.
 - estado: concluída e publicada sem pendência própria.
