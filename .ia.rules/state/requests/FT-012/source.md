@@ -230,3 +230,12 @@ O preflight local completo é gate anterior à rede específica da publicação.
 Somente prova local inconclusiva, divergência, ambiguidade, corrupção, ausência
 de ativo obrigatório ou `--revalidate` explícito pode liberar enriquecimento,
 capa, texto ou download remoto; a decisão e seu motivo devem ser testáveis.
+
+Implementação concluída no commit material `16b0886`: o callback recebe os
+quatro dados do cartão (ID, título, URL e autor), compõe a identidade com a
+coleção e valida metadado legado, PDF e EPUB no path canônico ou alias `en-us`.
+O teste `b42` transforma `_enrich_book()` em sentinela proibida e comprova
+`PUBLICATION_LOCAL_VALID remote_id=42 network=skipped`. Na coleção real
+`en-books`, 116 de 121 entradas foram comprovadas localmente sem página
+individual; somente cinco unidades sem prova local completa permaneceram
+elegíveis ao enriquecimento necessário.

@@ -151,9 +151,9 @@ Item `completed`, íntegro e indexado DEVE resultar em `skipped` sem request do 
 ativo, conversão, extração, reprocessamento ou regravação. Nome existente
 isolado, temporário ou parcial NÃO DEVE ser aceito. [3301a97]
 
-Depois da listagem única, o preflight DEVE receber também título, URL e autor do cartão e compor com coleção, idioma, categoria e tipo a identidade local. Metadado legado URL-chaveado com PDF e EPUB válidos DEVE ser reconhecido pelo mesmo path/acrônimo, inclusive alias `en-us`, sem exigir página individual nem migração prévia para v3; colisão ou divergência continua exigindo enriquecimento. [PENDENTE-CODIGO]
+Depois da listagem única, o preflight DEVE receber também título, URL e autor do cartão e compor com coleção, idioma, categoria e tipo a identidade local. Metadado legado URL-chaveado com PDF e EPUB válidos DEVE ser reconhecido pelo mesmo path/acrônimo, inclusive alias `en-us`, sem exigir página individual nem migração prévia para v3; colisão ou divergência continua exigindo enriquecimento. [b4f7627]
 
-O adaptador NÃO DEVE chamar `_enrich_book`, capa, leitura ou ativo enquanto o gate local puder comprovar a unidade. A liberação da rede DEVE decorrer somente de motivo objetivo de insuficiência local ou `--revalidate`, e o teste do caminho completo legado DEVE usar sentinela que reprova qualquer chamada HTTP. [PENDENTE-CODIGO]
+O adaptador NÃO DEVE chamar `_enrich_book`, capa, leitura ou ativo enquanto o gate local puder comprovar a unidade. A liberação da rede DEVE decorrer somente de motivo objetivo de insuficiência local ou `--revalidate`, e o teste do caminho completo legado DEVE usar sentinela que reprova qualquer chamada HTTP. [b4f7627]
 
 O coletor DEVE gravar checkpoint atômico por coleção, filtro e limite depois da normalização do catálogo, depois de cada enriquecimento e depois de cada item confirmado. [6cd652b]
 Retomada DEVE reutilizar catálogo e itens persistidos e continuar somente os enriquecimentos ou itens pendentes; checkpoint textual DEVE continuar da próxima página editorial ainda não confirmada. [6cd652b]

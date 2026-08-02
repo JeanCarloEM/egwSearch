@@ -2002,3 +2002,8 @@
     EPUB com SHA-512 integral idêntico coexistam em diretórios de publicação
     distintos, mesmo sob nomes diferentes; aliases históricos comprovadamente
     idênticos foram deduplicados sem eliminar variantes materiais.
+
+  - [x] Aplicar o preflight anterior à rede também aos metadados legados sem
+    `remote_id`, compondo identidade pelos dados da única listagem e liberando
+    request específico somente quando a prova local for insuficiente ou houver
+    `--revalidate` explícito.
