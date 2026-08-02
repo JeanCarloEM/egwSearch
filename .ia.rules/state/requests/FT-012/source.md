@@ -251,3 +251,10 @@ continue` impede exatamente esses itens antigos de passar pelo gate novo. Todo
 item não confirmado deve ser reavaliado localmente com a versão corrente do
 contrato, independentemente do booleano armazenado; checkpoint é cache de
 progresso, não autoridade para liberar rede nem invalidar prova local.
+
+Implementação concluída no commit material `dbd8096`: a retomada reaplica o
+preflight a todo item não confirmado, fornece os dados originais do cartão e
+substitui atomicamente o item histórico quando a prova local é válida. Teste
+dedicado persiste `b11101` como `local_complete=false`, proíbe
+`_enrich_book()` por sentinela e comprova atualização para
+`PUBLICATION_LOCAL_VALID ... checkpoint=updated network=skipped`.

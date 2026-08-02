@@ -2007,3 +2007,7 @@
     `remote_id`, compondo identidade pelos dados da única listagem e liberando
     request específico somente quando a prova local for insuficiente ou houver
     `--revalidate` explícito.
+
+  - [x] Reaplicar o gate vigente a itens não confirmados de checkpoint antigo,
+    inclusive quando armazenados com `local_complete=false`, impedindo que cache
+    histórico contorne a prova local atual e libere request desnecessário.
