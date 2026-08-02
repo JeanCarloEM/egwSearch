@@ -212,7 +212,10 @@ class TextAndEpubTests(unittest.TestCase):
         )
         self.assertNotIn("\x00", markdown)
         self.assertNotIn("STRONG_CLOSE", markdown)
-        self.assertIn("daquele que estava sentado no trono.", markdown)
+        self.assertEqual(
+            markdown,
+            "**VERSÍCULO 1. Vi, na mão direita daquele que estava sentado no trono.**\n",
+        )
 
     def test_gap_or_duplicate_blocks_completion(self) -> None:
         segments = [

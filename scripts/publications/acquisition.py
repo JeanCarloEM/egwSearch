@@ -589,6 +589,12 @@ class _MarkdownParser(HTMLParser):
         value = value.replace("\x00STRONG_CLOSE\x00", "**")
         value = value.replace("\x00EM_OPEN\x00", "*")
         value = value.replace("\x00EM_CLOSE\x00", "*")
+        adjacent_strong = (
+            r"\*\*([^*\n]+)\*\*(?:\s+\*\*\*\*)*\s+\*\*([^*\n]+)\*\*"
+        )
+        while re.search(adjacent_strong, value):
+            value = re.sub(adjacent_strong, r"**\1 \2**", value)
+        value = value.replace("****", "")
         if self.heading:
             value = f"{'#' * self.heading} {value}"
         self.lines.append(value)
