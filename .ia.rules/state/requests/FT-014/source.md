@@ -47,3 +47,25 @@
 7. integração no downloader permanece síncrona, local, retomável e sem rede;
 8. testes demonstram recomendação por evidência e rejeição/inconclusão quando
    a prova for insuficiente.
+
+## Adição de escopo - saída humana integrada
+
+> A saída de cada teste deve ser visualmente sucinta, agradável,
+> preferencialmente colorida e tabular. O mesmo padrão deve ser aplicado ao
+> `baixar.py` e ao indexador, com cada recurso claramente distinto e duas linhas
+> em branco ou separador visual equivalente entre publicações.
+>
+> Rich ou biblioteca equivalente deve planejar larguras, evitar quebras
+> acidentais e truncar paths longos previsivelmente sem perder identificação.
+> A síntese por método deve mostrar eficiência, erros e percentuais de acerto e
+> erro sem inundar o console. Em execução isolada, cada script deve ser completo
+> e equilibrado; em cadeia, a saída deve ser integrada, coesa e não redundante,
+> preservando limites de etapa sem duplicar cabeçalhos, separadores ou resumos.
+
+9. uma camada visual compartilhada produz tabelas determinísticas e legíveis em
+   TTY, com fallback textual estável quando cor/terminal não estiver disponível;
+10. paths e títulos variáveis são truncados pelo meio ou pela cauda com largura
+    previamente calculada e identidade preservada;
+11. analisador resume por método status, eficiência, acerto, erro e diagnóstico;
+12. downloader e indexador compõem etapas sob um único contexto visual quando
+    encadeados, sem repetir cabeçalhos/resumos e mantendo separação inequívoca.

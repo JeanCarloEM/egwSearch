@@ -2054,5 +2054,8 @@ do commit.
 - [ ] Medir fidelidade de fronteiras, cobertura, ordem, perda, duplicação e
   contaminação por cabeçalho, rodapé e paginação.
 - [ ] Agregar aprendizado experimental global deduplicado e sem conteúdo.
+- [ ] Implementar saída Rich tabular compartilhada no analisador, indexador e
+  downloader, com truncamento previsível, síntese de eficiência/acerto/erro e
+  composição isolada/encadeada sem redundância.
 - [ ] Integrar, testar, sincronizar rastreabilidade e validar amostra real sem
   versionar artefatos gerados.

@@ -28,7 +28,9 @@
 3. medir fidelidade, cobertura, ordem, unicidade, contaminação e fronteiras;
 4. gravar no manifesto somente evidência específica, IDs normativos e decisão;
 5. agregar resultados anonimizados/deduplicados em base global de aprendizado;
-6. preservar CLI, integração síncrona, idempotência e ausência de rede.
+6. introduzir uma camada Rich compartilhada para analisador, downloader e
+   indexador, capaz de compor execução isolada ou encadeada sem redundância;
+7. preservar CLI, integração síncrona, idempotência e ausência de rede.
 
 ## Invariantes
 
@@ -41,6 +43,10 @@
 - parâmetros recomendados são os efetivamente testados no ativo;
 - conhecimento global agrega assinaturas, métricas e padrões, não texto;
 - IA externa é opcional e não integra o caminho determinístico obrigatório;
+- saída de máquina/redirect permanece estável e sem ANSI; Rich é apresentação
+  humana, com detecção de terminal e fallback seguro;
+- a largura é limitada e calculada antes da renderização; path longo é truncado
+  de modo determinístico preservando início e basename;
 - artefatos gerados de publicações permanecem fora dos commits.
 
 ## Aceite global
@@ -52,4 +58,9 @@
   executados, medidos e classificados;
 - manifestos não repetem benefícios, riscos, descrições ou parâmetros globais;
 - aprendizagem global é estável, deduplicada e atualizada no mesmo gatilho;
+- tabelas por recurso mostram estado, eficiência, acerto/erro e códigos causais
+  sem despejar métricas brutas; duas linhas ou separador equivalente distinguem
+  publicações;
+- execução isolada mostra identidade e resumo próprios; composição pelo
+  downloader suprime cabeçalhos/resumos equivalentes do analisador/indexador;
 - suítes offline, compilação, contrato, rastreabilidade e amostra real passam.
