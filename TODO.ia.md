@@ -19,7 +19,7 @@
     - **corpus prioritário:** Bíblia, escritos de Ellen G. White, pioneiros adventistas e literatura pertinente;
     - **meios instrumentais:** obtenção, gestão, preparação e indexação do acervo, bem como avaliação de algoritmos, métodos e estratégias aplicáveis às fases de RAG.
 
-  - A página pública NÃO DEVE posicionar o produto como acervo, catálogo, downloader, gerenciador de publicações ou laboratório de RAG. Tais funções constituem meios instrumentais necessários, não a finalidade principal.
+  - A página pública NÃO DEVE posicionar o produto como acervo, catálogo, downloader, gerenciador de publicações ou laboratório de RAG, entre outros. Tais funções constituem meios instrumentais necessários, não a finalidade principal.
 
   - A publicação no GitHub Pages PODE conter — e provavelmente conterá, quando solicitado ou determinado pelo RCF — assets como manifestos, metadados, EPUBs e PDFs para download, sem obrigação de mencioná-los explicitamente ou disponibilizar links diretos na apresentação pública.
 
