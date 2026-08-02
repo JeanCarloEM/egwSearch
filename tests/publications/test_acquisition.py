@@ -204,6 +204,16 @@ class TextAndEpubTests(unittest.TestCase):
         )
         self.assertEqual(markdown, "### 2 - Estudos *sobre* a Fé\n")
 
+    def test_adjacent_emphasis_never_leaks_internal_markers(self) -> None:
+        markdown = editorial_html_to_markdown(
+            "<p><strong>VERSÍCULO 1. Vi, na</strong><strong> </strong>"
+            "<strong>mão</strong><strong> </strong><strong>direita</strong>"
+            "<strong> daquele que estava sentado no trono.</strong></p>"
+        )
+        self.assertNotIn("\x00", markdown)
+        self.assertNotIn("STRONG_CLOSE", markdown)
+        self.assertIn("daquele que estava sentado no trono.", markdown)
+
     def test_gap_or_duplicate_blocks_completion(self) -> None:
         segments = [
             CatalogSegment("1", "https://example.test/1", 1, "Um", "<p>Um</p>"),

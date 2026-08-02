@@ -24,6 +24,7 @@ import threading
 import time
 from typing import Callable, Iterable
 from urllib.parse import urlsplit
+import xml.etree.ElementTree as ElementTree
 import zipfile
 
 from publication_contract import (
@@ -584,6 +585,10 @@ class _MarkdownParser(HTMLParser):
         value = value.replace(" \x00STRONG_CLOSE\x00", "**")
         value = value.replace("\x00EM_OPEN\x00 ", "*")
         value = value.replace(" \x00EM_CLOSE\x00", "*")
+        value = value.replace("\x00STRONG_OPEN\x00", "**")
+        value = value.replace("\x00STRONG_CLOSE\x00", "**")
+        value = value.replace("\x00EM_OPEN\x00", "*")
+        value = value.replace("\x00EM_CLOSE\x00", "*")
         if self.heading:
             value = f"{'#' * self.heading} {value}"
         self.lines.append(value)
@@ -1019,6 +1024,12 @@ def validate_generated_epub(
             raise ContractError("nota nao editorial sem data de acesso")
         for section_name in sections:
             section = archive.read(section_name).decode("utf-8")
+            if "\x00" in section or re.search(r"(?:STRONG|EM)_(?:OPEN|CLOSE)", section):
+                raise ContractError("XHTML editorial contém marcador interno")
+            try:
+                ElementTree.fromstring(section)
+            except ElementTree.ParseError as error:
+                raise ContractError("XHTML editorial inválido") from error
             section_id = Path(section_name).stem
             body_match = re.search(r"<body\b[^>]*>(.*?)</body>", section, re.DOTALL)
             if (
