@@ -11,7 +11,9 @@ import io
 import json
 import os
 from pathlib import Path, PurePosixPath
+import re
 import tempfile
+import unicodedata
 from urllib.parse import unquote
 from xml.etree import ElementTree
 from zipfile import BadZipFile, ZipFile
@@ -174,6 +176,55 @@ def _normalize_cover(raw: bytes, target: Path, download_config: dict) -> None:
         raise CoverError("imagem de capa incorporada inválida") from error
 
 
+def _search_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode()
+    return " ".join(re.findall(r"[a-z0-9]+", normalized.casefold()))
+
+
+def _pdf_cover_bytes(path: Path, title: str, author: str) -> bytes:
+    """Renderiza a primeira página cuja evidência textual identifica a obra."""
+
+    try:
+        import pypdfium2
+
+        document = pypdfium2.PdfDocument(path)
+        title_tokens = {token for token in _search_text(title).split() if len(token) > 2}
+        author_tokens = {token for token in _search_text(author).split() if len(token) > 2}
+        selected = None
+        selected_score = 0.0
+        for index in range(min(len(document), 12)):
+            page = document[index]
+            text = _search_text(page.get_textpage().get_text_range())
+            tokens = set(text.split())
+            title_ratio = (
+                len(title_tokens.intersection(tokens)) / len(title_tokens)
+                if title_tokens
+                else 0.0
+            )
+            author_ratio = (
+                len(author_tokens.intersection(tokens)) / len(author_tokens)
+                if author_tokens
+                else 0.0
+            )
+            exact = 1.0 if _search_text(title) in text else 0.0
+            score = exact * 100 + title_ratio * 50 + author_ratio * 15
+            if title_ratio >= 0.6 and score > selected_score:
+                selected = page
+                selected_score = score
+        if selected is None:
+            raise CoverError(f"PDF sem página editorial identificável: {path}")
+        width, height = selected.get_size()
+        scale = min(800 / width, 800 / height)
+        image = selected.render(scale=scale).to_pil()
+        output = io.BytesIO()
+        image.save(output, format="PNG")
+        return output.getvalue()
+    except CoverError:
+        raise
+    except Exception as error:
+        raise CoverError(f"PDF ilegível para capa: {path}") from error
+
+
 def _catalog_item(entry: dict) -> CatalogItem:
     localization = entry["localization"]
     title = entry["title"]
@@ -202,6 +253,7 @@ def ensure_publication_covers(
     index_path: Path,
     config: dict,
     write: bool,
+    refresh: set[str] | None = None,
 ) -> dict[str, int]:
     """Valida todas as capas e, quando autorizado, materializa as ausentes."""
 
@@ -210,13 +262,22 @@ def ensure_publication_covers(
     if not isinstance(publications, list) or not publications:
         raise CoverError("índice global sem publicações")
     download_config = dict(config.get("download") or {})
-    counters = {"valid": 0, "optimized": 0, "embedded": 0, "technical": 0}
+    refresh = refresh or set()
+    observed_paths: set[str] = set()
+    counters = {
+        "valid": 0,
+        "optimized": 0,
+        "embedded": 0,
+        "pdf": 0,
+        "technical": 0,
+    }
     for entry in publications:
+        observed_paths.add(entry["path"])
         directory = (source_root / entry["path"]).resolve()
         if source_root.resolve() not in directory.parents:
             raise CoverError("path de publicação fora da raiz")
         target = directory / "cover.png"
-        if target.is_file():
+        if target.is_file() and entry["path"] not in refresh:
             validate_cover_png(target, download_config)
             if write:
                 previous = target.read_bytes()
@@ -241,6 +302,27 @@ def ensure_publication_covers(
                 continue
         if embedded:
             continue
+        for asset in entry.get("assets") or []:
+            if asset.get("format") != "pdf":
+                continue
+            pdf = source_root / asset["path"]
+            try:
+                _normalize_cover(
+                    _pdf_cover_bytes(
+                        pdf,
+                        entry["title"]["normalized"],
+                        entry["author"]["name"],
+                    ),
+                    target,
+                    download_config,
+                )
+                counters["pdf"] += 1
+                embedded = True
+                break
+            except CoverError:
+                continue
+        if embedded:
+            continue
         item = _catalog_item(entry)
         with tempfile.TemporaryDirectory(prefix="egwsearch-cover-") as temporary_root:
             generated, _source, _derivation = generate_technical_cover(
@@ -253,6 +335,9 @@ def ensure_publication_covers(
             generated.replace(target)
             validate_cover_png(target, download_config)
         counters["technical"] += 1
+    unknown = refresh.difference(observed_paths)
+    if unknown:
+        raise CoverError(f"publicação solicitada não existe: {sorted(unknown)[0]}")
     return counters
 
 
@@ -261,6 +346,7 @@ def main(argv: list[str] | None = None) -> int:
         description="Valida ou materializa cover.png para todo o índice global."
     )
     parser.add_argument("--write", action="store_true")
+    parser.add_argument("--refresh", action="append", default=[])
     parser.add_argument("--config", default=str(DEFAULT_CONFIG_PATH))
     args = parser.parse_args(argv)
     config_path = resolve_repository_path(args.config, REPOSITORY_ROOT)
@@ -269,11 +355,13 @@ def main(argv: list[str] | None = None) -> int:
     index_path = resolve_repository_path(
         config["intelligence"]["index_path"], REPOSITORY_ROOT
     )
-    counters = ensure_publication_covers(source_root, index_path, config, args.write)
+    counters = ensure_publication_covers(
+        source_root, index_path, config, args.write, set(args.refresh)
+    )
     print(
         "PUBLICATION_COVERS_OK "
         f"valid={counters['valid']} optimized={counters['optimized']} "
-        f"embedded={counters['embedded']} "
+        f"embedded={counters['embedded']} pdf={counters['pdf']} "
         f"technical={counters['technical']}"
     )
     return 0
