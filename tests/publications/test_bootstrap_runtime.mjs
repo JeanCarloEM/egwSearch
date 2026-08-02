@@ -38,4 +38,6 @@ test("os ciclos npm expõem bootstrap para instalação e atualização", () => 
   assert.match(manifest.scripts.postinstall, /bootstrap-runtime\.ts/u);
   assert.match(manifest.scripts.dependencies, /bootstrap-runtime\.ts/u);
   assert.match(manifest.scripts.update, /publications:bootstrap/u);
+  assert.match(manifest.scripts["publications:analyze"], /publication_analysis\.py/u);
+  assert.match(manifest.scripts["publications:index"], /publication_index\.py/u);
 });

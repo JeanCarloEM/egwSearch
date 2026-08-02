@@ -21,7 +21,13 @@ CONTRACT_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(CONTRACT_ROOT))
 
 import baixar  # noqa: E402
-from acquisition import CatalogAsset, CatalogItem, CatalogSegment, build_source_v3  # noqa: E402
+from acquisition import (  # noqa: E402
+    AcquisitionLedger,
+    CatalogAsset,
+    CatalogItem,
+    CatalogSegment,
+    build_source_v3,
+)
 from publication_contract import (  # noqa: E402
     hash_file,
     publication_identity,
@@ -568,6 +574,57 @@ class DownloaderTests(unittest.TestCase):
             self.assertEqual(summary["failures"], 0)
             self.assertFalse(checkpoint_path.exists())
             self.assertTrue(baixar.build_parser().parse_args(["--restart"]).restart)
+
+    def test_intelligence_failure_preserves_unconfirmed_checkpoint(self) -> None:
+        collection = self._checkpoint_collection()
+        item = self._checkpoint_item("7", "Publicação analisável")
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            source_root = root / "publications"
+            state_root = root / "state"
+            config = self._checkpoint_config()
+            config["intelligence"] = {"index_path": "src/publications/index.json"}
+            completed = {
+                "state": "completed",
+                "downloaded": 1,
+                "skipped": 0,
+                "extracted": 0,
+                "converted": 0,
+            }
+            with patch.object(
+                baixar, "parse_catalog_payload", return_value=[item]
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ), patch.object(
+                baixar,
+                "finalize_publication_intelligence",
+                side_effect=RuntimeError("análise inválida"),
+            ) as finalize:
+                summary = baixar._process_collection(
+                    collection,
+                    config,
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                )
+            self.assertEqual(summary["failures"], 1)
+            checkpoint = baixar._load_collection_checkpoint(
+                baixar._collection_checkpoint_path(
+                    state_root, collection, None, None
+                ),
+                collection,
+                None,
+                None,
+            )
+            self.assertEqual(checkpoint["confirmed_remote_ids"], [])
+            finalize.assert_called_once()
+            ledger = AcquisitionLedger(state_root / "ledger.json")
+            self.assertEqual(ledger.get(item.stable_key())["state"], "temporary_failure")
+            self.assertEqual(
+                ledger.get(item.stable_key())["phase"], "publication-intelligence"
+            )
 
     def test_invalid_text_checkpoint_is_preserved_and_blocks(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

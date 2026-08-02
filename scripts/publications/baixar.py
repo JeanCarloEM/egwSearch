@@ -71,6 +71,8 @@ from publication_contract import (
     validate_source_url,
     write_json_atomic,
 )
+from publication_analysis import analyze_publication
+from publication_index import configured_index_path, update_global_index
 from publication_transaction import (
     GitPublicationPublisher,
     PublicationTransactionError,
@@ -2311,7 +2313,11 @@ def preflight_local_publication(
     for metadata_path in local_index.get(remote_id, []):
         try:
             item = _local_item_from_metadata(metadata_path, collection, remote_id)
-            validate_complete_publication(item, source_root)
+            validate_complete_publication(
+                item,
+                source_root,
+                require_intelligence=False,
+            )
             if item.segments and preflight_existing_text(item, source_root, download_config) is None:
                 continue
             if not item.assets and not item.segments:
@@ -2689,6 +2695,41 @@ def _process_catalog_item(
         raise
 
 
+def finalize_publication_intelligence(
+    item: CatalogItem,
+    source_root: Path,
+    config: dict,
+) -> dict:
+    """Analisa ativos e atualiza o índice antes de confirmar a publicação.
+
+    A função é o único gatilho do downloader para as capacidades independentes.
+    Ela não usa rede e pode reparar derivados de inteligência durante retomada
+    sem reabrir a ficha remota da obra.
+    """
+
+    directory = source_root / item.publication_identity().relative_directory()
+    manifests = analyze_publication(directory, source_root)
+    canonical_root = resolve_repository_path(
+        str(config["source_root"]), REPOSITORY_ROOT
+    ).resolve()
+    index_path = (
+        configured_index_path(config)
+        if source_root.resolve() == canonical_root
+        else source_root.resolve() / "index.json"
+    )
+    update_global_index(
+        source_root,
+        index_path,
+        config,
+        publication=directory,
+    )
+    print(
+        f"PUBLICATION_INTELLIGENCE_UPDATED remote_id={item.remote_id} "
+        f"manifests={len(manifests)} index={index_path.name}"
+    )
+    return {"manifests": manifests, "index": index_path}
+
+
 def _process_collection(
     collection: dict,
     config: dict,
@@ -2840,6 +2881,29 @@ def _process_collection(
                 no_network=no_network,
                 revalidate=revalidate,
             )
+            if (
+                result["state"] in {"completed", "skipped"}
+                and config.get("intelligence")
+            ):
+                try:
+                    intelligence = finalize_publication_intelligence(
+                        item,
+                        source_root,
+                        config,
+                    )
+                except Exception as error:
+                    ledger.transition(
+                        item.stable_key(),
+                        "temporary_failure",
+                        phase="publication-intelligence",
+                        error=f"{type(error).__name__}:{error}",
+                    )
+                    raise
+                result["chunking_manifests"] = [
+                    path.relative_to(source_root).as_posix()
+                    for path in intelligence["manifests"]
+                ]
+                result["global_index"] = intelligence["index"].name
             for key in ("downloaded", "skipped", "extracted", "converted"):
                 summary[key] += result[key]
             if result["state"] == "review_required":
@@ -3014,7 +3078,7 @@ class _NullProgress:
 
 
 def _selected_collections(config: dict, selected: set[str] | None) -> list[dict]:
-    if config["schema_version"] in {2, 3}:
+    if config["schema_version"] in {2, 3, 4}:
         collections = list(config["collections"])
     else:
         collections = [
@@ -3136,7 +3200,7 @@ def run(
             paths["locks"] / "publication-git.lock",
             branch=str(config.get("transaction", {}).get("branch", "dev")),
             index_path=resolve_repository_path(
-                str(config["transaction"]["index_path"]),
+                str(config["intelligence"]["index_path"]),
                 REPOSITORY_ROOT,
             ),
         )

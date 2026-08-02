@@ -136,17 +136,30 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
         "download",
         "transaction",
     }
+    required_v4 = {
+        "schema_version",
+        "source_root",
+        "public_root",
+        "runtime_state_root",
+        "authors",
+        "collections",
+        "download",
+        "transaction",
+        "intelligence",
+    }
     if schema == 1 and set(data) != required_v1:
         raise ContractError("configuracao deve seguir publications-config/v1")
     if schema == 2 and set(data) != required_v2:
         raise ContractError("configuracao deve seguir publications-config/v2")
     if schema == 3 and set(data) != required_v3:
         raise ContractError("configuracao deve seguir publications-config/v3")
-    if schema not in {1, 2, 3}:
+    if schema == 4 and set(data) != required_v4:
+        raise ContractError("configuracao deve seguir publications-config/v4")
+    if schema not in {1, 2, 3, 4}:
         raise ContractError("schema de configuracao nao suportado")
     if not isinstance(data["authors"], dict) or not data["authors"]:
         raise ContractError("configuracao sem autores")
-    if schema in {2, 3}:
+    if schema in {2, 3, 4}:
         if not isinstance(data["collections"], list) or not data["collections"]:
             raise ContractError("configuracao sem colecoes")
         ids = [item.get("id") for item in data["collections"] if isinstance(item, dict)]
@@ -163,19 +176,31 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
                 or not category_name.strip()
             ):
                 raise ContractError("colecao sem categoria editorial")
-    if schema == 3:
+    if schema in {3, 4}:
         transaction = data["transaction"]
-        if not isinstance(transaction, dict) or set(transaction) != {
-            "branch",
-            "commit_per_publication",
-            "index_path",
-        }:
+        expected_transaction = {"branch", "commit_per_publication"}
+        if schema == 3:
+            expected_transaction.add("index_path")
+        if not isinstance(transaction, dict) or set(transaction) != expected_transaction:
             raise ContractError("transacao Git invalida")
         if transaction["branch"] != "dev" or not isinstance(
             transaction["commit_per_publication"], bool
         ):
             raise ContractError("politica Git exige branch dev e opt-in booleano")
-        resolve_repository_path(str(transaction["index_path"]), path.resolve().parents[1])
+        if schema == 3:
+            resolve_repository_path(str(transaction["index_path"]), path.resolve().parents[1])
+        else:
+            intelligence = data["intelligence"]
+            if not isinstance(intelligence, dict) or set(intelligence) != {"index_path"}:
+                raise ContractError("inteligencia de publicacoes invalida")
+            index_path = resolve_repository_path(
+                str(intelligence["index_path"]), path.resolve().parents[1]
+            )
+            source_root = resolve_repository_path(
+                str(data["source_root"]), path.resolve().parents[1]
+            )
+            if index_path != source_root and source_root not in index_path.parents:
+                raise ContractError("indice global fora da raiz de publicacoes")
     return data
 
 

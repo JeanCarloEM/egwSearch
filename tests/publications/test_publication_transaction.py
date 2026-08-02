@@ -25,6 +25,8 @@ from acquisition import (  # noqa: E402
     write_markdown_publication,
 )
 from publication_contract import hash_file, write_json_atomic  # noqa: E402
+from publication_analysis import analyze_publication  # noqa: E402
+from publication_index import update_global_index  # noqa: E402
 from publication_transaction import (  # noqa: E402
     GitPublicationPublisher,
     PublicationTransactionError,
@@ -84,6 +86,15 @@ def _materialize(root: Path, item: CatalogItem) -> Path:
     return source_root
 
 
+def _index_config(source_root: Path) -> dict:
+    return {
+        "source_root": source_root.as_posix(),
+        "public_root": "/publications",
+        "authors": {"author": {"name": "Author"}},
+        "intelligence": {"index_path": (source_root / "index.json").as_posix()},
+    }
+
+
 class PublicationTransactionTests(unittest.TestCase):
     def test_complete_publication_accepts_reversible_markdown_inside_epub(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
@@ -138,6 +149,7 @@ class PublicationTransactionTests(unittest.TestCase):
                 ],
             )
             write_json_atomic(directory / identity.metadata_name(), metadata)
+            analyze_publication(directory, source_root)
             allowlist = validate_complete_publication(item, source_root, root)
             self.assertIn(epub.relative_to(root), allowlist)
             self.assertFalse(list(directory.rglob("*.md")))
@@ -155,6 +167,14 @@ class PublicationTransactionTests(unittest.TestCase):
 
             item = _item()
             source_root = _materialize(root, item)
+            directory = source_root / item.publication_identity().relative_directory()
+            analyze_publication(directory, source_root)
+            update_global_index(
+                source_root,
+                source_root / "index.json",
+                _index_config(source_root),
+                publication=directory,
+            )
             (root / "unrelated.txt").write_text("preservar\n", encoding="utf-8")
             ledger = AcquisitionLedger(root / "constructor" / ".state" / "ledger.json")
             publisher = GitPublicationPublisher(
@@ -173,16 +193,17 @@ class PublicationTransactionTests(unittest.TestCase):
                 committed,
                 {
                     *(path.as_posix() for path in allowlist),
-                    "src/publications/acquisition-index.json",
+                    "src/publications/index.json",
                 },
             )
             self.assertIn("?? unrelated.txt", _git(root, "status", "--short"))
             self.assertEqual(ledger.get(item.stable_key())["commit"], commit)
             index = json.loads(
-                (root / "src" / "publications" / "acquisition-index.json").read_text(
+                (root / "src" / "publications" / "index.json").read_text(
                     encoding="utf-8"
                 )
             )
+            self.assertEqual(index["schema_version"], "publication-global-index/v1")
             self.assertEqual(index["publications"][0]["remote_id"], "42")
             self.assertIsNone(publisher.commit(item, allowlist, ledger))
             self.assertEqual(_git(root, "rev-list", "--count", "HEAD"), "2")

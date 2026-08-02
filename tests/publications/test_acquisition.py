@@ -120,6 +120,7 @@ class IdentityAndCatalogTests(unittest.TestCase):
 
     def test_config_exposes_both_new_collections_and_conservative_defaults(self) -> None:
         config = load_config(REPOSITORY_ROOT / "config" / "publications.json")
+        self.assertEqual(config["schema_version"], 4)
         identifiers = {item["id"] for item in config["collections"]}
         self.assertIn("pt-br-pioneiros", identifiers)
         self.assertIn("en-pioneers", identifiers)
@@ -132,6 +133,9 @@ class IdentityAndCatalogTests(unittest.TestCase):
         )
         self.assertEqual(config["download"]["workers"], 1)
         self.assertLessEqual(config["download"]["max_workers"], 2)
+        self.assertEqual(
+            config["intelligence"]["index_path"], "src/publications/index.json"
+        )
         source_root = REPOSITORY_ROOT / config["source_root"]
         self.assertNotIn(source_root, MODULE_ROOT.parents)
         self.assertTrue((MODULE_ROOT / "requirements.txt").is_file())
