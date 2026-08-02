@@ -23,7 +23,7 @@
 - **SUPERVISÃO_PROVIDENCIAL:** direção divina do processo sem supressão da agência humana.
 - **INDUÇÃO_NÃO_COERCITIVA:** influência diretiva do Espírito sobre mensageiro e expressão, sem ditado, automatismo ou microdeterminação lexical.
 - **INFALIBILIDADE:** confiabilidade da revelação para comunicar a vontade de Deus e veracidade do que o texto efetivamente afirma.
-- **INERRÂNCIA_VERBAL_ABSOLUTA:** tese de que cada vocábulo e detalhe dos autógrafos foi divinamente determinado e é tecnicamente impecável em todo domínio; NÃO constitui formulação fundamental adventista obrigatória.
+- **INERRÂNCIA VERBAL ABSOLUTA:** tese de que cada vocábulo e detalhe dos autógrafos foi divinamente determinado e é tecnicamente impecável em todo domínio; NÃO constitui formulação fundamental adventista obrigatória.
 - **CÂNON:** 66 livros reconhecidos como Escritura e norma escrita universal da fé cristã adventista.
 - **DEUTEROCANÔNICOS/APÓCRIFOS_DO_AT:** escritos judaicos antigos incluídos como cânon por católicos e, em extensão variável, ortodoxos; recebidos por adventistas e a maioria protestante como literatura extracanônica. Os termos são confessionais e suas listas NÃO são perfeitamente idênticas.
 - **SEFARIM_ḤITZONIM:** “livros externos” na terminologia rabínica; categoria extracanônica que NÃO implica, por si, falsidade integral, inutilidade histórica ou identidade exata com toda lista cristã de apócrifos.
@@ -80,7 +80,7 @@
 ## 6. Escritura, cânon e norma
 
 1. Os 66 livros do Antigo e Novo Testamentos constituem a **Palavra escrita de Deus**, único credo e norma canônica adventista.
-2. A Bíblia É:
+2. A Bíblia (e qualquer revelação verdadeira divina, independente do canal) É:
    - suprema e autorizada;
    - infalível em sua revelação da vontade divina;
    - suficiente para o conhecimento necessário à salvação;
