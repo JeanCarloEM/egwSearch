@@ -154,3 +154,14 @@ estruturado. A validação do contêiner confirmou a ordem de spine `capa ->
 proveniência -> sumário -> 12 seções`, URL oficial na nota não editorial, 12
 Markdown internos e zero `.md` externo. A repetição terminou `skipped`, com
 `downloaded=0`, `extracted=0`, `converted=0` e sem navegação específica da obra.
+
+## Complementação de 2026-08-01 — retomada sem reinício implícito
+
+> relativo a FT-012, baixar.py precisa ser capaz de continuar do ponto de onde
+> parou ou de onde foi interrompido sem reiniciar, a não ser que seja
+> explicitamente solicitado a isso.
+
+A retomada passa a abranger descoberta e processamento da coleção, além do
+checkpoint textual já existente. Reinício será uma operação separada e
+explícita por `--restart`; reexecução normal e `--revalidate` não podem apagar
+progresso confirmado.

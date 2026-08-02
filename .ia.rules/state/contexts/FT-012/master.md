@@ -146,4 +146,10 @@ capa oficialmente declarada para a obra.
   `PUBLICATION_LOCAL_VALID` e `ITEM_SKIPPED`, sem acesso específico da obra.
 - suíte final: 58 testes Python, três testes Node, `py_compile` e
   `publications:check` aprovados; arquivos gerados permanecem não rastreados.
-- estado: concluída e pronta para integração de `dev` em `main` e push.
+- estado: reaberta para implementar retomada integral sem reinício implícito.
+- lacuna superveniente: o checkpoint textual retomava páginas, mas corrupção era
+  renomeada e reiniciada; descoberta/enriquecimento e cursor de itens da coleção
+  não possuíam checkpoint próprio.
+- decisão humana: reexecução deve retomar automaticamente do último estado
+  confirmado; somente `--restart` explícito pode descartar checkpoints do
+  escopo, preservando publicações e ledger canônicos.
