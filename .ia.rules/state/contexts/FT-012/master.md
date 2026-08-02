@@ -187,3 +187,21 @@ capa oficialmente declarada para a obra.
 - integração: `dev` incorporada em `main` pelo merge `92994c6`; referências
   remotas publicadas e arquivos gerados/quarentena preservados fora do Git.
 - estado: concluída e publicada sem pendência própria.
+- estado: reaberta por evidência de request individual desnecessário para o
+  acervo legado completo.
+- causa: o índice local anterior reconhece somente três metadados v3 por
+  `remote_id`; 518 grupos legados, dos quais 515 com PDF+EPUB, não participam do
+  preflight anterior ao enriquecimento.
+- correção autorizada: compor identidade a partir da única listagem da coleção
+  e validar localmente o path/metadado legado e os dois assets antes de decidir
+  por `_enrich_book()`.
+- implementação material: `16b08868a45eabfb19c4e8f896c84b8b4b4f7627`;
+  catálogo entrega ID/título/URL/autor ao gate, que compõe os demais campos da
+  coleção e reconhece PDF+EPUB legados íntegros também sob `en-us`.
+- prova real: `b42` terminou `PUBLICATION_LOCAL_VALID ... network=skipped`; na
+  coleção `en-books`, 116/121 entradas dispensaram página individual e cinco
+  sem prova completa permaneceram corretamente no fluxo remoto.
+- validação: 66 testes Python, três Node, `py_compile`, bootstrap/check e
+  `git diff --check` aprovados; sentinela reprova qualquer `_enrich_book()` no
+  caminho legado completo.
+- estado: concluída; integração e publicação pendentes.

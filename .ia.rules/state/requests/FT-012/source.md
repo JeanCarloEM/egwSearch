@@ -199,3 +199,43 @@ aliases históricos e o diretório não rastreado do exemplo, preservando em cad
 grupo o título declarado dentro do EPUB e mantendo os removidos em quarentena
 local recuperável. O acervo ativo terminou com 1.036 identidades físicas sem
 SHA-512 repetido entre publicações.
+
+## Evidência superveniente de 2026-08-01 — request individual no legado
+
+> eu percebo que ele faz pelo menos um HTTP request por publicação, mesmo que a
+> publicação já exista com ambos os assets (epub/pdf) possíveis. Por exemplo,
+> `https://text.egwwritings.org/book/b42`. Se ambos os assets possíveis são
+> válidos e verificados, e é possível obter o título pelo índice da coleção uma
+> única vez, qual o motivo de cada publicação ter uma requisição?
+>
+> o exemplo é apenas um mero exemplo; o caso ocorre com todas as publicações já
+> existentes localmente.
+
+A causa comprovada é sistêmica: `build_local_publication_index()` indexa apenas
+`publication-source/v3` por `identity.remote_id`, enquanto 518 das 521
+publicações locais ainda usam metadado legado URL-chaveado; 515 delas possuem
+PDF e EPUB. O callback de descoberta recebe somente o ID remoto, não encontra
+essas unidades e chama `_enrich_book()` para cada entrada. O catálogo já
+fornece ID/URL, título, autor, coleção, idioma e tipo suficientes para projetar
+o path legado determinístico. O preflight deve usar essa identidade composta,
+validar metadado, URL, ambos os assets, assinatura, tamanho e hashes localmente
+e dispensar toda requisição específica quando a prova for inequívoca.
+
+## Garantia adicional de 2026-08-01 — rede somente por necessidade
+
+> Garanta que a requisição HTTP à origem ocorra apenas quando efetivamente
+> necessária.
+
+O preflight local completo é gate anterior à rede específica da publicação.
+Somente prova local inconclusiva, divergência, ambiguidade, corrupção, ausência
+de ativo obrigatório ou `--revalidate` explícito pode liberar enriquecimento,
+capa, texto ou download remoto; a decisão e seu motivo devem ser testáveis.
+
+Implementação concluída no commit material `16b0886`: o callback recebe os
+quatro dados do cartão (ID, título, URL e autor), compõe a identidade com a
+coleção e valida metadado legado, PDF e EPUB no path canônico ou alias `en-us`.
+O teste `b42` transforma `_enrich_book()` em sentinela proibida e comprova
+`PUBLICATION_LOCAL_VALID remote_id=42 network=skipped`. Na coleção real
+`en-books`, 116 de 121 entradas foram comprovadas localmente sem página
+individual; somente cinco unidades sem prova local completa permaneceram
+elegíveis ao enriquecimento necessário.

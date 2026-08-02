@@ -726,7 +726,9 @@ class DownloaderTests(unittest.TestCase):
                         "catalog_url": "https://egwwritings.org/allCollection/pt/4",
                     },
                     Mock(before_request=Mock()),
-                    local_preflight=lambda remote_id: item if remote_id == "1806" else None,
+                    local_preflight=lambda remote_id, *_catalog: (
+                        item if remote_id == "1806" else None
+                    ),
                 )
             self.assertEqual(discovered, [item])
             enrich.assert_not_called()
@@ -787,6 +789,99 @@ class DownloaderTests(unittest.TestCase):
                 baixar.preflight_local_publication(
                     "1806", collection, source_root, index, {"cover_max_dimension": 800}
                 )
+            )
+
+    def test_legacy_pdf_epub_skip_every_book_request(self) -> None:
+        collection = {
+            "id": "en-books",
+            "name": "EGW Writings - Books",
+            "catalog_url": "https://egwwritings.org/allCollection/en/4",
+            "language": "en",
+            "type": "books",
+            "category_name": "EGW Writings",
+            "category": "egw",
+            "default_author_key": "egw",
+        }
+        title = "Life Sketches of James White and Ellen G. White (1880 ed.)"
+        public_url = "https://text.egwwritings.org/book/b42"
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            source_root = Path(temporary)
+            identity = publication_identity(
+                "egw", "en", "books", title, category="egw"
+            )
+            directory = (
+                source_root
+                / "egw"
+                / "en-us"
+                / "books"
+                / identity.route_slug
+            )
+            directory.mkdir(parents=True)
+            pdf = directory / identity.asset_name("pdf")
+            pdf.write_bytes(b"%PDF-1.7\ncomplete\n%%EOF")
+            epub = directory / identity.asset_name("epub")
+            with zipfile.ZipFile(epub, "w") as archive:
+                archive.writestr(
+                    "mimetype",
+                    b"application/epub+zip",
+                    compress_type=zipfile.ZIP_STORED,
+                )
+            pdf_url = "https://media2.egwwritings.org/pdf/en_LS80.pdf"
+            epub_url = "https://media2.egwwritings.org/epub/en_LS80.epub"
+            write_json_atomic(
+                directory / identity.metadata_name(),
+                {
+                    pdf_url: {"acesso": 1, "sha256": hash_file(pdf).sha256},
+                    epub_url: {"acesso": 1, "sha256": hash_file(epub).sha256},
+                },
+            )
+            driver = _FakeDriver()
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock(return_value=driver)),
+                {"delay_seconds": 0, "browser_visible": True},
+                self._runtime_paths(source_root),
+            )
+            manager._driver = driver
+            manager._primary_handle = "main"
+            local_index = baixar.build_local_publication_index(source_root)
+
+            def local_preflight(remote_id, card_title, card_url, card_author):
+                return baixar.preflight_local_publication(
+                    remote_id,
+                    collection,
+                    source_root,
+                    local_index,
+                    {},
+                    card_title,
+                    card_url,
+                    card_author,
+                )
+
+            with patch.object(
+                manager, "_wait_for_human_release", return_value=driver
+            ), patch.object(
+                manager,
+                "_discover_catalog_links",
+                return_value={public_url: (title, public_url, "Ellen G. White")},
+            ), patch.object(
+                manager,
+                "_enrich_book",
+                side_effect=AssertionError("request individual proibido"),
+            ) as enrich:
+                discovered = manager.discover_catalog_items(
+                    collection,
+                    Mock(before_request=Mock()),
+                    local_preflight=local_preflight,
+                )
+            self.assertEqual(len(discovered), 1)
+            self.assertTrue(discovered[0].local_complete)
+            self.assertEqual(
+                {asset.format for asset in discovered[0].assets}, {"pdf", "epub"}
+            )
+            enrich.assert_not_called()
+            self.assertEqual(
+                driver.visited,
+                ["https://text.egwwritings.org/allCollection/en/4"],
             )
 
     def test_asset_install_is_atomic_and_repetition_is_idempotent(self) -> None:

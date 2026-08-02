@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from dataclasses import replace
 from datetime import datetime, timezone
 import hashlib
 import io
@@ -1382,7 +1383,11 @@ class BrowserSessionManager:
             remote_id = _book_id_from_url(url)
             if restart:
                 self._text_checkpoint_path(remote_id).unlink(missing_ok=True)
-            local = local_preflight(remote_id) if local_preflight else None
+            local = (
+                local_preflight(remote_id, title, url, author)
+                if local_preflight
+                else None
+            )
             if local is not None:
                 items.append(local)
                 print(
@@ -2289,8 +2294,11 @@ def preflight_local_publication(
     source_root: Path,
     local_index: dict[str, list[Path]],
     download_config: dict,
+    title: str = "",
+    public_url: str = "",
+    author: str = "",
 ) -> CatalogItem | None:
-    """Comprova uma unidade inteira antes de dispensar todo acesso da obra."""
+    """Comprova unidade v3 ou legado completo antes de liberar rede da obra."""
 
     valid: list[CatalogItem] = []
     for metadata_path in local_index.get(remote_id, []):
@@ -2304,7 +2312,117 @@ def preflight_local_publication(
             valid.append(item)
         except (OSError, ValueError, ContractError, PublicationTransactionError):
             continue
-    return valid[0] if len(valid) == 1 else None
+    if len(valid) == 1:
+        return valid[0]
+    if valid or not title or not public_url or not author:
+        return None
+    return _preflight_legacy_native_publication(
+        remote_id,
+        title,
+        public_url,
+        author,
+        collection,
+        source_root,
+    )
+
+
+def _preflight_legacy_native_publication(
+    remote_id: str,
+    title: str,
+    public_url: str,
+    author: str,
+    collection: dict,
+    source_root: Path,
+) -> CatalogItem | None:
+    """Pareia catálogo e metadado legado com PDF+EPUB íntegros, sem rede."""
+
+    if _book_id_from_url(public_url) != remote_id:
+        return None
+    try:
+        language, language_path = canonical_language(str(collection["language"]))
+        category_name = str(collection["category_name"]).strip()
+        category_path = str(collection["category"]).strip()
+        publication_type = canonical_publication_type(
+            str(collection["type"]), str(collection["language"])
+        )
+        if (
+            not category_name
+            or not category_path
+            or uri_slug(category_path) != category_path
+        ):
+            return None
+        item = CatalogItem(
+            remote_id=remote_id,
+            collection_id=str(collection["id"]),
+            collection_name=str(collection["name"]),
+            author_name=author,
+            author_key=str(
+                collection.get("default_author_key") or canonical_author_key(author)
+            ),
+            language_original=str(collection["language"]),
+            language=language,
+            language_path=language_path,
+            publication_type=publication_type,
+            title_original=title,
+            title_normalized=title,
+            public_url=public_url,
+            category_name=category_name,
+            category_path=category_path,
+        )
+    except (KeyError, ContractError):
+        return None
+    identity = item.publication_identity()
+    matches: list[CatalogItem] = []
+    for directory in _identity_directories(source_root, identity):
+        metadata_path = directory / identity.metadata_name()
+        if not metadata_path.is_file():
+            continue
+        try:
+            records = read_source_records(metadata_path)
+        except ContractError:
+            continue
+        native = [
+            record for record in records if record.get("format") in {"pdf", "epub"}
+        ]
+        if len(native) != 2 or {record.get("format") for record in native} != {
+            "pdf",
+            "epub",
+        }:
+            continue
+        assets: list[CatalogAsset] = []
+        paths: list[Path] = []
+        for record in native:
+            url = str(record.get("url") or "")
+            existing = preflight_existing_asset(url, identity, source_root)
+            if existing is None or existing[0].parent.resolve() != directory.resolve():
+                break
+            normalized = existing[1]
+            paths.append(existing[0].resolve())
+            assets.append(
+                CatalogAsset(
+                    format=str(normalized["format"]),
+                    url=str(normalized["url"]),
+                    etag=str(normalized.get("etag") or ""),
+                    last_modified=str(normalized.get("last_modified") or ""),
+                    size=int(normalized["size"]),
+                    remote_hash=str(normalized["hashes"]["sha256"]),
+                )
+            )
+        if len(assets) != 2 or len({path.parent for path in paths}) != 1:
+            continue
+        matches.append(
+            replace(
+                item,
+                assets=tuple(
+                    sorted(
+                        assets,
+                        key=lambda asset: (asset.format != "epub", asset.url),
+                    )
+                ),
+                local_complete=True,
+            )
+        )
+    return matches[0] if len(matches) == 1 else None
 
 
 def _process_catalog_item(
@@ -2683,12 +2801,15 @@ def _process_collection(
                 local_preflight=(
                     None
                     if revalidate
-                    else lambda remote_id: preflight_local_publication(
+                    else lambda remote_id, title, url, author: preflight_local_publication(
                         remote_id,
                         collection,
                         source_root,
                         local_index or {},
                         download_config,
+                        title,
+                        url,
+                        author,
                     )
                 ),
                 checkpoint_path=checkpoint_path,
