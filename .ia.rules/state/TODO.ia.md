@@ -2023,16 +2023,22 @@
 ## FT-013 - Índice global e análise de estratégias de chunking
 
 - [x] Capturar a solicitação e criar contexto mestre próprio.
-- [ ] Evoluir o RCF global e especializado para o índice incremental e o
+- [x] Evoluir o RCF global e especializado para o índice incremental e o
   manifesto identificador de estratégias por ativo.
-- [ ] Implementar invocador único do índice global, com modos publicação,
+- [x] Implementar invocador único do índice global, com modos publicação,
   subárvore e corpus, e reutilizá-lo no gatilho do downloader.
-- [ ] Implementar analisador EPUB/PDF seguro, explicável e determinístico, com
+- [x] Implementar analisador EPUB/PDF seguro, explicável e determinístico, com
   sinais estruturais, parsers candidatos, estratégias comparáveis e correlação
   de fingerprints do acervo.
-- [ ] Executar análise e indexação sincronamente após cada publicação
+- [x] Executar análise e indexação sincronamente após cada publicação
   baixada/atualizada/gerada e antes de confirmar o checkpoint.
-- [ ] Cobrir idempotência, falha sem parcial, escopos de CLI e ausência de rede
+- [x] Cobrir idempotência, falha sem parcial, escopos de CLI e ausência de rede
   para reparo estritamente local.
-- [ ] Sincronizar rastreabilidade, validar e integrar sem versionar resultados
+- [x] Sincronizar rastreabilidade, validar e integrar sem versionar resultados
   de coleta, caches, temporários ou perfis.
+
+Conclusão: correção `e00ca57`; FT `0563749`; norma `718f737`; implementação
+`b7a1421`; rastreabilidade `b6b9f8e`. Foram aprovados 75 testes Python, 3 testes
+Node, compilação, `publications:check`, geração local de índice com 564 entradas
+e análise EPUB/PDF específica. Resultados gerados de coleta permaneceram fora
+do commit.

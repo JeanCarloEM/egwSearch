@@ -1,14 +1,14 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-02T01:05:29-03:00`.
+Atualizado_em: `2026-08-02T14:31:10-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-012 concluída, integrada e publicada com gate de retomada.
-Fonte_local: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`.
-Fonte_original: `main@62426d7` integrada em `dev` pelo merge `8998fe1`.
+Escopo_atual: FT-013 concluída; índice global e análise de chunking implementados.
+Fonte_local: `.ia.rules/state/TODO.ia.md:2023`.
+Fonte_original: solicitação humana capturada em `.ia.rules/state/requests/FT-013/source.md`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
 Fonte_atual_sha256: `nao_aplicavel; fonte local Git integral`.
-Contexto_mestre: `.ia.rules/state/contexts/FT-012/master.md`.
+Contexto_mestre: `.ia.rules/state/contexts/FT-013/master.md`.
 Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 ## FT-001 - Inicializacao normativa do projeto
@@ -396,7 +396,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-013/source.md`
 - escopo: Técnico
 - prioridade: alta
-- status: em andamento
+- status: concluída
 - objetivo: gerar/atualizar o índice global multilocalizado e analisar,
   sincronamente por publicação, as melhores estratégias candidatas de chunking
   para cada EPUB/PDF, com invocadores específicos, aninhados e globais.
@@ -405,5 +405,11 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - contexto_mestre: `.ia.rules/state/contexts/FT-013/master.md`
 - nao_escopo: materializar obrigatoriamente todos os chunks, executar embeddings,
   selecionar definitivamente uma estratégia de RAG ou versionar runtime/coleta.
-- proximo_ponto: evoluir RCF global/especializado e implementar as capacidades
-  compartilhadas antes da integração síncrona no downloader.
+- commits: `e00ca57` (catálogo inglês), `0563749` (FT), `718f737` (norma),
+  `b7a1421` (implementação) e `b6b9f8e` (rastreabilidade).
+- validacao: 75 testes Python e 3 Node aprovados; compilação,
+  `publications:check`, índice local com 564 entradas e análise EPUB/PDF
+  específica aprovados; artefatos gerados não foram versionados.
+- debito_preexistente: `agent:rcf` ainda acusa somente
+  `RCF_SENTENCA_NAO_MAPEADA:RCF.md:9`.
+- proximo_ponto: nenhuma pendência da FT-013.

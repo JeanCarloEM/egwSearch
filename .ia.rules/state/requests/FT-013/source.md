@@ -2,7 +2,8 @@
 
 - origem: solicitação humana desta conversa.
 - recebido em: `2026-08-02`.
-- incorporação: em andamento pela FT-013.
+- incorporação: concluída pela FT-013 nos commits `718f737`, `b7a1421` e
+  `b6b9f8e`.
 - precedente imediato: correção do catálogo `en-pioneers` no commit `e00ca57`.
 
 ## Solicitação integral

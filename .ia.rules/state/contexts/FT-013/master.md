@@ -5,7 +5,7 @@
 - FT: `FT-013`.
 - tipo: `implementacao_codigo` com evolução normativa causal.
 - fonte: `.ia.rules/state/requests/FT-013/source.md`.
-- estado: criada; implementação integral autorizada no mesmo pedido humano.
+- estado: concluída; implementação integral autorizada no mesmo pedido humano.
 - escopo: índice global multilocalizado e análise estrutural de EPUB/PDF.
 
 ## Objetivo
@@ -60,3 +60,18 @@ publicação adquirida ou gerada por `baixar.py`.
 - execução de subdiretório e global gera resultados deterministicamente
   equivalentes para os mesmos itens;
 - falha é conclusiva, deixa diagnóstico e não produz sucesso parcial silencioso.
+
+## Evidências de conclusão
+
+- correção precedente do catálogo inglês: `e00ca57`;
+- criação da FT e captura da fonte: `0563749`;
+- evolução normativa: `718f737`;
+- implementação material: `b7a1421`;
+- sincronização causal do RCF: `b6b9f8e`;
+- suíte Python: 75 testes aprovados;
+- suíte Node do invocador: 3 testes aprovados;
+- índice real: 564 publicações reconstruídas localmente sem acesso à origem;
+- análise específica: EPUB e PDF de `b42` produziram manifestos válidos;
+- `publications:check`, compilação Python e verificação de whitespace aprovados;
+- `agent:rcf` mantém somente o débito preexistente
+  `RCF_SENTENCA_NAO_MAPEADA:RCF.md:9`.
