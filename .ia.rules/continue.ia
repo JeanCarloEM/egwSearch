@@ -555,3 +555,23 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   `git diff --check` aprovados.
 - commit_material: `90d53ff33874d0911564f56051ddfeaeaf9423a0`.
 - proximo_ponto: nenhuma pendencia na FT-019; aguardar solicitacao humana.
+
+## FT-020 - Commit atomico obrigatorio por publicacao
+
+- tipo: `evolucao normativa e implementacao de codigo`.
+- origem: `.ia.rules/state/requests/FT-020/source.md`.
+- status: fase normativa em andamento; codigo ainda nao autorizado pelo gate.
+- objetivo: ao concluir enriquecimento, analise de chunking e indexacao de uma
+  publicacao, criar imediatamente um commit exclusivo com sua arvore e somente
+  os artefatos globais causalmente alterados por ela.
+- evolucao: substitui o opt-in Git atual por pos-condicao obrigatoria das
+  execucoes canonicas, isoladas ou compostas; fixture/teste segregado permanece
+  sem efeito Git.
+- retomada_global: downloader e analisador mantem diario preciso de progresso,
+  retomam automaticamente do ultimo limite confirmado e somente descartam o
+  cursor mediante reset explicito e corretamente propagado.
+- preservacao: nao incorporar publicacoes, manifestos gerados, caches,
+  temporarios, localstores, runtime ou alteracoes concorrentes ja existentes.
+- contexto_mestre: `.ia.rules/state/contexts/FT-020/master.md`.
+- proximo_ponto: concluir e commitar a evolucao do RCF; depois interromper e
+  aguardar autorizacao humana explicita para implementar.
