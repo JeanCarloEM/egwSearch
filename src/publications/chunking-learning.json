@@ -8,7 +8,7 @@
     "schema": "publication-chunking-method-catalog/v1",
     "sha256": "f1ca35473b0d568393aa43aaee5725716fff4714a39b5d6b0cb94fd3e89f5221"
   },
-  "manifests": 1212,
+  "manifests": 1225,
   "profiles": [
     {
       "id": "0011131e503c00dd48943469d0cda7ffce7b081ddbd8a75d3d8bb95153778738",
@@ -1759,6 +1759,46 @@
       }
     },
     {
+      "id": "055acd42f6c8f4a2c9d36b3e9d06bbaba2f158a53e3b03577cfdfe56c3267f67",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "recursive-separator",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "maximum_words": 450,
+        "separators": [
+          "paragraph",
+          "sentence",
+          "token"
+        ]
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 1991,
+          "median": 2005,
+          "maximum": 2019
+        },
+        "tokens_per_chunk": {
+          "minimum": 438,
+          "median": 442,
+          "maximum": 447
+        }
+      }
+    },
+    {
       "id": "055c81a55f5457e5b43b8a4582dc541d2f4ae1e6d82fdeaef9b2b6ba82e24e6c",
       "profile": "f7c508ba3e3a2b680c9cc05676db6b2b65ee65ddcf1458205f0b504567d75b08",
       "method": "regex-structural",
@@ -2634,9 +2674,9 @@
           "token"
         ]
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -2651,13 +2691,13 @@
         },
         "characters_per_chunk": {
           "minimum": 2021,
-          "median": 2021,
-          "maximum": 2021
+          "median": 2046,
+          "maximum": 2072
         },
         "tokens_per_chunk": {
           "minimum": 441,
-          "median": 441,
-          "maximum": 441
+          "median": 452,
+          "maximum": 462
         }
       }
     },
@@ -2822,9 +2862,9 @@
         "overlap": 0,
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -2839,12 +2879,12 @@
         },
         "characters_per_chunk": {
           "minimum": 485,
-          "median": 727,
+          "median": 720,
           "maximum": 1304
         },
         "tokens_per_chunk": {
           "minimum": 113,
-          "median": 164,
+          "median": 161,
           "maximum": 260
         }
       }
@@ -3427,9 +3467,9 @@
           "token"
         ]
       },
-      "assets": 9,
+      "assets": 10,
       "status_counts": {
-        "passed": 9
+        "passed": 10
       },
       "metrics": {
         "accuracy_ppm": {
@@ -3444,12 +3484,12 @@
         },
         "characters_per_chunk": {
           "minimum": 1750,
-          "median": 1895,
+          "median": 1892,
           "maximum": 2135
         },
         "tokens_per_chunk": {
           "minimum": 377,
-          "median": 423,
+          "median": 415,
           "maximum": 472
         }
       }
@@ -4124,9 +4164,9 @@
       "parameters": {
         "boundary": "none"
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -4141,12 +4181,12 @@
         },
         "characters_per_chunk": {
           "minimum": 5923,
-          "median": 15980,
+          "median": 17050,
           "maximum": 30107
         },
         "tokens_per_chunk": {
           "minimum": 1344,
-          "median": 3524,
+          "median": 3730,
           "maximum": 7009
         }
       }
@@ -4867,9 +4907,9 @@
         "tokens": 220,
         "overlap": 0
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -4884,7 +4924,7 @@
         },
         "characters_per_chunk": {
           "minimum": 846,
-          "median": 955,
+          "median": 958,
           "maximum": 1007
         },
         "tokens_per_chunk": {
@@ -5528,6 +5568,44 @@
           "minimum": 443,
           "median": 443,
           "maximum": 443
+        }
+      }
+    },
+    {
+      "id": "12511e589b1115962ab387a78ed11e2b4a0fc76674eaf2d33e2c8b63e288c5b5",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "13f1578817769a7c09e1bd022d304ce060e34b4567cc957532420c88ac5d50a5",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 17814,
+          "median": 17814,
+          "maximum": 17814
+        },
+        "tokens_per_chunk": {
+          "minimum": 3900,
+          "median": 3900,
+          "maximum": 3900
         }
       }
     },
@@ -7022,6 +7100,46 @@
       }
     },
     {
+      "id": "16f5770f9cd1391a274db07e4e09e7e09ce47242d5ae33c42376cb440a3c64d0",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "recursive-separator",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "maximum_words": 450,
+        "separators": [
+          "paragraph",
+          "sentence",
+          "token"
+        ]
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 2008,
+          "median": 2107,
+          "maximum": 2206
+        },
+        "tokens_per_chunk": {
+          "minimum": 440,
+          "median": 456,
+          "maximum": 471
+        }
+      }
+    },
+    {
       "id": "1700b81a66d4607fb69c97e514218dcb6b7448293cb1998c04a4717b76717727",
       "profile": "5b665aeaf69e5be96a64079d3bbf373741b83e354b621c368104b926342a5eb3",
       "method": "recursive-separator",
@@ -7403,9 +7521,9 @@
       "parameters": {
         "boundary": "parsed-block"
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -7420,12 +7538,12 @@
         },
         "characters_per_chunk": {
           "minimum": 200,
-          "median": 442,
+          "median": 450,
           "maximum": 562
         },
         "tokens_per_chunk": {
           "minimum": 57,
-          "median": 95,
+          "median": 97,
           "maximum": 124
         }
       }
@@ -8586,9 +8704,9 @@
         "tokens": 220,
         "overlap": 0
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -8603,13 +8721,13 @@
         },
         "characters_per_chunk": {
           "minimum": 966,
-          "median": 966,
-          "maximum": 966
+          "median": 970,
+          "maximum": 975
         },
         "tokens_per_chunk": {
           "minimum": 211,
-          "median": 211,
-          "maximum": 211
+          "median": 214,
+          "maximum": 217
         }
       }
     },
@@ -8965,9 +9083,9 @@
         "boundary": "parsed-heading",
         "preserve_order": true
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -8987,7 +9105,7 @@
         },
         "tokens_per_chunk": {
           "minimum": 1105,
-          "median": 2621,
+          "median": 2530,
           "maximum": 4198
         }
       }
@@ -11433,9 +11551,9 @@
           "token"
         ]
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -11455,7 +11573,7 @@
         },
         "tokens_per_chunk": {
           "minimum": 373,
-          "median": 438,
+          "median": 435,
           "maximum": 577
         }
       }
@@ -14059,6 +14177,44 @@
       }
     },
     {
+      "id": "310fbc5fb67722f0ee99e498c6b72ce51f5a61ef3782e2aa99cfe29bf87bff60",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "5d0d1527a5a87d9e5d47dbe36f8312fe9c2f2db75b3a7e8d63c91081646ec536",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 22898,
+          "median": 22898,
+          "maximum": 22898
+        },
+        "tokens_per_chunk": {
+          "minimum": 4971,
+          "median": 4971,
+          "maximum": 4971
+        }
+      }
+    },
+    {
       "id": "3146bc815675244b406b6fdacbc30ddd31f4d21cc606e7e469223f9668d1de32",
       "profile": "6d06fa0b82b9777b24a1b7c786191fd531a87286416ac2093b3651c55013b096",
       "method": "regex-structural",
@@ -15579,6 +15735,41 @@
       }
     },
     {
+      "id": "36b0d064a6becc902387ab74beb3c93cbc046afe5ae78d163d512366db4388ac",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "whole-document",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "none"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 1341146,
+          "median": 1436558,
+          "maximum": 1531969
+        },
+        "tokens_per_chunk": {
+          "minimum": 286221,
+          "median": 310824,
+          "maximum": 335427
+        }
+      }
+    },
+    {
       "id": "37651e490884c2af13cd89fb0bf7a2e1988a1f183149a69257cf932aa7ad2c26",
       "profile": "2b6d71e7df6b352754a6f6fef198274d784fa2fe8b39f225f399a6e97a28df7b",
       "method": "sentence",
@@ -15586,9 +15777,9 @@
       "parameters": {
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -15603,12 +15794,12 @@
         },
         "characters_per_chunk": {
           "minimum": 81,
-          "median": 121,
+          "median": 120,
           "maximum": 217
         },
         "tokens_per_chunk": {
           "minimum": 19,
-          "median": 27,
+          "median": 26,
           "maximum": 43
         }
       }
@@ -16288,9 +16479,9 @@
       "parameters": {
         "boundary": "parsed-block"
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -16305,13 +16496,13 @@
         },
         "characters_per_chunk": {
           "minimum": 261,
-          "median": 261,
-          "maximum": 261
+          "median": 300,
+          "maximum": 338
         },
         "tokens_per_chunk": {
           "minimum": 57,
-          "median": 57,
-          "maximum": 57
+          "median": 66,
+          "maximum": 75
         }
       }
     },
@@ -17513,6 +17704,44 @@
       }
     },
     {
+      "id": "3db770e9f57f3b6ae4b6de2b9c22c4ad746ec0f75a7d4bf0119f975e5de05b64",
+      "profile": "9bb25a2f74d68d58eddbfa5b9f293e04181d57e2697ff58abd71f3b2b4e05555",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "b1224f5198f1a34b6c4ef0469c45ed3c67f9fbacbc51d89841ab3af448fe259c",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 12461,
+          "median": 12461,
+          "maximum": 12461
+        },
+        "tokens_per_chunk": {
+          "minimum": 2514,
+          "median": 2514,
+          "maximum": 2514
+        }
+      }
+    },
+    {
       "id": "3dcd3e05211426b36471be0cf4efaf58c874b10b135e3a357a737b1d7294c325",
       "profile": "5e2b625f43cf06ef283b53a7287150a4b8b5530d21dd9a1c1c74a1279196d205",
       "method": "regex-structural",
@@ -17672,9 +17901,9 @@
         "tokens": 220,
         "overlap": 0
       },
-      "assets": 9,
+      "assets": 10,
       "status_counts": {
-        "passed": 9
+        "passed": 10
       },
       "metrics": {
         "accuracy_ppm": {
@@ -17689,7 +17918,7 @@
         },
         "characters_per_chunk": {
           "minimum": 930,
-          "median": 984,
+          "median": 992,
           "maximum": 1065
         },
         "tokens_per_chunk": {
@@ -17924,6 +18153,44 @@
       }
     },
     {
+      "id": "3fb63fc9cad00bae4b945e0807cb77b2ccecb914182e9bd9577b5f6edb1a825c",
+      "profile": "9bb25a2f74d68d58eddbfa5b9f293e04181d57e2697ff58abd71f3b2b4e05555",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "c9f7649882424549777554f89ddd9272f53f3b6b2d133f77fece095422ab473b",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 10989,
+          "median": 10989,
+          "maximum": 10989
+        },
+        "tokens_per_chunk": {
+          "minimum": 2530,
+          "median": 2530,
+          "maximum": 2530
+        }
+      }
+    },
+    {
       "id": "3fde108b79cfbf8925e9662e0a6ca9298b19657288e7afe6d7488d7ae6c5221b",
       "profile": "4133d9db2cf972af3fc12e2fe05bc04650e5e01d4f31390afc390e441d124bd8",
       "method": "sentence",
@@ -18139,6 +18406,44 @@
           "minimum": 692,
           "median": 692,
           "maximum": 692
+        }
+      }
+    },
+    {
+      "id": "414068477d6dd0af47d3c590fdb05a8d96ad176feabec462013ef7e816ac8009",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "f0a9f78d94d8225157d4573873224f89bc7d529665ae95b1865026f846599731",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 29113,
+          "median": 29113,
+          "maximum": 29113
+        },
+        "tokens_per_chunk": {
+          "minimum": 6542,
+          "median": 6542,
+          "maximum": 6542
         }
       }
     },
@@ -19850,6 +20155,42 @@
       }
     },
     {
+      "id": "47f4a8f6731d36c892bdbfd9fecb65576d6cceddd5a093ccbc9aa09977d22106",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "hierarchical-structure",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "parsed-heading",
+        "preserve_order": true
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 3055,
+          "median": 3863,
+          "maximum": 4671
+        },
+        "tokens_per_chunk": {
+          "minimum": 652,
+          "median": 838,
+          "maximum": 1023
+        }
+      }
+    },
+    {
       "id": "482b63e8ff1dfdc0b9a6a7a0caed9baf48e7da0098b519e690bd3497af2dc9ab",
       "profile": "3f9b6525c25585998f1ca724ce257f4a07adc4914eea0b411665cfca861bff0a",
       "method": "regex-structural",
@@ -21421,6 +21762,42 @@
           "minimum": 1934,
           "median": 1934,
           "maximum": 1934
+        }
+      }
+    },
+    {
+      "id": "4e8b6e0cffd5db2f7c5c8b69bea951c87cf7eebb4a482f151e6814b02595ebb0",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "hierarchical-structure",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "parsed-heading",
+        "preserve_order": true
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 22898,
+          "median": 26006,
+          "maximum": 29113
+        },
+        "tokens_per_chunk": {
+          "minimum": 4971,
+          "median": 5756,
+          "maximum": 6542
         }
       }
     },
@@ -23833,9 +24210,9 @@
           "token"
         ]
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -23849,13 +24226,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 1942,
-          "median": 2058,
+          "minimum": 1807,
+          "median": 2007,
           "maximum": 2333
         },
         "tokens_per_chunk": {
-          "minimum": 423,
-          "median": 457,
+          "minimum": 413,
+          "median": 445,
           "maximum": 514
         }
       }
@@ -24919,9 +25296,9 @@
       "parameters": {
         "boundary": "none"
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -24935,13 +25312,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 534572,
-          "median": 593708,
+          "minimum": 370236,
+          "median": 534572,
           "maximum": 652843
         },
         "tokens_per_chunk": {
-          "minimum": 115315,
-          "median": 129927,
+          "minimum": 76036,
+          "median": 115315,
           "maximum": 144539
         }
       }
@@ -26369,9 +26746,9 @@
       "parameters": {
         "boundary": "parsed-block"
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -26385,13 +26762,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 451,
-          "median": 455,
+          "minimum": 195,
+          "median": 451,
           "maximum": 459
         },
         "tokens_per_chunk": {
-          "minimum": 97,
-          "median": 100,
+          "minimum": 40,
+          "median": 97,
           "maximum": 102
         }
       }
@@ -26959,6 +27336,44 @@
       }
     },
     {
+      "id": "657c530cdce5ee38999898ff9b85cedef17023164f7e5ef54207cf97f1858370",
+      "profile": "6ea43ea544def6b258ff487411cf74cbbec29e281e85ea579df431fb92e37025",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "db841845d24f09c0701676daa42bb8a0a92c1942fa2e44e4401b205084b172c1",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 5696,
+          "median": 5696,
+          "maximum": 5696
+        },
+        "tokens_per_chunk": {
+          "minimum": 1170,
+          "median": 1170,
+          "maximum": 1170
+        }
+      }
+    },
+    {
       "id": "65865f4adac5d6e4b7a86cff1c8da92e4c62e534528883e86bcefe36dccc3a37",
       "profile": "f69b8d5755347f5b40916af0957dbeb4d95e926effc57b6fe04601bdced70237",
       "method": "paragraph",
@@ -27039,9 +27454,9 @@
         "tokens": 220,
         "overlap": 0
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -27056,8 +27471,8 @@
         },
         "characters_per_chunk": {
           "minimum": 994,
-          "median": 1006,
-          "maximum": 1018
+          "median": 1018,
+          "maximum": 1070
         },
         "tokens_per_chunk": {
           "minimum": 220,
@@ -28711,9 +29126,9 @@
       "parameters": {
         "boundary": "parsed-block"
       },
-      "assets": 9,
+      "assets": 10,
       "status_counts": {
-        "passed": 9
+        "passed": 10
       },
       "metrics": {
         "accuracy_ppm": {
@@ -28728,12 +29143,12 @@
         },
         "characters_per_chunk": {
           "minimum": 408,
-          "median": 574,
+          "median": 575,
           "maximum": 829
         },
         "tokens_per_chunk": {
           "minimum": 93,
-          "median": 116,
+          "median": 120,
           "maximum": 183
         }
       }
@@ -29400,6 +29815,44 @@
           "minimum": 3222,
           "median": 3222,
           "maximum": 3222
+        }
+      }
+    },
+    {
+      "id": "7040628456e66473a0f44ac8158dbd3fb67726e328f506fc4e01cfecaf9817fa",
+      "profile": "9bb25a2f74d68d58eddbfa5b9f293e04181d57e2697ff58abd71f3b2b4e05555",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "744e0470afc1c63aeb4d39e86d49e9eed0c6ebb184543369cababaeca8a363ef",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 13735,
+          "median": 13735,
+          "maximum": 13735
+        },
+        "tokens_per_chunk": {
+          "minimum": 3157,
+          "median": 3157,
+          "maximum": 3157
         }
       }
     },
@@ -30304,9 +30757,9 @@
         "overlap": 0,
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -30320,13 +30773,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 794,
-          "median": 794,
+          "minimum": 771,
+          "median": 782,
           "maximum": 794
         },
         "tokens_per_chunk": {
-          "minimum": 173,
-          "median": 173,
+          "minimum": 172,
+          "median": 172,
           "maximum": 173
         }
       }
@@ -30639,9 +31092,9 @@
       "parameters": {
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -30661,7 +31114,7 @@
         },
         "tokens_per_chunk": {
           "minimum": 20,
-          "median": 29,
+          "median": 30,
           "maximum": 36
         }
       }
@@ -31110,9 +31563,9 @@
       "parameters": {
         "boundary": "none"
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -31127,12 +31580,12 @@
         },
         "characters_per_chunk": {
           "minimum": 19138,
-          "median": 36770,
+          "median": 53250,
           "maximum": 114329
         },
         "tokens_per_chunk": {
           "minimum": 4421,
-          "median": 8193,
+          "median": 11969,
           "maximum": 25191
         }
       }
@@ -31831,6 +32284,41 @@
           "minimum": 10532,
           "median": 10532,
           "maximum": 10532
+        }
+      }
+    },
+    {
+      "id": "79da96b601966fe78c50b1529a81b1b180fa0bcdba4581884c507e89956068b3",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "paragraph",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "parsed-block"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 293,
+          "median": 344,
+          "maximum": 395
+        },
+        "tokens_per_chunk": {
+          "minimum": 63,
+          "median": 74,
+          "maximum": 86
         }
       }
     },
@@ -33332,9 +33820,9 @@
         "overlap": 0,
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -33349,12 +33837,12 @@
         },
         "characters_per_chunk": {
           "minimum": 543,
-          "median": 736,
+          "median": 746,
           "maximum": 959
         },
         "tokens_per_chunk": {
           "minimum": 124,
-          "median": 170,
+          "median": 171,
           "maximum": 215
         }
       }
@@ -36600,9 +37088,9 @@
       "parameters": {
         "boundary": "parsed-block"
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -36617,12 +37105,12 @@
         },
         "characters_per_chunk": {
           "minimum": 343,
-          "median": 504,
+          "median": 541,
           "maximum": 1216
         },
         "tokens_per_chunk": {
           "minimum": 78,
-          "median": 113,
+          "median": 118,
           "maximum": 268
         }
       }
@@ -36813,6 +37301,43 @@
           "minimum": 108873,
           "median": 203230,
           "maximum": 319500
+        }
+      }
+    },
+    {
+      "id": "8a063fc2dfb28af0739150541c201f31768daaae0fed5ef11126bb227315d76d",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "sentence-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "sentences": 6,
+        "overlap": 0,
+        "boundary": "punctuation-regex-v1"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 570,
+          "median": 570,
+          "maximum": 570
+        },
+        "tokens_per_chunk": {
+          "minimum": 122,
+          "median": 124,
+          "maximum": 125
         }
       }
     },
@@ -37091,9 +37616,9 @@
           "token"
         ]
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -37108,13 +37633,13 @@
         },
         "characters_per_chunk": {
           "minimum": 2040,
-          "median": 2046,
-          "maximum": 2053
+          "median": 2053,
+          "maximum": 2285
         },
         "tokens_per_chunk": {
           "minimum": 440,
-          "median": 448,
-          "maximum": 455
+          "median": 455,
+          "maximum": 469
         }
       }
     },
@@ -37239,9 +37764,9 @@
       "parameters": {
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -37255,13 +37780,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 107,
-          "median": 120,
+          "minimum": 90,
+          "median": 107,
           "maximum": 134
         },
         "tokens_per_chunk": {
-          "minimum": 24,
-          "median": 26,
+          "minimum": 18,
+          "median": 24,
           "maximum": 29
         }
       }
@@ -38314,6 +38839,44 @@
       }
     },
     {
+      "id": "8e579c31b6050d10bec856a311362f9e194a350eb2af1b7d3455176613e87efd",
+      "profile": "9bb25a2f74d68d58eddbfa5b9f293e04181d57e2697ff58abd71f3b2b4e05555",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "738fbcd5ca25a41f6b48692123571849d8f5fa86b9060a37c8fed95332341421",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 7607,
+          "median": 7607,
+          "maximum": 7607
+        },
+        "tokens_per_chunk": {
+          "minimum": 1710,
+          "median": 1710,
+          "maximum": 1710
+        }
+      }
+    },
+    {
       "id": "8e5fbcd3da8b2ef087fda8677cf3cff601306229860b51319fb9d58369d205c2",
       "profile": "f5e74026d9bdaa0aea2096eac12ed119e2bbfbb2b142e019795769484c5a1097",
       "method": "fixed-window",
@@ -38730,9 +39293,9 @@
         "boundary": "parsed-heading",
         "preserve_order": true
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -38747,12 +39310,12 @@
         },
         "characters_per_chunk": {
           "minimum": 1948,
-          "median": 5814,
+          "median": 6016,
           "maximum": 13724
         },
         "tokens_per_chunk": {
           "minimum": 578,
-          "median": 1315,
+          "median": 1344,
           "maximum": 2851
         }
       }
@@ -38985,9 +39548,9 @@
         "tokens": 220,
         "overlap": 0
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -39002,8 +39565,8 @@
         },
         "characters_per_chunk": {
           "minimum": 911,
-          "median": 972,
-          "maximum": 1016
+          "median": 968,
+          "maximum": 1068
         },
         "tokens_per_chunk": {
           "minimum": 211,
@@ -39461,6 +40024,43 @@
           "minimum": 336,
           "median": 1109,
           "maximum": 1528
+        }
+      }
+    },
+    {
+      "id": "933742a4a78b2fb1b80897fdab8398d5cc1114618e710d3794de8978836bbc9a",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "sentence-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "sentences": 6,
+        "overlap": 0,
+        "boundary": "punctuation-regex-v1"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 696,
+          "median": 698,
+          "maximum": 699
+        },
+        "tokens_per_chunk": {
+          "minimum": 151,
+          "median": 154,
+          "maximum": 157
         }
       }
     },
@@ -40398,9 +40998,9 @@
         "overlap": 0,
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -40414,13 +41014,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 643,
-          "median": 722,
+          "minimum": 539,
+          "median": 643,
           "maximum": 800
         },
         "tokens_per_chunk": {
-          "minimum": 142,
-          "median": 158,
+          "minimum": 111,
+          "median": 142,
           "maximum": 173
         }
       }
@@ -42123,9 +42723,9 @@
         "tokens": 220,
         "overlap": 0
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -42140,7 +42740,7 @@
         },
         "characters_per_chunk": {
           "minimum": 733,
-          "median": 1001,
+          "median": 1000,
           "maximum": 1105
         },
         "tokens_per_chunk": {
@@ -43419,9 +44019,9 @@
       "parameters": {
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 9,
+      "assets": 10,
       "status_counts": {
-        "passed": 9
+        "passed": 10
       },
       "metrics": {
         "accuracy_ppm": {
@@ -43436,7 +44036,7 @@
         },
         "characters_per_chunk": {
           "minimum": 103,
-          "median": 125,
+          "median": 122,
           "maximum": 212
         },
         "tokens_per_chunk": {
@@ -44488,6 +45088,42 @@
           "minimum": 23014,
           "median": 23014,
           "maximum": 23014
+        }
+      }
+    },
+    {
+      "id": "a3d62e8a39dbadf428a9ddd5405f1813b63a535f005251b60a97144de97246ae",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "fixed-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "tokens": 220,
+        "overlap": 0
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 1005,
+          "median": 1018,
+          "maximum": 1030
+        },
+        "tokens_per_chunk": {
+          "minimum": 220,
+          "median": 220,
+          "maximum": 220
         }
       }
     },
@@ -49715,9 +50351,9 @@
         "overlap": 0,
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 9,
+      "assets": 10,
       "status_counts": {
-        "passed": 9
+        "passed": 10
       },
       "metrics": {
         "accuracy_ppm": {
@@ -49732,12 +50368,12 @@
         },
         "characters_per_chunk": {
           "minimum": 614,
-          "median": 750,
+          "median": 724,
           "maximum": 1233
         },
         "tokens_per_chunk": {
           "minimum": 136,
-          "median": 159,
+          "median": 158,
           "maximum": 266
         }
       }
@@ -49815,6 +50451,44 @@
           "minimum": 497,
           "median": 497,
           "maximum": 497
+        }
+      }
+    },
+    {
+      "id": "b772955754df76c486ebacc8addc9e31b0b11ac81078f6ccef161b8f7d8716cb",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "c9a9361f39d35dcd3d096e1f85d1a09aa9a0b2346ca077ba8b9c2e9be83e5671",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 18124,
+          "median": 18124,
+          "maximum": 18124
+        },
+        "tokens_per_chunk": {
+          "minimum": 3868,
+          "median": 3868,
+          "maximum": 3868
         }
       }
     },
@@ -50793,9 +51467,9 @@
       "parameters": {
         "boundary": "none"
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -50810,13 +51484,13 @@
         },
         "characters_per_chunk": {
           "minimum": 62324,
-          "median": 156579,
-          "maximum": 313878
+          "median": 161168,
+          "maximum": 380617
         },
         "tokens_per_chunk": {
           "minimum": 18488,
-          "median": 35019,
-          "maximum": 72963
+          "median": 35780,
+          "maximum": 87946
         }
       }
     },
@@ -52800,6 +53474,79 @@
       }
     },
     {
+      "id": "c0f0c1227026e72d705249c8a43706be2d3a3741fbaed66232706ba580fd1100",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "paragraph",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "parsed-block"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 463,
+          "median": 480,
+          "maximum": 498
+        },
+        "tokens_per_chunk": {
+          "minimum": 101,
+          "median": 106,
+          "maximum": 112
+        }
+      }
+    },
+    {
+      "id": "c12734cd20e46cd6c64aa23a12d3b463c75e09db6a03e3f5ae6e2401f59d3238",
+      "profile": "2b6d71e7df6b352754a6f6fef198274d784fa2fe8b39f225f399a6e97a28df7b",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "9c2b667f9434a0143b412c72a29b2bde9b6955ca0328963693533b464033432e",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 10287,
+          "median": 10287,
+          "maximum": 10287
+        },
+        "tokens_per_chunk": {
+          "minimum": 2377,
+          "median": 2377,
+          "maximum": 2377
+        }
+      }
+    },
+    {
       "id": "c13cbe78eef7ebc1e51fa961c6035ba37e50aa0f8be1936854b389be2825d620",
       "profile": "86bbfe89979e4f58abce0ce7f898f07aa7b8913cecc4722c0b9adaf620ee7400",
       "method": "sentence-window",
@@ -52849,9 +53596,9 @@
           "token"
         ]
       },
-      "assets": 17,
+      "assets": 18,
       "status_counts": {
-        "passed": 17
+        "passed": 18
       },
       "metrics": {
         "accuracy_ppm": {
@@ -52865,13 +53612,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 1959,
-          "median": 2021,
+          "minimum": 1848,
+          "median": 2018,
           "maximum": 2210
         },
         "tokens_per_chunk": {
           "minimum": 417,
-          "median": 443,
+          "median": 442,
           "maximum": 596
         }
       }
@@ -54739,9 +55486,9 @@
         "boundary": "parsed-heading",
         "preserve_order": true
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -54756,13 +55503,13 @@
         },
         "characters_per_chunk": {
           "minimum": 1185,
-          "median": 2283,
-          "maximum": 6021
+          "median": 2303,
+          "maximum": 13672
         },
         "tokens_per_chunk": {
           "minimum": 269,
-          "median": 503,
-          "maximum": 1402
+          "median": 507,
+          "maximum": 3022
         }
       }
     },
@@ -58303,6 +59050,42 @@
       }
     },
     {
+      "id": "d40e90759ef3a2fdaa937b2cf90ab3ad69d0faad60ebf6789dd86a863714d802",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "fixed-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "tokens": 220,
+        "overlap": 0
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 979,
+          "median": 996,
+          "maximum": 1012
+        },
+        "tokens_per_chunk": {
+          "minimum": 220,
+          "median": 220,
+          "maximum": 220
+        }
+      }
+    },
+    {
       "id": "d4277a088847fdc2152fa7fb9cb5e29cd49063af8a5b86d41f3f5bddad3fbacd",
       "profile": "b6952242347e7e5e802b06a01b46d62c652358bc27e8c6e658e4a44800e74f4b",
       "method": "regex-structural",
@@ -59979,9 +60762,9 @@
       "parameters": {
         "boundary": "none"
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -59996,13 +60779,13 @@
         },
         "characters_per_chunk": {
           "minimum": 22226,
-          "median": 22226,
-          "maximum": 22226
+          "median": 27687,
+          "maximum": 33148
         },
         "tokens_per_chunk": {
           "minimum": 4856,
-          "median": 4856,
-          "maximum": 4856
+          "median": 6124,
+          "maximum": 7391
         }
       }
     },
@@ -61013,9 +61796,9 @@
       "parameters": {
         "boundary": "none"
       },
-      "assets": 9,
+      "assets": 10,
       "status_counts": {
-        "passed": 9
+        "passed": 10
       },
       "metrics": {
         "accuracy_ppm": {
@@ -61030,12 +61813,12 @@
         },
         "characters_per_chunk": {
           "minimum": 7457,
-          "median": 15748,
+          "median": 16244,
           "maximum": 28350
         },
         "tokens_per_chunk": {
           "minimum": 1509,
-          "median": 3473,
+          "median": 3638,
           "maximum": 6111
         }
       }
@@ -63900,9 +64683,9 @@
         "overlap": 0,
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -63917,12 +64700,12 @@
         },
         "characters_per_chunk": {
           "minimum": 516,
-          "median": 769,
+          "median": 775,
           "maximum": 946
         },
         "tokens_per_chunk": {
           "minimum": 115,
-          "median": 169,
+          "median": 171,
           "maximum": 208
         }
       }
@@ -64639,9 +65422,9 @@
         "boundary": "parsed-heading",
         "preserve_order": true
       },
-      "assets": 2,
+      "assets": 3,
       "status_counts": {
-        "passed": 2
+        "passed": 3
       },
       "metrics": {
         "accuracy_ppm": {
@@ -64655,13 +65438,13 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 6519,
-          "median": 9088,
+          "minimum": 5289,
+          "median": 6519,
           "maximum": 11658
         },
         "tokens_per_chunk": {
-          "minimum": 1406,
-          "median": 1994,
+          "minimum": 1086,
+          "median": 1406,
           "maximum": 2581
         }
       }
@@ -64883,6 +65666,41 @@
           "minimum": 2150,
           "median": 2150,
           "maximum": 2150
+        }
+      }
+    },
+    {
+      "id": "ead7b3d5c569ef36ae8ae80c6eb14d5d65efb67a83bcda3e5d05f62d1aaa7437",
+      "profile": "98c5d2d9bc1ebe3de6fa8c90fa1dc1508e2d7391aeaec6c671c33bb997cc4ff1",
+      "method": "sentence",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "punctuation-regex-v1"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 95,
+          "median": 95,
+          "maximum": 95
+        },
+        "tokens_per_chunk": {
+          "minimum": 20,
+          "median": 20,
+          "maximum": 21
         }
       }
     },
@@ -65109,6 +65927,41 @@
       }
     },
     {
+      "id": "eb651b6d0422bbaaa0f4b108a5886378631990d79e109877589bd955fde688e5",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "sentence",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "punctuation-regex-v1"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 116,
+          "median": 116,
+          "maximum": 117
+        },
+        "tokens_per_chunk": {
+          "minimum": 25,
+          "median": 26,
+          "maximum": 26
+        }
+      }
+    },
+    {
       "id": "eb7895ffe534b0d715b55f5c175f52d077dcd98da3263dc0d123890535dd4ca1",
       "profile": "10e486baebe7928f6e3d4177b64471052c6af3e410e5fc8cdfc24770cc857a83",
       "method": "regex-structural",
@@ -65303,9 +66156,9 @@
       "parameters": {
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 7,
+      "assets": 11,
       "status_counts": {
-        "passed": 7
+        "passed": 11
       },
       "metrics": {
         "accuracy_ppm": {
@@ -65595,6 +66448,44 @@
       }
     },
     {
+      "id": "ec5aa13250f5d937f6934c3ffc4afd47db7c1ea82b16f73edb230461a3bf71e9",
+      "profile": "5dc6af9056d876dde74941281df09ea82a2c70d95c3674aae148b662cb497f9b",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "0ffda7583a68956c7ccef0926327fcb9f018d1041dd7c2a282f20c3d5a27a1c2",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 2550,
+          "median": 2550,
+          "maximum": 2550
+        },
+        "tokens_per_chunk": {
+          "minimum": 569,
+          "median": 569,
+          "maximum": 569
+        }
+      }
+    },
+    {
       "id": "ec7d61c467f365f3e10b94f67b9d5d59bd3a61dc34c408c23ee1174b40504f2f",
       "profile": "ddc1c1713d383bce54c2e6e6de24de704e17206c55820e005740ecba2702c871",
       "method": "regex-structural",
@@ -65641,9 +66532,9 @@
         "boundary": "parsed-heading",
         "preserve_order": true
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -65658,13 +66549,13 @@
         },
         "characters_per_chunk": {
           "minimum": 2223,
-          "median": 2223,
-          "maximum": 2223
+          "median": 2386,
+          "maximum": 2550
         },
         "tokens_per_chunk": {
           "minimum": 486,
-          "median": 486,
-          "maximum": 486
+          "median": 528,
+          "maximum": 569
         }
       }
     },
@@ -65897,9 +66788,9 @@
       "parameters": {
         "boundary": "parsed-block"
       },
-      "assets": 15,
+      "assets": 16,
       "status_counts": {
-        "passed": 15
+        "passed": 16
       },
       "metrics": {
         "accuracy_ppm": {
@@ -65914,12 +66805,12 @@
         },
         "characters_per_chunk": {
           "minimum": 243,
-          "median": 495,
+          "median": 496,
           "maximum": 668
         },
         "tokens_per_chunk": {
           "minimum": 54,
-          "median": 109,
+          "median": 110,
           "maximum": 147
         }
       }
@@ -67823,6 +68714,41 @@
       }
     },
     {
+      "id": "f408f135c8ce9e4f507f831b8ea38db9947f280dcad015a2a4f61ad4b1e9222f",
+      "profile": "2cffc49b3e82664d42ba08ba871f940ac813ad9c8c45daf3e25c1a50d07f0332",
+      "method": "whole-document",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "none"
+      },
+      "assets": 2,
+      "status_counts": {
+        "passed": 2
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 732743,
+          "median": 832183,
+          "maximum": 931623
+        },
+        "tokens_per_chunk": {
+          "minimum": 159077,
+          "median": 184204,
+          "maximum": 209332
+        }
+      }
+    },
+    {
       "id": "f44892c4c520f8a50634ae90515d021b1af468b58221a8dbaa9f08ecd9f46566",
       "profile": "5dc6af9056d876dde74941281df09ea82a2c70d95c3674aae148b662cb497f9b",
       "method": "regex-structural",
@@ -68009,6 +68935,44 @@
           "minimum": 1202,
           "median": 1202,
           "maximum": 1202
+        }
+      }
+    },
+    {
+      "id": "f48ab42cca473e18755214a58ea697680745e11c92726e344d46730e8b140930",
+      "profile": "cccfc2deffdd66cb3eb6dd5a8c63d0cdd218a5ef8f9e596057785779421fd9e9",
+      "method": "regex-structural",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "pattern_sha256": "59c2bd48865676872cdd71cc0b9650ba7022e8ceb94c39cff577015ab0f6dc06",
+        "flags": [
+          "MULTILINE"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 13672,
+          "median": 13672,
+          "maximum": 13672
+        },
+        "tokens_per_chunk": {
+          "minimum": 3022,
+          "median": 3022,
+          "maximum": 3022
         }
       }
     },
@@ -70504,9 +71468,9 @@
       "parameters": {
         "boundary": "punctuation-regex-v1"
       },
-      "assets": 1,
+      "assets": 2,
       "status_counts": {
-        "passed": 1
+        "passed": 2
       },
       "metrics": {
         "accuracy_ppm": {
@@ -70520,8 +71484,8 @@
           "maximum": 0
         },
         "characters_per_chunk": {
-          "minimum": 135,
-          "median": 135,
+          "minimum": 129,
+          "median": 132,
           "maximum": 135
         },
         "tokens_per_chunk": {
@@ -70799,5 +71763,5 @@
       }
     }
   ],
-  "integrity": "09a5d016f5d1742a89bfc66168b2099a447c2712094ab310dd98eeaa917e5475"
+  "integrity": "f315def04c1aec94ab11fd971920c313ab53cbe5ce8a8a3db65632d9b11e328e"
 }
