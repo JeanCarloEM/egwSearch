@@ -5,7 +5,7 @@
 - FT: `FT-020`.
 - tipo: `evolucao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-020/source.md`.
-- estado: evolucao normativa concluida; implementacao bloqueada pelo gate de fase.
+- estado: concluida.
 - prioridade: alta.
 
 ## Evolucao requerida
@@ -101,3 +101,31 @@ cursor aplicavel.
 - 21 sentencas materiais foram preparadas para os artefatos causais da fase de
   codigo e testes direcionados;
 - a fase material permanece pendente de autorizacao humana explicita.
+
+## Fechamento material
+
+- a autorizacao explicita foi recebida em `2026-08-03`;
+- `GitPublicationPublisher.finalize` agora mantem um unico lock desde a analise
+  e atualizacao do indice/aprendizado ate a validacao, staging e commit;
+- o downloader canonico sempre instancia a transacao, sem flag de ativacao, e
+  somente fixture segregada permanece sem efeito Git;
+- analisador isolado e indexador com `--analyze` reutilizam a mesma transacao e
+  criam um commit por publicacao, sem duplicacao quando compostos;
+- allowlist cobre a arvore da publicacao, `index.json`, manifesto estrutural e
+  `chunking-learning.json` somente quando alterados; outra publicacao suja
+  bloqueia antes da recomposicao global;
+- `GlobalProgressJournal` grava em runtime escopo, ordem, fingerprint, unidade,
+  fase, limite confirmado e commit; crescimento compativel e retomado por
+  identidade, enquanto divergencia exige reset explicito;
+- o downloader usa `--restart`; analisador e indexador propagam `--reset` em
+  `--all`; execucao global concluida salta colecoes/publicacoes sem navegador,
+  experimento, indexacao ou commit;
+- falha Git conserva `commit_pending`, e reexecucao sem alteracao nao cria
+  commit vazio;
+- 56 testes direcionados passaram em 33,841 s no runtime preparado, incluindo
+  integracao real com duas publicacoes, dois commits exclusivos e retomada sem
+  retrabalho; bootstrap, cinco testes documentais, compilacao e diff-check
+  tambem foram aprovados;
+- commit material causal: `2490e744b54aedb3567a2747b3211dbbef8db96d`;
+- publicacoes, indices produzidos pela execucao concorrente, caches,
+  temporarios, localstores e runtime ficaram fora do commit da FT.

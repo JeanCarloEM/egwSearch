@@ -382,23 +382,23 @@ entrada final. HTTP de sucesso, existência ou stream encerrado isoladamente nã
 comprovam conclusão. Ambiguidade material exige `review_required`.
 [PENDENTE-CÓDIGO]
 
-Download, promoção, metadado, derivados, análise de chunking, aprendizado agregado, índice e commit DEVEM formar uma transação lógica por publicação; falha DEVE preservar ou restaurar estado canônico íntegro, manter runtime retomável e impedir conclusão falsa. [PENDENTE-CODIGO]
+Download, promoção, metadado, derivados, análise de chunking, aprendizado agregado, índice e commit DEVEM formar uma transação lógica por publicação; falha DEVE preservar ou restaurar estado canônico íntegro, manter runtime retomável e impedir conclusão falsa. [f8db96d]
 
-Em execução canônica, direta ou composta, que crie ou altere artefato de uma publicação, o efeito Git DEVE ser pós-condição automática e obrigatória, ocorrer imediatamente depois do enriquecimento, dos experimentos aplicáveis e da indexação e anteceder a confirmação final da publicação. [PENDENTE-CODIGO]
+Em execução canônica, direta ou composta, que crie ou altere artefato de uma publicação, o efeito Git DEVE ser pós-condição automática e obrigatória, ocorrer imediatamente depois do enriquecimento, dos experimentos aplicáveis e da indexação e anteceder a confirmação final da publicação. [f8db96d]
 
-A mesma capacidade transacional DEVE ser reutilizada pelo downloader, pelo analisador isolado e pelo indexador quando este invocar análise; fixture ou teste em raiz segregada fora do acervo canônico NÃO DEVE produzir efeito Git. [PENDENTE-CODIGO]
+A mesma capacidade transacional DEVE ser reutilizada pelo downloader, pelo analisador isolado e pelo indexador quando este invocar análise; fixture ou teste em raiz segregada fora do acervo canônico NÃO DEVE produzir efeito Git. [f8db96d]
 
-O commit somente PODE ocorrer em `dev`, em repositório Git validado, sem operação Git concorrente e com identidade configurada; push permanece operação separada e nunca é efeito implícito da publicação. [PENDENTE-CODIGO]
+O commit somente PODE ocorrer em `dev`, em repositório Git validado, sem operação Git concorrente e com identidade configurada; push permanece operação separada e nunca é efeito implícito da publicação. [f8db96d]
 
-A allowlist positiva DEVE conter exatamente a árvore canônica da publicação e os artefatos globais causalmente alterados por ela, incluindo índice, manifesto estrutural e aprendizado agregado quando efetivamente modificados; `git add .`, `git add -A`, glob aberto, runtime, log, checkpoint, cache, temporário, localstore ou alteração alheia são proibidos. [PENDENTE-CODIGO]
+A allowlist positiva DEVE conter exatamente a árvore canônica da publicação e os artefatos globais causalmente alterados por ela, incluindo índice, manifesto estrutural e aprendizado agregado quando efetivamente modificados; `git add .`, `git add -A`, glob aberto, runtime, log, checkpoint, cache, temporário, localstore ou alteração alheia são proibidos. [f8db96d]
 
-Antes do commit, a transação DEVE validar novamente blobs staged, schemas, hashes, referências, índice, ausência de segredo/runtime e igualdade entre staged e allowlist; conflito no mesmo path global ou mudança após staging DEVE bloquear sem absorver a worktree concorrente. [PENDENTE-CODIGO]
+Antes do commit, a transação DEVE validar novamente blobs staged, schemas, hashes, referências, índice, ausência de segredo/runtime e igualdade entre staged e allowlist; conflito no mesmo path global ou mudança após staging DEVE bloquear sem absorver a worktree concorrente. [f8db96d]
 
-Cada commit DEVE conter exatamente uma publicação completa e seus artefatos globais inevitáveis, possuir mensagem com identificador estável e ter seu hash confirmado no ledger; commit vazio, parcial, agrupado, fragmentado ou recriado após retomada é proibido. [PENDENTE-CODIGO]
+Cada commit DEVE conter exatamente uma publicação completa e seus artefatos globais inevitáveis, possuir mensagem com identificador estável e ter seu hash confirmado no ledger; commit vazio, parcial, agrupado, fragmentado ou recriado após retomada é proibido. [f8db96d]
 
-Reexecução inalterada DEVE resultar em `skipped` sem commit, timestamp ou derivado divergente; falha Git DEVE conservar `commit_pending`, impedir `completed` e retomar localmente sem repetir download nem experimento ainda válido. [PENDENTE-CODIGO]
+Reexecução inalterada DEVE resultar em `skipped` sem commit, timestamp ou derivado divergente; falha Git DEVE conservar `commit_pending`, impedir `completed` e retomar localmente sem repetir download nem experimento ainda válido. [f8db96d]
 
-Downloads distintos PODEM ser concorrentes, mas fechamento, aprendizado, índice, staging e commit DEVEM ser serializados por lock de runtime; testes DEVEM cobrir execução direta e composta, worktree alheia, conflito, completude, parcial, índice quebrado, falhas antes/depois do staging, retomada, commit exato e ausência de runtime. [PENDENTE-CODIGO]
+Downloads distintos PODEM ser concorrentes, mas fechamento, aprendizado, índice, staging e commit DEVEM ser serializados por lock de runtime; testes DEVEM cobrir execução direta e composta, worktree alheia, conflito, completude, parcial, índice quebrado, falhas antes/depois do staging, retomada, commit exato e ausência de runtime. [f8db96d]
 
 ### 42.12 Completude observável da descoberta e da derivação
 
@@ -535,11 +535,11 @@ Somente `--force-recalculate` PODE ignorar a janela válida; downloader, indexad
 
 O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da unidade e a atualização compartilhada do índice depois de validar/promover os ativos e antes de confirmar o checkpoint; falha preserva a publicação material, impede confirmação e permite retomada estritamente local sem nova requisição à origem. [62596f1]
 
-Em escopo global, downloader e analisador DEVEM manter diário de runtime versionado e atômico que registre identidade do escopo, ordenação, fingerprint causal, publicação, ativo, fase e último limite integralmente confirmado; log operacional textual sem estado estruturado não satisfaz esse contrato. [PENDENTE-CODIGO]
+Em escopo global, downloader e analisador DEVEM manter diário de runtime versionado e atômico que registre identidade do escopo, ordenação, fingerprint causal, publicação, ativo, fase e último limite integralmente confirmado; log operacional textual sem estado estruturado não satisfaz esse contrato. [f8db96d]
 
-Nova invocação global compatível DEVE retomar automaticamente do limite confirmado sem repetir publicação, ativo, experimento, indexação ou commit; somente parâmetro explícito de reset, propagado por wrappers e composições, PODE descartar o cursor estritamente pertencente ao escopo solicitado. [PENDENTE-CODIGO]
+Nova invocação global compatível DEVE retomar automaticamente do limite confirmado sem repetir publicação, ativo, experimento, indexação ou commit; somente parâmetro explícito de reset, propagado por wrappers e composições, PODE descartar o cursor estritamente pertencente ao escopo solicitado. [f8db96d]
 
-Cursor ausente DEVE iniciar o escopo, enquanto cursor corrompido, ambíguo, futuro ou incompatível com configuração, corpus, catálogo ou versão do algoritmo DEVE bloquear com diagnóstico e exigir reset explícito, sem reinício silencioso; o diário permanece fora de Git, publicação, índice, build e Pages. [PENDENTE-CODIGO]
+Cursor ausente DEVE iniciar o escopo, enquanto cursor corrompido, ambíguo, futuro ou incompatível com configuração, corpus, catálogo ou versão do algoritmo DEVE bloquear com diagnóstico e exigir reset explícito, sem reinício silencioso; o diário permanece fora de Git, publicação, índice, build e Pages. [f8db96d]
 
 ### 43.2.1 Catálogo global de hipóteses experimentais
 

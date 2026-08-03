@@ -289,17 +289,17 @@ O resultado DEVE expor allowlist relativa à raiz, [f313f39]
 hashes e evidência de completude; item ambíguo ou incompleto não é elegível a
 Git. [PENDENTE-CODIGO]
 
-Finalização canônica que altere a unidade DEVE adquirir lock global no runtime, validar `dev`, executar análise e indexação compartilhadas e criar imediatamente um commit por publicação antes de confirmar seu checkpoint; ativação por flag é proibida. [PENDENTE-CODIGO]
+Finalização canônica que altere a unidade DEVE adquirir lock global no runtime, validar `dev`, executar análise e indexação compartilhadas e criar imediatamente um commit por publicação antes de confirmar seu checkpoint; ativação por flag é proibida. [f8db96d]
 
-Downloader, `publication_analysis.py` isolado e `publication_index.py --analyze` DEVEM reutilizar a mesma finalização transacional, sem commits duplicados na composição; fixture/teste com raiz explicitamente segregada NÃO DEVE tocar Git. [PENDENTE-CODIGO]
+Downloader, `publication_analysis.py` isolado e `publication_index.py --analyze` DEVEM reutilizar a mesma finalização transacional, sem commits duplicados na composição; fixture/teste com raiz explicitamente segregada NÃO DEVE tocar Git. [f8db96d]
 
-A finalização DEVE excluir estado não canônico, adicionar somente a allowlist positiva com `git add -- <paths>`, incluir a árvore da publicação e somente índice, manifesto estrutural ou aprendizado global efetivamente alterados por ela, validar o diff staged e criar exatamente um commit. [PENDENTE-CODIGO]
+A finalização DEVE excluir estado não canônico, adicionar somente a allowlist positiva com `git add -- <paths>`, incluir a árvore da publicação e somente índice, manifesto estrutural ou aprendizado global efetivamente alterados por ela, validar o diff staged e criar exatamente um commit. [f8db96d]
 
-Alteração staged preexistente, alteração alheia ou conflito em path global DEVE bloquear sem incorporá-los nem modificar o índice Git correspondente. [PENDENTE-CODIGO]
+Alteração staged preexistente, alteração alheia ou conflito em path global DEVE bloquear sem incorporá-los nem modificar o índice Git correspondente. [f8db96d]
 
-Falha entre promoção e commit DEVE restaurar índice/metadado da transação ou preservar preparação no runtime como `commit_pending`; commit confirmado DEVE ser registrado no ledger e não pode ser repetido. [PENDENTE-CODIGO]
+Falha entre promoção e commit DEVE restaurar índice/metadado da transação ou preservar preparação no runtime como `commit_pending`; commit confirmado DEVE ser registrado no ledger e não pode ser repetido. [f8db96d]
 
-Push DEVE permanecer fase separada e NÃO DEVE ser requisito implícito do download, da análise ou da indexação. [PENDENTE-CODIGO]
+Push DEVE permanecer fase separada e NÃO DEVE ser requisito implícito do download, da análise ou da indexação. [f8db96d]
 
 ## 8. Conteúdo textual e derivados
 
@@ -433,13 +433,13 @@ Toda invocação direta ou indireta da análise DEVE reutilizar sem reexecução
 
 `--force-recalculate` DEVE ser o único override da janela e ser propagado pelo downloader, pelo modo de análise do indexador, pelo wrapper TypeScript e pelos comandos npm; prova ausente, falha, expirada, futura, inválida ou materialmente divergente DEVE recalcular. [f0c7638]
 
-Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB/PDF, valida os manifestos, atualiza índice/aprendizado e cria o commit exclusivo; somente então PODE marcar o remote ID como confirmado. [PENDENTE-CODIGO]
+Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB/PDF, valida os manifestos, atualiza índice/aprendizado e cria o commit exclusivo; somente então PODE marcar o remote ID como confirmado. [f8db96d]
 
 Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos; na retomada, o preflight editorial válido DEVE permitir reparar análise/índice somente com arquivos locais, mantendo `network=skipped`. [1fd53ef]
 
-Nos modos globais, downloader e analisador DEVEM persistir atomicamente em runtime um diário versionado com escopo, ordem, fingerprint, publicação, ativo, fase e último limite confirmado e DEVEM retomá-lo automaticamente sem reiterar unidades concluídas. [PENDENTE-CODIGO]
+Nos modos globais, downloader e analisador DEVEM persistir atomicamente em runtime um diário versionado com escopo, ordem, fingerprint, publicação, ativo, fase e último limite confirmado e DEVEM retomá-lo automaticamente sem reiterar unidades concluídas. [f8db96d]
 
-`--restart` no downloader e `--reset` no analisador DEVEM descartar somente o cursor do escopo explícito e ser propagados sem perda pelo indexador e wrappers; cursor incompatível ou corrompido DEVE bloquear em vez de reiniciar silenciosamente. [PENDENTE-CODIGO]
+`--restart` no downloader e `--reset` no analisador DEVEM descartar somente o cursor do escopo explícito e ser propagados sem perda pelo indexador e wrappers; cursor incompatível ou corrompido DEVE bloquear em vez de reiniciar silenciosamente. [f8db96d]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação
 pertence à FT-006 e exige nova autorização humana explícita após a conclusão
