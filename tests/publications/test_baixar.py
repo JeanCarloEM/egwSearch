@@ -728,6 +728,101 @@ class DownloaderTests(unittest.TestCase):
                 ledger.get(item.stable_key())["phase"], "publication-intelligence"
             )
 
+    def test_publication_is_committed_inside_intelligence_closure(self) -> None:
+        collection = self._checkpoint_collection()
+        item = self._checkpoint_item("20", "Transação obrigatória")
+        completed = {
+            "state": "completed",
+            "downloaded": 1,
+            "skipped": 0,
+            "extracted": 0,
+            "converted": 0,
+        }
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            source_root = root / "publications"
+            state_root = root / "state"
+            config = self._checkpoint_config()
+            config["intelligence"] = {"index_path": "src/publications/index.json"}
+            publisher = Mock()
+
+            def finalize(_item, _ledger, operation):
+                return operation(), "a" * 40
+
+            publisher.finalize.side_effect = finalize
+            intelligence = {"manifests": [], "index": source_root / "index.json"}
+            with patch.object(
+                baixar, "parse_catalog_payload", return_value=[item]
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ), patch.object(
+                baixar,
+                "finalize_publication_intelligence",
+                return_value=intelligence,
+            ) as closure:
+                summary = baixar._process_collection(
+                    collection,
+                    config,
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                    publisher=publisher,
+                )
+
+            self.assertEqual(summary["failures"], 0)
+            publisher.preflight.assert_called_once()
+            publisher.finalize.assert_called_once()
+            closure.assert_called_once()
+
+    def test_commit_pending_is_not_overwritten_by_outer_failure(self) -> None:
+        collection = self._checkpoint_collection()
+        item = self._checkpoint_item("21", "Commit pendente")
+        completed = {
+            "state": "completed",
+            "downloaded": 1,
+            "skipped": 0,
+            "extracted": 0,
+            "converted": 0,
+        }
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            source_root = root / "publications"
+            state_root = root / "state"
+            config = self._checkpoint_config()
+            config["intelligence"] = {"index_path": "src/publications/index.json"}
+            publisher = Mock()
+
+            def fail(_item, ledger, _operation):
+                ledger.transition(
+                    item.stable_key(),
+                    "completed",
+                    git_state="commit_pending",
+                )
+                raise baixar.PublicationTransactionError("git indisponível")
+
+            publisher.finalize.side_effect = fail
+            with patch.object(
+                baixar, "parse_catalog_payload", return_value=[item]
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ):
+                summary = baixar._process_collection(
+                    collection,
+                    config,
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                    fixture_payload={"publications": []},
+                    publisher=publisher,
+                )
+
+            ledger = baixar.AcquisitionLedger(state_root / "ledger.json")
+            self.assertEqual(summary["failures"], 1)
+            self.assertEqual(ledger.get(item.stable_key())["git_state"], "commit_pending")
+
     def test_invalid_text_checkpoint_is_preserved_and_blocks(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

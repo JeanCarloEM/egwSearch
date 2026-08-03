@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import time
 import unittest
@@ -30,6 +31,7 @@ from publication_analysis import (  # noqa: E402
     _reference_model,
     _safe_zip_entries,
     analyze_publication,
+    analyze_and_commit_scope,
     analyze_scope,
     inspect_asset,
     learning_path_for,
@@ -101,7 +103,7 @@ def _config(root: Path) -> dict:
             }
         ],
         "download": {},
-        "transaction": {"branch": "dev", "commit_per_publication": False},
+        "transaction": {"branch": "dev", "commit_per_publication": True},
         "intelligence": {"index_path": (root / "index.json").as_posix()},
     }
 
@@ -174,6 +176,95 @@ def _materialize(root: Path, item: CatalogItem) -> tuple[Path, Path, Path]:
 
 
 class PublicationIntelligenceTests(unittest.TestCase):
+    def test_global_analysis_commits_each_publication_and_resumes_without_rework(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            repository = Path(temporary)
+            subprocess.run(["git", "init", "-b", "dev"], cwd=repository, check=True, capture_output=True)
+            subprocess.run(
+                ["git", "config", "user.name", "Fixture"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "config", "user.email", "fixture@example.test"],
+                cwd=repository,
+                check=True,
+            )
+            (repository / ".gitignore").write_text(
+                "/constructor/.state/\n",
+                encoding="utf-8",
+            )
+            source_root = repository / "src" / "publications"
+            _materialize(source_root, _item("42", "Primeira"))
+            _materialize(source_root, _item("43", "Segunda"))
+            catalog = repository / "config" / "publication-chunking-methods.json"
+            catalog.parent.mkdir(parents=True)
+            catalog.write_bytes(
+                (REPOSITORY_ROOT / "config" / "publication-chunking-methods.json").read_bytes()
+            )
+            subprocess.run(
+                ["git", "add", "--", ".gitignore", "config", "src"],
+                cwd=repository,
+                check=True,
+            )
+            subprocess.run(
+                ["git", "commit", "-m", "Base"],
+                cwd=repository,
+                check=True,
+                capture_output=True,
+            )
+            config = _config(source_root)
+            config["source_root"] = "src/publications"
+            config["runtime_state_root"] = "constructor/.state/egwsearch"
+            config["intelligence"]["index_path"] = "src/publications/index.json"
+
+            with (
+                patch("publication_analysis.REPOSITORY_ROOT", repository),
+                patch("publication_analysis.CATALOG_PATH", catalog),
+                patch("publication_index.REPOSITORY_ROOT", repository),
+            ):
+                manifests, commits = analyze_and_commit_scope(
+                    source_root,
+                    source_root,
+                    config,
+                )
+                repeated, repeated_commits = analyze_and_commit_scope(
+                    source_root,
+                    source_root,
+                    config,
+                )
+
+            self.assertEqual(len(manifests), 4)
+            self.assertEqual(len(commits), 2)
+            self.assertEqual(repeated, [])
+            self.assertEqual(repeated_commits, [])
+            for commit in commits:
+                changed = subprocess.run(
+                    ["git", "show", "--pretty=format:", "--name-only", commit],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout.splitlines()
+                publication_roots = {
+                    "/".join(path.split("/")[:-1])
+                    for path in changed
+                    if path.endswith(".chunking.json")
+                }
+                self.assertEqual(len(publication_roots), 1)
+                self.assertIn("src/publications/index.json", changed)
+                self.assertIn("src/publications/chunking-learning.json", changed)
+            self.assertEqual(
+                subprocess.run(
+                    ["git", "status", "--porcelain"],
+                    cwd=repository,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                ).stdout,
+                "",
+            )
+
     def test_fresh_success_skips_for_24_hours_and_force_recalculates(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
             root = Path(temporary) / "publications"
@@ -265,7 +356,11 @@ class PublicationIntelligenceTests(unittest.TestCase):
             with (
                 patch.object(publication_index, "load_config", return_value=config),
                 patch.object(publication_index, "configured_index_path", return_value=target),
-                patch.object(publication_index, "analyze_scope", return_value=[]) as analysis,
+                patch.object(
+                    publication_index,
+                    "analyze_and_commit_scope",
+                    return_value=([], []),
+                ) as analysis,
                 patch.object(publication_index, "update_global_index", return_value=target),
             ):
                 self.assertEqual(
@@ -275,6 +370,11 @@ class PublicationIntelligenceTests(unittest.TestCase):
                     0,
                 )
             self.assertTrue(analysis.call_args.kwargs["force_recalculate"])
+
+            reset_arguments = publication_index._parser().parse_args(
+                ["--all", "--analyze", "--reset"]
+            )
+            self.assertTrue(reset_arguments.reset)
 
             with (
                 patch.object(baixar, "analyze_publication", return_value=[]) as analysis,

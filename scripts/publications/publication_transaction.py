@@ -1,7 +1,7 @@
 # Repository: https://github.com/JeanCarloEM/egwSearch
 # License: MPL-2.0 - https://www.mozilla.org/MPL/2.0/
 
-"""Validação e commit atômico, opt-in, de uma única publicação."""
+"""Validação, progresso retomável e commit atômico de uma publicação."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import os
 from pathlib import Path
 import re
 import subprocess
-from typing import Iterable
+from typing import Callable, Iterable, TypeVar
 import zipfile
 
 from acquisition import AcquisitionLedger, CatalogItem
@@ -22,7 +22,11 @@ from publication_contract import (
     hash_file,
     validate_file_signature,
 )
-from publication_analysis import MANIFEST_SCHEMA, manifest_path_for
+
+
+MANIFEST_SCHEMA = "publication-chunking-analysis/v2"
+PROGRESS_SCHEMA = "publication-global-progress/v1"
+T = TypeVar("T")
 
 
 ALLOWED_CANONICAL_SUFFIXES = {
@@ -52,6 +56,161 @@ class PublicationTransactionError(ContractError):
     """Bloqueia uma transação sem tocar alterações alheias."""
 
 
+def _write_json_atomic(path: Path, value: dict) -> None:
+    """Persiste estado de runtime sem expor janela de arquivo parcial."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with temporary.open("w", encoding="utf-8", newline="\n") as stream:
+            json.dump(value, stream, ensure_ascii=False, indent=2, sort_keys=True)
+            stream.write("\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def progress_fingerprint(value: object) -> str:
+    """Identifica somente configuração/algoritmo causal do diário global."""
+
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+class GlobalProgressJournal:
+    """Registra o limite global confirmado e aceita apenas crescimento apenso."""
+
+    def __init__(
+        self,
+        path: Path,
+        *,
+        tool: str,
+        scope: str,
+        fingerprint: str,
+        order: list[str],
+        reset: bool = False,
+    ) -> None:
+        self.path = path.resolve()
+        self.tool = tool
+        self.scope = scope
+        self.fingerprint = fingerprint
+        self.order = list(order)
+        if len(self.order) != len(set(self.order)):
+            raise PublicationTransactionError("diário global possui ordem duplicada")
+        if reset:
+            self.path.unlink(missing_ok=True)
+        self.document = self._load()
+
+    @property
+    def next_index(self) -> int:
+        return int(self.document["next_index"])
+
+    def _initial(self) -> dict:
+        return {
+            "schema_version": PROGRESS_SCHEMA,
+            "tool": self.tool,
+            "scope": self.scope,
+            "fingerprint": self.fingerprint,
+            "order": self.order,
+            "next_index": 0,
+            "current": None,
+            "last_confirmed": None,
+            "status": "running",
+        }
+
+    def _load(self) -> dict:
+        if not self.path.exists():
+            document = self._initial()
+            _write_json_atomic(self.path, document)
+            return document
+        try:
+            document = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise PublicationTransactionError(
+                f"diário global corrompido; use reset explícito: {self.path}"
+            ) from error
+        required = {
+            "schema_version",
+            "tool",
+            "scope",
+            "fingerprint",
+            "order",
+            "next_index",
+            "current",
+            "last_confirmed",
+            "status",
+        }
+        if not isinstance(document, dict):
+            raise PublicationTransactionError(
+                f"diário global incompatível; use reset explícito: {self.path}"
+            )
+        stored_order = document.get("order")
+        next_index = document.get("next_index")
+        order_compatible = (
+            isinstance(stored_order, list)
+            and len(stored_order) == len(set(stored_order))
+            and all(value in self.order for value in stored_order)
+            and [value for value in self.order if value in set(stored_order)] == stored_order
+        )
+        if (
+            set(document) != required
+            or document.get("schema_version") != PROGRESS_SCHEMA
+            or document.get("tool") != self.tool
+            or document.get("scope") != self.scope
+            or document.get("fingerprint") != self.fingerprint
+            or not isinstance(stored_order, list)
+            or not all(isinstance(value, str) and value for value in stored_order)
+            or not isinstance(next_index, int)
+            or next_index < 0
+            or next_index > len(stored_order)
+            or not order_compatible
+        ):
+            raise PublicationTransactionError(
+                f"diário global incompatível; use reset explícito: {self.path}"
+            )
+        appended = [value for value in self.order if value not in set(stored_order)]
+        self.order = [*stored_order, *appended]
+        if appended:
+            document["order"] = self.order
+            document["status"] = "running"
+            _write_json_atomic(self.path, document)
+        return document
+
+    def record(self, position: int, identity: str, phase: str) -> None:
+        """Atualiza a fase corrente sem avançar o limite confirmado."""
+
+        if position < self.next_index or position >= len(self.order):
+            raise PublicationTransactionError("posição inválida no diário global")
+        if self.order[position] != identity:
+            raise PublicationTransactionError("identidade divergente no diário global")
+        self.document["current"] = {
+            "position": position,
+            "identity": identity,
+            "phase": phase,
+        }
+        self.document["status"] = "running"
+        _write_json_atomic(self.path, self.document)
+
+    def confirm(self, position: int, identity: str, *, commit: str | None = None) -> None:
+        """Avança somente a próxima unidade e persiste a prova de confirmação."""
+
+        if position != self.next_index or self.order[position] != identity:
+            raise PublicationTransactionError("avanço não contíguo no diário global")
+        self.document["next_index"] = position + 1
+        self.document["current"] = None
+        self.document["last_confirmed"] = {
+            "position": position,
+            "identity": identity,
+            "commit": commit,
+        }
+        self.document["status"] = (
+            "completed" if position + 1 == len(self.order) else "running"
+        )
+        _write_json_atomic(self.path, self.document)
+
+
 def _inside(path: Path, root: Path) -> bool:
     resolved = path.resolve()
     resolved_root = root.resolve()
@@ -68,6 +227,53 @@ def _read_metadata(path: Path) -> dict:
     if value.get("state") != "completed":
         raise PublicationTransactionError("publicação ainda não está completed")
     return value
+
+
+def catalog_item_from_publication(directory: Path) -> CatalogItem:
+    """Reconstrói a identidade transacional exclusivamente do metadado v3."""
+
+    candidates = sorted(directory.glob("*.source.json"))
+    if len(candidates) != 1:
+        raise PublicationTransactionError("publicação sem metadado v3 inequívoco")
+    document = _read_metadata(candidates[0])
+    identity = document.get("identity") or {}
+    collection = document.get("collection") or {}
+    required = (
+        "remote_id",
+        "author_original",
+        "author_key",
+        "title_original",
+        "title_normalized",
+        "language_original",
+        "language",
+        "language_path",
+        "category_original",
+        "category",
+        "type",
+        "public_url",
+    )
+    if any(not isinstance(identity.get(key), str) or not identity[key] for key in required):
+        raise PublicationTransactionError("identidade v3 incompleta")
+    if not isinstance(collection.get("id"), str) or not collection["id"]:
+        raise PublicationTransactionError("coleção v3 incompleta")
+    return CatalogItem(
+        remote_id=identity["remote_id"],
+        collection_id=collection["id"],
+        collection_name=str(collection.get("name") or collection["id"]),
+        author_name=identity["author_original"],
+        author_key=identity["author_key"],
+        language_original=identity["language_original"],
+        language=identity["language"],
+        language_path=identity["language_path"],
+        publication_type=identity["type"],
+        title_original=identity["title_original"],
+        title_normalized=identity["title_normalized"],
+        public_url=identity["public_url"],
+        category_name=identity["category_original"],
+        category_path=identity["category"],
+        edition=str(identity.get("edition") or ""),
+        local_complete=True,
+    )
 
 
 def _matching_asset(directory: Path, record: dict) -> Path:
@@ -194,7 +400,7 @@ def validate_complete_publication(
     if not editorial_assets:
         raise PublicationTransactionError("publicação sem EPUB/PDF analisável")
     for asset in editorial_assets if require_intelligence else []:
-        manifest_path = manifest_path_for(asset)
+        manifest_path = asset.with_name(f"{asset.name}.chunking.json")
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
@@ -301,6 +507,7 @@ class GitPublicationPublisher:
         lock_path: Path,
         branch: str = "dev",
         index_path: Path | None = None,
+        global_paths: Iterable[Path] | None = None,
     ) -> None:
         self.repository_root = repository_root.resolve()
         self.source_root = source_root.resolve()
@@ -313,6 +520,20 @@ class GitPublicationPublisher:
         )
         if not _inside(self.index_path, self.source_root):
             raise PublicationTransactionError("índice global fora da fonte")
+        defaults = {
+            self.index_path,
+            self.index_path.with_name(
+                f"{self.index_path.stem}.manifest{self.index_path.suffix}"
+            ),
+            self.source_root / "chunking-learning.json",
+        }
+        self.global_paths = {
+            Path(path).resolve() for path in (global_paths or defaults)
+        }
+        if self.index_path not in self.global_paths:
+            self.global_paths.add(self.index_path)
+        if any(not _inside(path, self.source_root) for path in self.global_paths):
+            raise PublicationTransactionError("artefato global fora da fonte")
 
     def _validate_global_index(self, item: CatalogItem) -> None:
         """Confirma a saída da capacidade canônica sem reserializá-la."""
@@ -354,14 +575,45 @@ class GitPublicationPublisher:
     def preflight(self, item: CatalogItem, *, resume: bool = False) -> None:
         self._validate_repository()
         directory = self.source_root / item.publication_identity().relative_directory()
-        if not directory.exists():
-            return
         relative = directory.relative_to(self.repository_root)
-        dirty = _status_paths(self.repository_root, relative)
-        if dirty and not resume:
+        source_relative = self.source_root.relative_to(self.repository_root)
+        dirty = _status_paths(self.repository_root, source_relative)
+        unit_prefix = f"{relative.as_posix()}/"
+        globals_relative = {
+            path.relative_to(self.repository_root).as_posix()
+            for path in self.global_paths
+        }
+        unit_dirty = {
+            path for path in dirty if path == relative.as_posix() or path.startswith(unit_prefix)
+        }
+        global_dirty = dirty & globals_relative
+        unrelated = dirty - unit_dirty - global_dirty
+        if unrelated:
+            raise PublicationTransactionError(
+                "outra publicação possui alterações: " + ", ".join(sorted(unrelated))
+            )
+        if not resume and (unit_dirty or global_dirty):
             raise PublicationTransactionError(
                 "unidade possui alterações anteriores; preservar e resolver antes da coleta"
             )
+
+    def finalize(
+        self,
+        item: CatalogItem,
+        ledger: AcquisitionLedger,
+        operation: Callable[[], T],
+    ) -> tuple[T, str | None]:
+        """Serializa inteligência, validação, staging e commit como uma unidade."""
+
+        with _exclusive_lock(self.lock_path):
+            self._validate_repository()
+            result = operation()
+            paths = validate_complete_publication(
+                item,
+                self.source_root,
+                self.repository_root,
+            )
+            return result, self._commit_locked(item, paths, ledger)
 
     def commit(
         self,
@@ -369,98 +621,112 @@ class GitPublicationPublisher:
         paths: list[Path],
         ledger: AcquisitionLedger,
     ) -> str | None:
+        with _exclusive_lock(self.lock_path):
+            return self._commit_locked(item, paths, ledger)
+
+    def _commit_locked(
+        self,
+        item: CatalogItem,
+        paths: list[Path],
+        ledger: AcquisitionLedger,
+    ) -> str | None:
+        """Executa o efeito Git sob lock já adquirido pelo fechamento."""
+
         self._validate_repository()
         allowed = {path.as_posix() for path in paths}
-        index_relative = self.index_path.relative_to(self.repository_root).as_posix()
-        allowed.add(index_relative)
+        global_relatives = {
+            path.relative_to(self.repository_root).as_posix()
+            for path in self.global_paths
+        }
+        allowed.update(global_relatives)
         runtime_relative = self.lock_path.parent.parent.relative_to(self.repository_root).as_posix()
         if any(path == runtime_relative or path.startswith(f"{runtime_relative}/") for path in allowed):
             raise PublicationTransactionError("allowlist contém estado de runtime")
         directory = self.source_root / item.publication_identity().relative_directory()
         relative_directory = directory.relative_to(self.repository_root)
         key = item.stable_key()
-        with _exclusive_lock(self.lock_path):
-            created_commit: str | None = None
-            changed: set[str] = set()
-            try:
-                self._validate_repository()
-                self._validate_global_index(item)
-                changed = _status_paths(self.repository_root, relative_directory)
+        created_commit: str | None = None
+        changed: set[str] = set()
+        try:
+            self._validate_repository()
+            self._validate_global_index(item)
+            changed = _status_paths(self.repository_root, relative_directory)
+            for global_path in sorted(self.global_paths):
                 changed.update(
                     _status_paths(
                         self.repository_root,
-                        self.index_path.relative_to(self.repository_root),
+                        global_path.relative_to(self.repository_root),
                     )
                 )
-                if not changed:
-                    return None
-                if not changed.issubset(allowed):
-                    raise PublicationTransactionError(
-                        f"alteração fora da allowlist: {', '.join(sorted(changed - allowed))}"
-                    )
-                _git(self.repository_root, ["add", "--", *sorted(changed)])
-                staged = set(
-                    _nul_paths(
-                        _git(
-                            self.repository_root,
-                            ["diff", "--cached", "--name-only", "-z", "--", *sorted(changed)],
-                        ).stdout
-                    )
+            if not changed:
+                return None
+            if not changed.issubset(allowed):
+                raise PublicationTransactionError(
+                    f"alteração fora da allowlist: {', '.join(sorted(changed - allowed))}"
                 )
-                if staged != changed:
-                    raise PublicationTransactionError("staging diverge da unidade calculada")
-                worktree_changed = _nul_paths(
+            _git(self.repository_root, ["add", "--", *sorted(changed)])
+            staged = set(
+                _nul_paths(
                     _git(
                         self.repository_root,
-                        ["diff", "--name-only", "-z", "--", *sorted(changed)],
+                        ["diff", "--cached", "--name-only", "-z", "--", *sorted(changed)],
                     ).stdout
                 )
-                if worktree_changed:
-                    raise PublicationTransactionError(
-                        "unidade mudou após staging; commit interrompido"
-                    )
-                title = " ".join(item.title_normalized.split())[:96]
-                message = f"publicação: adiciona {item.remote_id} {title}"
-                before = _git(self.repository_root, ["rev-parse", "HEAD"]).stdout.decode().strip()
-                result = _git(
+            )
+            if staged != changed:
+                raise PublicationTransactionError("staging diverge da unidade calculada")
+            worktree_changed = _nul_paths(
+                _git(
                     self.repository_root,
-                    ["commit", "-m", message, "--", *sorted(changed)],
-                    check=False,
+                    ["diff", "--name-only", "-z", "--", *sorted(changed)],
+                ).stdout
+            )
+            if worktree_changed:
+                raise PublicationTransactionError(
+                    "unidade mudou após staging; commit interrompido"
                 )
-                after = _git(self.repository_root, ["rev-parse", "HEAD"]).stdout.decode().strip()
-                if result.returncode != 0 and after == before:
-                    detail = (result.stderr or result.stdout).decode("utf-8", "replace").strip()
-                    raise PublicationTransactionError(f"commit falhou: {detail}")
-                if after == before:
-                    raise PublicationTransactionError("commit não alterou HEAD")
-                created_commit = after
-                committed = set(
-                    _nul_paths(
-                        _git(
-                            self.repository_root,
-                            ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", after],
-                        ).stdout
-                    )
+            title = " ".join(item.title_normalized.split())[:96]
+            message = f"publicação: adiciona {item.remote_id} {title}"
+            before = _git(self.repository_root, ["rev-parse", "HEAD"]).stdout.decode().strip()
+            result = _git(
+                self.repository_root,
+                ["commit", "-m", message, "--", *sorted(changed)],
+                check=False,
+            )
+            after = _git(self.repository_root, ["rev-parse", "HEAD"]).stdout.decode().strip()
+            if result.returncode != 0 and after == before:
+                detail = (result.stderr or result.stdout).decode("utf-8", "replace").strip()
+                raise PublicationTransactionError(f"commit falhou: {detail}")
+            if after == before:
+                raise PublicationTransactionError("commit não alterou HEAD")
+            created_commit = after
+            committed = set(
+                _nul_paths(
+                    _git(
+                        self.repository_root,
+                        ["diff-tree", "--no-commit-id", "--name-only", "-r", "-z", after],
+                    ).stdout
                 )
-                if committed != changed:
-                    ledger.transition(
-                        key,
-                        "completed",
-                        git_state="commit_review",
-                        commit=after,
+            )
+            if committed != changed:
+                ledger.transition(
+                    key,
+                    "completed",
+                    git_state="commit_review",
+                    commit=after,
+                )
+                raise PublicationTransactionError(
+                    "commit criado com conteúdo diferente da unidade calculada"
+                )
+            ledger.transition(key, "completed", git_state="committed", commit=after)
+            return after
+        except Exception:
+            if created_commit is None:
+                if changed:
+                    _git(
+                        self.repository_root,
+                        ["restore", "--staged", "--", *sorted(changed)],
+                        check=False,
                     )
-                    raise PublicationTransactionError(
-                        "commit criado com conteúdo diferente da unidade calculada"
-                    )
-                ledger.transition(key, "completed", git_state="committed", commit=after)
-                return after
-            except Exception:
-                if created_commit is None:
-                    if changed:
-                        _git(
-                            self.repository_root,
-                            ["restore", "--staged", "--", *sorted(changed)],
-                            check=False,
-                        )
-                    ledger.transition(key, "completed", git_state="commit_pending")
-                raise
+                ledger.transition(key, "completed", git_state="commit_pending")
+            raise

@@ -183,10 +183,11 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
             expected_transaction.add("index_path")
         if not isinstance(transaction, dict) or set(transaction) != expected_transaction:
             raise ContractError("transacao Git invalida")
-        if transaction["branch"] != "dev" or not isinstance(
-            transaction["commit_per_publication"], bool
+        if (
+            transaction["branch"] != "dev"
+            or transaction["commit_per_publication"] is not True
         ):
-            raise ContractError("politica Git exige branch dev e opt-in booleano")
+            raise ContractError("politica Git exige branch dev e commit obrigatório")
         if schema == 3:
             resolve_repository_path(str(transaction["index_path"]), path.resolve().parents[1])
         else:

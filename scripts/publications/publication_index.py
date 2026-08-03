@@ -25,7 +25,7 @@ from publication_console import PublicationReporter
 
 from publication_analysis import (
     MANIFEST_SCHEMA,
-    analyze_scope,
+    analyze_and_commit_scope,
     extract_metadata_evidence,
     manifest_path_for,
 )
@@ -644,6 +644,11 @@ def _parser() -> argparse.ArgumentParser:
         action="store_true",
         help="propaga recálculo forçado ao avaliador usado por --analyze",
     )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="propaga reset do diário global ao avaliador usado por --analyze --all",
+    )
     scope = parser.add_mutually_exclusive_group(required=True)
     scope.add_argument("--publication", type=Path)
     scope.add_argument("--scope", type=Path)
@@ -666,17 +671,21 @@ def main(argv: Iterable[str] | None = None) -> int:
         reporter.start(str(output))
         if arguments.force_recalculate and not arguments.analyze:
             raise IndexError("--force-recalculate exige --analyze")
+        if arguments.reset and not (arguments.analyze and arguments.all):
+            raise IndexError("--reset exige --analyze --all")
         if arguments.analyze:
             if arguments.manifest_only:
                 raise IndexError("--analyze não se aplica a --manifest-only")
             analysis_target = source_root if arguments.all else (
                 arguments.publication or arguments.scope
             )
-            analyze_scope(
+            analyze_and_commit_scope(
                 Path(analysis_target),
                 source_root,
+                config,
                 reporter.child("Análise"),
                 force_recalculate=arguments.force_recalculate,
+                reset=arguments.reset,
             )
         manifest_output = None
         if arguments.manifest_only:

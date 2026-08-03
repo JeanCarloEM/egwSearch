@@ -71,12 +71,14 @@ from publication_contract import (
     validate_source_url,
     write_json_atomic,
 )
-from publication_analysis import analyze_publication
+from publication_analysis import ANALYZER_VERSION, analyze_publication
 from publication_console import PublicationReporter
 from publication_index import configured_index_path, update_global_index
 from publication_transaction import (
+    GlobalProgressJournal,
     GitPublicationPublisher,
     PublicationTransactionError,
+    progress_fingerprint,
     validate_complete_publication,
 )
 
@@ -2774,6 +2776,8 @@ def _process_collection(
     restart: bool = False,
     force_recalculate: bool = False,
     reporter: PublicationReporter | None = None,
+    global_journal: GlobalProgressJournal | None = None,
+    collection_position: int | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -2897,6 +2901,12 @@ def _process_collection(
                 f"{item.remote_id} · {item.title_original}",
             )
         try:
+            if global_journal is not None and collection_position is not None:
+                global_journal.record(
+                    collection_position,
+                    collection["id"],
+                    f"publication:{item.remote_id}:processing",
+                )
             if publisher is not None:
                 previous = ledger.get(item.stable_key()) or {}
                 publisher.preflight(
@@ -2913,25 +2923,32 @@ def _process_collection(
                 no_network=no_network,
                 revalidate=revalidate,
             )
-            if (
-                result["state"] in {"completed", "skipped"}
-                and config.get("intelligence")
-            ):
+            intelligence = None
+            commit = None
+            if result["state"] in {"completed", "skipped"} and config.get("intelligence"):
                 try:
-                    intelligence = finalize_publication_intelligence(
-                        item,
-                        source_root,
-                        config,
-                        reporter,
-                        force_recalculate=force_recalculate,
-                    )
+                    def operation() -> dict:
+                        return finalize_publication_intelligence(
+                            item,
+                            source_root,
+                            config,
+                            reporter,
+                            force_recalculate=force_recalculate,
+                        )
+
+                    if publisher is not None:
+                        intelligence, commit = publisher.finalize(item, ledger, operation)
+                    else:
+                        intelligence = operation()
                 except Exception as error:
-                    ledger.transition(
-                        item.stable_key(),
-                        "temporary_failure",
-                        phase="publication-intelligence",
-                        error=f"{type(error).__name__}:{error}",
-                    )
+                    current = ledger.get(item.stable_key()) or {}
+                    if current.get("git_state") != "commit_pending":
+                        ledger.transition(
+                            item.stable_key(),
+                            "temporary_failure",
+                            phase="publication-intelligence",
+                            error=f"{type(error).__name__}:{error}",
+                        )
                     raise
                 result["chunking_manifests"] = [
                     path.relative_to(source_root).as_posix()
@@ -2942,14 +2959,15 @@ def _process_collection(
                 summary[key] += result[key]
             if result["state"] == "review_required":
                 summary["review_required"] += 1
-            if publisher is not None and result["state"] in {"completed", "skipped"}:
-                allowlist = validate_complete_publication(item, source_root)
-                commit = publisher.commit(item, allowlist, ledger)
-                if commit:
-                    result["commit"] = commit
-                    print(
-                        f"PUBLICATION_COMMITTED remote_id={item.remote_id} commit={commit}"
-                    )
+            if commit:
+                result["commit"] = commit
+                print(f"PUBLICATION_COMMITTED remote_id={item.remote_id} commit={commit}")
+            if global_journal is not None and collection_position is not None:
+                global_journal.record(
+                    collection_position,
+                    collection["id"],
+                    f"publication:{item.remote_id}:confirmed",
+                )
             if reporter is None:
                 print(
                     f"ITEM_{result['state'].upper()} collection={collection['id']} "
@@ -3190,7 +3208,6 @@ def run(
     revalidate: bool = False,
     restart: bool = False,
     force_recalculate: bool = False,
-    commit_per_publication: bool = False,
     publication_query: str | None = None,
 ) -> int:
     reporter = PublicationReporter("Downloader de publicações")
@@ -3236,10 +3253,7 @@ def run(
     shared_limiter = RateLimiter(_rate_policy(config["download"]))
     needs_browser = fixture is None and not no_network
     browser_manager = None
-    transaction_enabled = bool(
-        commit_per_publication
-        or config.get("transaction", {}).get("commit_per_publication", False)
-    )
+    transaction_enabled = fixture_path is None and source_root == canonical_source_root
     publisher = None
     if transaction_enabled:
         if worker_count != 1:
@@ -3254,6 +3268,38 @@ def run(
                 REPOSITORY_ROOT,
             ),
         )
+    global_mode = (
+        fixture_path is None
+        and selected is None
+        and publication_query is None
+        and limit is None
+    )
+    global_journal = None
+    if global_mode:
+        collection_order = [str(collection["id"]) for collection in collections]
+        global_journal = GlobalProgressJournal(
+            paths["logs"] / "baixar.global.json",
+            tool="baixar.py",
+            scope="all",
+            fingerprint=progress_fingerprint(
+                {
+                    "schema": config["schema_version"],
+                    "source_root": str(config["source_root"]),
+                    "collections": [
+                        {
+                            "id": collection["id"],
+                            "url": collection["catalog_url"],
+                            "language": collection["language"],
+                            "type": collection["type"],
+                        }
+                        for collection in collections
+                    ],
+                    "analyzer": ANALYZER_VERSION,
+                }
+            ),
+            order=collection_order,
+            reset=restart,
+        )
     if needs_browser:
         if worker_count != 1:
             raise ContractError(
@@ -3262,9 +3308,11 @@ def run(
         browser_manager = BrowserSessionManager(runtime, config["download"], paths)
     try:
         if worker_count == 1:
-            for collection in collections:
-                results.append(
-                    _process_collection(
+            for collection_position, collection in enumerate(collections):
+                if global_journal is not None and collection_position < global_journal.next_index:
+                    print(f"COLLECTION_GLOBAL_RESUMED collection={collection['id']}")
+                    continue
+                result = _process_collection(
                         collection,
                         config,
                         source_root,
@@ -3286,8 +3334,18 @@ def run(
                         restart=restart,
                         force_recalculate=force_recalculate,
                         reporter=reporter,
+                        global_journal=global_journal,
+                        collection_position=collection_position,
                     )
-                )
+                results.append(result)
+                if (
+                    global_journal is not None
+                    and not result["failures"]
+                    and not result["blocked"]
+                ):
+                    global_journal.confirm(collection_position, collection["id"])
+                elif global_journal is not None:
+                    break
         else:
             with ThreadPoolExecutor(max_workers=worker_count) as executor:
                 futures = {
@@ -3383,11 +3441,6 @@ def build_parser() -> argparse.ArgumentParser:
         type=Path,
         help="Raiz segregada para artefatos de fixture; nunca pode ser src/publications.",
     )
-    parser.add_argument(
-        "--commit",
-        action="store_true",
-        help="Cria um commit isolado por publicação completa; exige branch dev limpa no índice.",
-    )
     return parser
 
 
@@ -3405,7 +3458,6 @@ def main(argv: list[str] | None = None) -> int:
             revalidate=arguments.revalidate,
             restart=arguments.restart,
             force_recalculate=arguments.force_recalculate,
-            commit_per_publication=arguments.commit,
             publication_query=arguments.publication,
         )
     except ContractError as error:

@@ -28,8 +28,10 @@ from publication_contract import hash_file, write_json_atomic  # noqa: E402
 from publication_analysis import analyze_publication  # noqa: E402
 from publication_index import update_global_index  # noqa: E402
 from publication_transaction import (  # noqa: E402
+    GlobalProgressJournal,
     GitPublicationPublisher,
     PublicationTransactionError,
+    progress_fingerprint,
     validate_complete_publication,
 )
 
@@ -193,7 +195,9 @@ class PublicationTransactionTests(unittest.TestCase):
                 committed,
                 {
                     *(path.as_posix() for path in allowlist),
+                    "src/publications/chunking-learning.json",
                     "src/publications/index.json",
+                    "src/publications/index.manifest.json",
                 },
             )
             self.assertIn("?? unrelated.txt", _git(root, "status", "--short"))
@@ -233,6 +237,49 @@ class PublicationTransactionTests(unittest.TestCase):
             )
             with self.assertRaises(PublicationTransactionError):
                 publisher.preflight(item)
+
+    def test_global_journal_resumes_append_only_and_reset_is_explicit(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "logs" / "analysis.global.json"
+            fingerprint = progress_fingerprint({"algorithm": 2})
+            journal = GlobalProgressJournal(
+                path,
+                tool="publication_analysis.py",
+                scope="all",
+                fingerprint=fingerprint,
+                order=["a", "b"],
+            )
+            journal.record(0, "a", "analysis")
+            journal.confirm(0, "a", commit="a" * 40)
+
+            resumed = GlobalProgressJournal(
+                path,
+                tool="publication_analysis.py",
+                scope="all",
+                fingerprint=fingerprint,
+                order=["a", "b", "c"],
+            )
+            self.assertEqual(resumed.next_index, 1)
+            self.assertEqual(resumed.document["current"], None)
+            with self.assertRaisesRegex(PublicationTransactionError, "reset explícito"):
+                GlobalProgressJournal(
+                    path,
+                    tool="publication_analysis.py",
+                    scope="all",
+                    fingerprint=fingerprint,
+                    order=["x", "b", "c"],
+                )
+
+            reset = GlobalProgressJournal(
+                path,
+                tool="publication_analysis.py",
+                scope="all",
+                fingerprint=fingerprint,
+                order=["x"],
+                reset=True,
+            )
+            self.assertEqual(reset.next_index, 0)
+            self.assertEqual(reset.document["order"], ["x"])
 
 
 if __name__ == "__main__":

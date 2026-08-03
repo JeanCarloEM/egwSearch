@@ -133,6 +133,7 @@ class IdentityAndCatalogTests(unittest.TestCase):
         )
         self.assertEqual(config["download"]["workers"], 1)
         self.assertLessEqual(config["download"]["max_workers"], 2)
+        self.assertIs(config["transaction"]["commit_per_publication"], True)
         self.assertEqual(
             config["intelligence"]["index_path"], "src/publications/index.json"
         )

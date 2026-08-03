@@ -33,9 +33,11 @@ from publication_contract import (
     hash_file,
     load_config,
     resolve_repository_path,
+    runtime_paths,
     validate_file_signature,
     write_json_atomic,
 )
+from acquisition import AcquisitionLedger
 from publication_console import PublicationReporter
 
 
@@ -1495,6 +1497,120 @@ def analyze_scope(
     return written
 
 
+def analyze_and_commit_scope(
+    target: Path,
+    source_root: Path,
+    config: dict,
+    reporter: PublicationReporter | None = None,
+    *,
+    force_recalculate: bool = False,
+    reset: bool = False,
+) -> tuple[list[Path], list[str]]:
+    """Fecha e commita cada publicação do escopo pela transação compartilhada."""
+
+    from publication_index import configured_index_path, update_global_index
+    from publication_transaction import (
+        GlobalProgressJournal,
+        GitPublicationPublisher,
+        catalog_item_from_publication,
+        progress_fingerprint,
+    )
+
+    root = source_root.resolve()
+    candidate = target.resolve()
+    asset = candidate if candidate.is_file() else None
+    if asset is not None and asset.suffix.casefold() not in {".epub", ".pdf"}:
+        raise AnalysisError("--asset exige EPUB ou PDF")
+    directories = [candidate.parent] if asset is not None else publication_directories(candidate, root)
+    if not directories:
+        raise AnalysisError("escopo sem ativos analisáveis")
+    by_identity = {
+        directory.relative_to(root).as_posix(): directory for directory in directories
+    }
+    order = list(by_identity)
+    paths = runtime_paths(config, REPOSITORY_ROOT)
+    index_path = configured_index_path(config)
+    publisher = GitPublicationPublisher(
+        REPOSITORY_ROOT,
+        root,
+        paths["locks"] / "publication-git.lock",
+        branch=str(config["transaction"]["branch"]),
+        index_path=index_path,
+    )
+    ledger = AcquisitionLedger(paths["acquisition"] / "ledger.json")
+    global_mode = candidate == root
+    journal = (
+        GlobalProgressJournal(
+            paths["logs"] / "publication-analysis.global.json",
+            tool="publication_analysis.py",
+            scope="all",
+            fingerprint=progress_fingerprint(
+                {
+                    "analyzer": ANALYZER_VERSION,
+                    "catalog": _catalog()[1],
+                    "source_root": str(config["source_root"]),
+                }
+            ),
+            order=order,
+            reset=reset,
+        )
+        if global_mode
+        else None
+    )
+    if journal is not None:
+        order = journal.order
+        directories = [by_identity[identity] for identity in order]
+    written: list[Path] = []
+    commits: list[str] = []
+    for position, directory in enumerate(directories):
+        identity = order[position]
+        if journal is not None and position < journal.next_index:
+            if reporter is not None:
+                reporter.notice("Publicação retomada", identity)
+            continue
+        item = catalog_item_from_publication(directory)
+        previous = ledger.get(item.stable_key()) or {}
+        publisher.preflight(
+            item,
+            resume=previous.get("git_state") == "commit_pending",
+        )
+        if journal is not None:
+            journal.record(position, identity, "analysis")
+
+        def operation() -> tuple[list[Path], Path]:
+            manifests = (
+                _analyze_assets(
+                    directory,
+                    [asset],
+                    root,
+                    reporter,
+                    force_recalculate=force_recalculate,
+                )
+                if asset is not None
+                else analyze_publication(
+                    directory,
+                    root,
+                    reporter,
+                    force_recalculate=force_recalculate,
+                )
+            )
+            updated = update_global_index(
+                root,
+                index_path,
+                config,
+                publication=directory,
+            )
+            return manifests, updated
+
+        (manifests, _updated), commit = publisher.finalize(item, ledger, operation)
+        written.extend(manifests)
+        if commit:
+            commits.append(commit)
+        if journal is not None:
+            journal.confirm(position, identity, commit=commit)
+    return written, commits
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Analisa estruturas EPUB/PDF e recomenda chunking sem gerar chunks."
@@ -1509,6 +1625,11 @@ def _parser() -> argparse.ArgumentParser:
         "--force-recalculate",
         action="store_true",
         help="ignora a conclusão válida das últimas 24 horas e recalcula",
+    )
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="descarta somente o diário global do analisador antes de --all",
     )
     scope = parser.add_mutually_exclusive_group(required=True)
     scope.add_argument("--asset", type=Path)
@@ -1532,18 +1653,22 @@ def main(argv: Iterable[str] | None = None) -> int:
             arguments.asset or arguments.publication or arguments.scope
         )
         reporter.start(str(target))
-        paths = analyze_scope(
+        if arguments.reset and not arguments.all:
+            raise AnalysisError("--reset exige --all")
+        paths, commits = analyze_and_commit_scope(
             Path(target),
             source_root,
+            config,
             reporter,
-            reuse_existing=arguments.resume,
             force_recalculate=arguments.force_recalculate,
+            reset=arguments.reset,
         )
         reporter.result(
             "Análise concluída",
             {
                 "manifestos": len(paths),
                 "aprendizado": learning_path_for(source_root),
+                "commits": len(commits),
             },
         )
         return 0
