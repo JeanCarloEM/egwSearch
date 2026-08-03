@@ -130,6 +130,20 @@ function validateLanding(html: string): void {
   for (const required of ["<main", "<h1", "viewport", "lang=\"pt-BR\""]) {
     if (!html.includes(required)) throw new Error(`HTML sem requisito: ${required}`);
   }
+  for (const required of [
+    "ferramenta planejada",
+    "Bíblia",
+    "Ellen G. White",
+    "pioneiros adventistas",
+    "ainda são planejadas",
+  ]) {
+    if (!html.includes(required)) {
+      throw new Error(`posicionamento público ausente: ${required}`);
+    }
+  }
+  if (/<(?:title|p class="eyebrow")[^>]*>[^<]*acervo/i.test(html)) {
+    throw new Error("página posiciona o produto como acervo");
+  }
 }
 
 function validateIndex(publicationsRoot: string): {

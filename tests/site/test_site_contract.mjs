@@ -19,6 +19,19 @@ test("página institucional não revela nem vincula o acervo", () => {
   assert.match(landing, /<main\b/);
   assert.match(landing, /lang="pt-BR"/);
   assert.match(landing, /name="viewport"/);
+  assert.doesNotMatch(landing, /<title>[^<]*acervo/i);
+  assert.doesNotMatch(landing, /class="eyebrow">[^<]*acervo/i);
+});
+
+test("página distingue finalidade, corpus e estado real", () => {
+  assert.match(landing, /ferramenta planejada/i);
+  assert.match(landing, /pesquisar conceitos/i);
+  assert.match(landing, /conversar de forma probatória/i);
+  assert.match(landing, /Bíblia/);
+  assert.match(landing, /Ellen G\. White/);
+  assert.match(landing, /pioneiros adventistas/i);
+  assert.match(landing, /preparação documental está funcional/i);
+  assert.match(landing, /pesquisa e conversa probatória ainda são planejadas/i);
 });
 
 test("workflow usa Pages dedicado, Node 24 e permissões mínimas", () => {

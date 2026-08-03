@@ -8,9 +8,9 @@ Divergência DEVE aplicar o RCF da raiz. [3301a97]
 
 O downloader, o cliente de aquisição, o contrato Python comum e seus requisitos DEVEM residir em `scripts/publications/`, fora de `src/` e do artefato público. [3301a97]
 
-## 1. Identidade e configuracao
+## 1. Identidade e configuração
 
-`config/publications.json` e a configuracao causal versionada da cadeia. Ela declara raiz-fonte, raiz publica, autores, colecoes, idiomas, tipos e limites de rede; scripts DEVEM resolver seus paths pela raiz do repositorio, nunca pelo diretório corrente. [3301a97]
+`config/publications.json` é a configuração causal versionada da cadeia. Ela declara raiz-fonte, raiz pública, autores, coleções, idiomas, tipos e limites de rede; scripts DEVEM resolver seus paths pela raiz do repositório, nunca pelo diretório corrente. [3301a97]
 
 O autor `egw` representa Ellen G. White. Autores pioneiros DEVEM receber chave [3301a97]
 autoral própria, determinística e persistente; coleção, provedor ou editora NÃO
@@ -31,11 +31,11 @@ comprovados DEVEM normalizar para `pt-BR`; inglês sem diferença material, [330
 inclusive `en_US` e `en-GB`, DEVE normalizar para `en`. Valor remoto original [3301a97]
 DEVE ser preservado; diferença material de variante DEVE bloquear fusão. [3301a97]
 
-Titulo normalizado DEVE preservar Unicode, caixa, diacriticos, pontuacao e trecho parentetico duvidoso; slug de rota e projecao separada e NÃO DEVE substituir nem servir para reconstruir o titulo. Tag ou edicao somente DEVE sair do titulo com evidencia editorial registrada. [3301a97]
+Título normalizado DEVE preservar Unicode, caixa, diacríticos, pontuação e trecho parentético duvidoso; slug de rota é projeção separada e NÃO DEVE substituir nem servir para reconstruir o título. Tag ou edição somente DEVE sair do título com evidência editorial registrada. [3301a97]
 
 Artigo final separado por vírgula DEVE ser removido somente quando repetir, por equivalência Unicode sem diacríticos e caixa, o artigo já presente no início; essa canonicalização editorial antecede acrônimo, slug, preflight e destino. Demais sufixos ou inversões ambíguas DEVEM ser preservados. [10cb602]
 
-O acronimo do titulo DEVE derivar apenas de suas palavras normalizadas: titulo de uma palavra usa seu token ASCII normalizado; titulo de varias palavras usa as iniciais alfanumericas, em minusculas. Ausencia de representacao ASCII DEVE usar identificador causal derivado do titulo Unicode. [3301a97]
+O acrônimo do título DEVE derivar apenas de suas palavras normalizadas: título de uma palavra usa seu token ASCII normalizado; título de várias palavras usa as iniciais alfanuméricas, em minúsculas. Ausência de representação ASCII DEVE usar identificador causal derivado do título Unicode. [3301a97]
 
 ## 2. Paths e colisoes
 
@@ -49,9 +49,9 @@ migração para `en` exige plano atômico e prova de ausência de variante
 material. PDF, EPUB, Markdown, derivados e metadado do grupo DEVEM permanecer [3301a97]
 no mesmo diretório. [c5c4da6]
 
-Slug DEVE seguir `[a-z0-9]+(?:-[a-z0-9]+)*`: aplicar minusculas, decomposicao Unicode, transliteracao ASCII deterministica, remocao de acentos, diacriticos e caracteres especiais, substituicao de espacos por hifens, colapso e aparo de hifens; resultado vazio e limite de portabilidade DEVEM usar hash causal. Path e segmento DEVEM permanecer relativos a raiz declarada, sem traversal, path absoluto, controle, nome reservado do Windows ou equivalencia insegura por caixa/normalizacao. [3301a97]
+Slug DEVE seguir `[a-z0-9]+(?:-[a-z0-9]+)*`: aplicar minúsculas, decomposição Unicode, transliteração ASCII determinística, remoção de acentos, diacríticos e caracteres especiais, substituição de espaços por hifens, colapso e aparo de hifens; resultado vazio e limite de portabilidade DEVEM usar hash causal. Path e segmento DEVEM permanecer relativos à raiz declarada, sem traversal, path absoluto, controle, nome reservado do Windows ou equivalência insegura por caixa/normalização. [3301a97]
 
-Destino ausente DEVE receber o original. Destino existente com SHA-256 identico DEVE eliminar somente a copia redundante depois da validacao transacional. Destino existente com hash diferente DEVE preservar a variante em `<acronimo>.<prefixo-sha256>.<extensao>`; o prefixo DEVE iniciar com oito caracteres e expandir em pares ate desambiguar. [3301a97]
+Destino ausente DEVE receber o original. Destino existente com SHA-256 idêntico DEVE eliminar somente a cópia redundante depois da validação transacional. Destino existente com hash diferente DEVE preservar a variante em `<acronimo>.<prefixo-sha256>.<extensao>`; o prefixo DEVE iniciar com oito caracteres e expandir em pares até desambiguar. [3301a97]
 
 Antes da promoção, o coletor DEVE comparar o SHA-512 integral do PDF/EPUB com todo o acervo: igualdade em diretórios de publicação distintos caracteriza duplicação física global e proíbe a segunda cópia, quaisquer que sejam nomes ou slugs. Resolução editorial determinística DEVE reutilizar o diretório canônico; sem ela, a operação DEVE bloquear para revisão e preservar ambos os estados anteriores sem promover o temporário. [10cb602]
 
@@ -59,11 +59,11 @@ Antes da promoção, o coletor DEVE comparar o SHA-512 integral do PDF/EPUB com 
 
 O downloader DEVE emitir `egw-source/v2`, UTF-8 sem BOM e JSON deterministico. A raiz DEVE conter exatamente `schema_version`, `identity` e `sources`. [3301a97]
 
-`identity` DEVE conter exatamente `author`, `language`, `type`, `title`, `acronym` e `tags`. `tags` DEVE permanecer vazio sem evidencia confirmada. [3301a97]
+`identity` DEVE conter exatamente `author`, `language`, `type`, `title`, `acronym` e `tags`. `tags` DEVE permanecer vazio sem evidência confirmada. [3301a97]
 
 Cada item de `sources` DEVE conter exatamente `format`, `url`, `accessed_at`, `size` e `hashes`; `hashes` DEVE conter exatamente `sha1`, `sha256` e `sha512`. Registros DEVEM ordenar por formato `pdf`, `epub` e depois URL. [3301a97]
 
-Metadado legado URL-chaveado DEVE permanecer entrada valida da migracao. Sua associacao DEVE exigir compatibilidade de formato, URL e SHA-256 com o arquivo quando esses dados existirem; filename isolado NÃO DEVE bastar para declarar conformidade. [3301a97]
+Metadado legado URL-chaveado DEVE permanecer entrada válida da migração. Sua associação DEVE exigir compatibilidade de formato, URL e SHA-256 com o arquivo quando esses dados existirem; filename isolado NÃO DEVE bastar para declarar conformidade. [3301a97]
 
 `egw-source/v2` permanece legível para os 527 grupos existentes e NÃO DEVE ser [3301a97]
 reescrito em execução sem mudança material. Aquisição nova ou atualização
@@ -96,7 +96,7 @@ metadado e índice coerentes comprova incorporação.
 
 ## 4. Contrato comum
 
-`publication_contract.py` e a unidade comum para normalizacao editorial, slug URI, identidade, paths, formatos, hashes, metadados e colisoes. Downloader, migrador, indexador e validador DEVEM reutiliza-la. [3301a97]
+`publication_contract.py` é a unidade comum para normalização editorial, slug URI, identidade, paths, formatos, hashes, metadados e colisões. Downloader, migrador, indexador e validador DEVEM reutilizá-la. [3301a97]
 
 O modulo comum DEVE usar somente a biblioteca padrao do Python. A escolha preserva o runtime preexistente, evita dependencia para regras deterministicas e deixa bibliotecas de navegador/rede restritas ao downloader. [3301a97]
 
@@ -108,14 +108,14 @@ Toda leitura de arquivo para hash DEVE ser binaria, sequencial e calcular SHA-1,
 
 - `plan` DEVE inventariar e gerar plano sem mover; [3301a97]
 - `apply --plan <arquivo>` DEVE aplicar somente plano integro e ainda correspondente ao estado; [3301a97]
-- `rollback --journal <arquivo>` DEVE reverter operacao incompleta ou aplicada ainda nao finalizada; [3301a97]
-- `finalize --journal <arquivo>` DEVE remover quarentena somente depois da validacao completa. [3301a97]
+- `rollback --journal <arquivo>` DEVE reverter operação incompleta ou aplicada ainda não finalizada; [3301a97]
+- `finalize --journal <arquivo>` DEVE remover quarentena somente depois da validação completa. [3301a97]
 
-`plan` DEVE ser o default e não possuir efeito no acervo. O plano DEVE declarar schema, identidade causal, configuracao, inventario, grupos, acoes e renomeacoes Unicode-para-slug, problemas e resumo; ordem e identidade DEVEM independer de horario, cwd e enumeracao do filesystem. [3301a97]
+`plan` DEVE ser o default e não possuir efeito no acervo. O plano DEVE declarar schema, identidade causal, configuração, inventário, grupos, ações e renomeações Unicode-para-slug, problemas e resumo; ordem e identidade DEVEM independer de horário, cwd e enumeração do filesystem. [3301a97]
 
-`apply` DEVE verificar path, tamanho e SHA-256 antes de cada acao de renomeacao, persistir sua intencao antes do movimento, confirmar o journal atomico depois e usar quarentena para redundancia. Falha DEVE acionar rollback reverso, inclusive de registro pendente cuja origem ou destino comprove se o movimento ocorreu; journal e quarentena DEVEM preservar retomada. Replace atomico temporariamente bloqueado DEVE admitir somente retry limitado. `finalize` DEVE recusar estado nao concluido. [3301a97]
+`apply` DEVE verificar path, tamanho e SHA-256 antes de cada ação de renomeação, persistir sua intenção antes do movimento, confirmar o journal atômico depois e usar quarentena para redundância. Falha DEVE acionar rollback reverso, inclusive de registro pendente cuja origem ou destino comprove se o movimento ocorreu; journal e quarentena DEVEM preservar retomada. Replace atômico temporariamente bloqueado DEVE admitir somente retry limitado. `finalize` DEVE recusar estado não concluído. [3301a97]
 
-O migrador NÃO DEVE acessar rede nem modificar bytes de PDF/EPUB; diretorio Unicode vazio somente PODE ser removido depois da validacao integral dos arquivos movidos e o rollback DEVE recria-lo quando necessario. Codigo `0` DEVE indicar sucesso; `1`, falha operacional; `2`, uso ou entrada invalida; `3`, conflito ou precondicao; `4`, integridade insegura. [3301a97]
+O migrador NÃO DEVE acessar rede nem modificar bytes de PDF/EPUB; diretório Unicode vazio somente PODE ser removido depois da validação integral dos arquivos movidos e o rollback DEVE recriá-lo quando necessário. Código `0` DEVE indicar sucesso; `1`, falha operacional; `2`, uso ou entrada inválida; `3`, conflito ou precondição; `4`, integridade insegura. [3301a97]
 
 ## 6. Downloader e descoberta
 
@@ -165,9 +165,9 @@ Item enriquecido e completo DEVE ser entregue ao processamento logo após seu ch
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [6cd652b]
 `--restart` DEVE ser explícito, apagar somente checkpoints de runtime do escopo solicitado e preservar publicações, ledger e ativos canônicos. [6cd652b]
 
-Titulo obtido da interface DEVE permanecer candidato editorial integral e NÃO DEVE constituir prova autossuficiente; somente sua projecao de path DEVE aplicar o slug comum, sem remover artigo, parentese, tag, pontuacao ou qualificador do titulo preservado. [3301a97]
+Título obtido da interface DEVE permanecer candidato editorial integral e NÃO DEVE constituir prova autossuficiente; somente sua projeção de path DEVE aplicar o slug comum, sem remover artigo, parêntese, tag, pontuação ou qualificador do título preservado. [3301a97]
 
-Somente URL HTTPS de host allowlisted DEVE ser aceita. Cada request DEVE validar URL, DNS/IP publico e redirecionamento; conexao DEVE usar timeout, limite de bytes, streaming, cancelamento por interrupcao e arquivo parcial no destino. [3301a97]
+Somente URL HTTPS de host allowlisted DEVE ser aceita. Cada request DEVE validar URL, DNS/IP público e redirecionamento; conexão DEVE usar timeout, limite de bytes, streaming, cancelamento por interrupção e arquivo parcial no destino. [3301a97]
 
 Arquivo parcial somente DEVE ser incorporado depois de resposta completa, formato confirmado e hashes calculados. Incorporacao DEVE usar replace atomico; colisao DEVE aplicar o contrato comum e nunca sobrescrever bytes diferentes. [3301a97]
 
@@ -178,7 +178,7 @@ emitir registro de sucesso. Atualização exige evidência material por hash,
 versão/edição, novo ativo, correção remota, metadado relevante ou arquivo
 local inválido/ausente. [e59c122]
 
-Dependencias de Selenium, Requests e tqdm DEVEM ser carregadas apenas pela execucao da CLI. Ausencia de dependencia DEVE produzir diagnostico e codigo `3`, sem impedir importacao, teste do contrato ou migracao. [3301a97]
+Dependências de Selenium, Requests e tqdm DEVEM ser carregadas apenas pela execução da CLI. Ausência de dependência DEVE produzir diagnóstico e código `3`, sem impedir importação, teste do contrato ou migração. [3301a97]
 
 Os requisitos fixados em `requirements.txt` DEVEM ser preparados pelo bootstrap multi-runtime do repositório em ambiente Python local segregado, antes da execução suportada da CLI. [d9e37be]
 

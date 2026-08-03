@@ -8,6 +8,9 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/pages.yml"
+      - ".RCFs/**"
+      - "RCF.md"
+      - "README.md"
       - "config/publications.json"
       - "config/site.json"
       - "package.json"
@@ -51,7 +54,7 @@ jobs:
         run: npm run site:refresh
 
       - name: Construir e validar
-        run: npm run site:build
+        run: npm run docs:validate && npm run site:build
 
       - name: Enviar artefato
         uses: actions/upload-pages-artifact@v4
