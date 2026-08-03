@@ -5,7 +5,7 @@
 - FT: `FT-018`.
 - tipo: `implementação de código com evolução normativa causal`.
 - fonte: `.ia.rules/state/requests/FT-018/source.md`.
-- estado: em implementação após conclusão pública da FT-017.
+- estado: concluída e validada.
 - prioridade: alta.
 
 ## Objetivo
@@ -38,3 +38,17 @@ propagado sem perda por toda a cadeia.
 5. propagar por analisador, indexador, downloader, TypeScript/npm e ajuda;
 6. testar fresco, expirado, falho, alterado, direto, indireto e forçado;
 7. validar, rastrear e concluir em commits isolados.
+
+## Fechamento
+
+- gate central implementado com prova `completed`, relógio UTC controlável e
+  janela estrita inferior a 24 horas;
+- ativo, hashes integrais, versão do analisador, catálogo e contexto editorial
+  são revalidados antes de qualquer skip;
+- prova ausente, falha, futura, inválida, expirada ou materialmente divergente
+  recalcula; `--force-recalculate` sempre prevalece;
+- propagação comprovada no analisador, no indexador com `--analyze`, no
+  downloader e no wrapper npm que encaminha argumentos integralmente;
+- skip fresco não reescreve manifesto nem aprendizado agregado;
+- 46 testes Python, cinco testes documentais, rastreabilidade e diff aprovados;
+- commits causais: `c9c4f44` e `0a47d86`.

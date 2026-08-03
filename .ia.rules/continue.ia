@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-02T21:25:00-03:00`.
+Atualizado_em: `2026-08-02T22:29:33-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-016 implementada e validada localmente; commit pendente.
+Escopo_atual: FT-018 concluída e validada; integração remota pendente.
 Fonte_local: `.ia.rules/state/TODO.ia.md`.
 Fonte_original: solicitação humana capturada em `.ia.rules/state/requests/FT-014/source.md`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -511,9 +511,19 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 - tipo: `implementação de código com evolução normativa causal`.
 - origem: `.ia.rules/state/requests/FT-018/source.md`.
-- status: em implementação após conclusão da FT-017.
+- status: concluída e validada.
 - objetivo: suprimir avaliação concluída com sucesso há menos de 24 horas e
   propagar override explícito de recálculo forçado por toda invocação direta ou
   indireta, inclusive downloader e wrappers npm.
 - contexto_mestre: `.ia.rules/state/contexts/FT-018/master.md`.
-- proximo_ponto: validar e concluir o gate de 24 horas e sua propagação.
+- implementação: prova persistida `completed` com relógio UTC e gate central
+  estrito de menos de 24 horas; validação integral de bytes, hashes, analisador,
+  catálogo e contexto antes do reuso; `--force-recalculate` propagado pelo
+  analisador, indexador em modo de análise, downloader e wrapper npm.
+- preservação: nenhuma execução corrente foi encerrada ou reiniciada; nenhum
+  ativo, manifesto gerado, cache, temporário ou estado local entrou nos commits.
+- evidências: 46 testes Python direcionados; cinco testes documentais;
+  rastreabilidade com 946 entradas e 833 sentenças materiais; `git diff
+  --check` aprovado.
+- commits: `c9c4f44` (implementação) e `0a47d86` (rastreabilidade).
+- proximo_ponto: publicar `dev`, integrar em `main` e validar a automação remota.
