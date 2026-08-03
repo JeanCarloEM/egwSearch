@@ -5,7 +5,7 @@
 - FT: `FT-018`.
 - tipo: `implementação de código com evolução normativa causal`.
 - fonte: `.ia.rules/state/requests/FT-018/source.md`.
-- estado: enfileirada após a FT-017.
+- estado: em implementação após conclusão pública da FT-017.
 - prioridade: alta.
 
 ## Objetivo

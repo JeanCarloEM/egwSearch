@@ -6,7 +6,7 @@
 - tipo: `documentação, arquitetura normativa e comunicação pública`.
 - fonte: `TODO.ia.md`.
 - prioridade: alta.
-- estado: em implementação.
+- estado: concluída e validada publicamente.
 
 ## Objetivo
 
@@ -71,3 +71,13 @@ especializações subordinadas sem perda de força, regra, exceção ou nuance.
 A FT somente conclui quando o conteúdo público implantado expressar a finalidade
 correta, o README e os RCFs forem coerentes com o estado real, a reorganização
 for auditável e os assets públicos continuarem íntegros sem links na página.
+
+## Fechamento
+
+- material: `cbf1773`;
+- rastreabilidade: `31383dc`, com 829 sentenças materiais validadas;
+- testes: documentação 5/5 e site 4/4;
+- artefato local: `SITE_PUBLICATION_OK`, 604 publicações e 3.562 arquivos;
+- implantação: workflow Pages `30776089574` concluído com sucesso;
+- validação pública: `https://egwsearch.jcem.pro/`, sem erro de console ou
+  overflow horizontal, com finalidade, corpus e estado planejado corretos.

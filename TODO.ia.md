@@ -1,4 +1,4 @@
-- [ ] Corrigir o posicionamento público e reorganizar a documentação do **egwSearch**.
+- [x] Corrigir o posicionamento público e reorganizar a documentação do **egwSearch**.
   - Ler integralmente, antes de qualquer edição, o `AGENTS.md` — na extensão efetivamente aplicável —, o RCF vigente, o `README.md`, a página pública e todos os respectivos fontes, processos de build e assets responsáveis pelo conteúdo publicado.
 
   - Identificar e distinguir inequivocamente:
