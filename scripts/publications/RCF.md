@@ -432,9 +432,9 @@ O índice `publication-global-index/v1` DEVE conter envelope de geração e list
 
 Atualização `--publication` DEVE substituir somente a identidade alvo quando o índice existente cobrir integralmente os metadados válidos do corpus; índice ausente, incompatível ou incompleto DEVE acionar reconstrução integral local. `--scope` analisa/regenera somente a subárvore solicitada, e `--all` cobre o corpus, sempre com resolução a partir da raiz configurada. [1fd53ef]
 
-Toda invocação direta ou indireta da análise DEVE reutilizar sem reexecução uma prova `completed` com menos de 24 horas somente quando ativo, hashes, analisador, catálogo/configuração e contexto editorial continuarem válidos; o skip NÃO DEVE reescrever manifesto, aprendizado, índice, checkpoint ou timestamp. [PENDENTE-CODIGO]
+Toda invocação direta ou indireta da análise DEVE reutilizar sem reexecução uma prova `completed` com menos de 24 horas somente quando ativo, hashes, analisador, catálogo/configuração e contexto editorial continuarem válidos; o skip NÃO DEVE reescrever manifesto, aprendizado, índice, checkpoint ou timestamp. [f0c7638]
 
-`--force-recalculate` DEVE ser o único override da janela e ser propagado pelo downloader, pelo modo de análise do indexador, pelo wrapper TypeScript e pelos comandos npm; prova ausente, falha, expirada, futura, inválida ou materialmente divergente DEVE recalcular. [PENDENTE-CODIGO]
+`--force-recalculate` DEVE ser o único override da janela e ser propagado pelo downloader, pelo modo de análise do indexador, pelo wrapper TypeScript e pelos comandos npm; prova ausente, falha, expirada, futura, inválida ou materialmente divergente DEVE recalcular. [f0c7638]
 
 Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB/PDF, valida os manifestos e atualiza o índice. Somente então PODE marcar o remote ID como confirmado ou iniciar commit opt-in. [1fd53ef]
 
