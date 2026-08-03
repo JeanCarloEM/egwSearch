@@ -283,6 +283,9 @@ class PublicationIntelligenceTests(unittest.TestCase):
             target = root / "index.json"
             publication_index.update_global_index(root, target, config)
             document = json.loads(target.read_text(encoding="utf-8"))
+            manifest = json.loads(
+                publication_index.index_manifest_path(target).read_text(encoding="utf-8")
+            )
             self.assertEqual(document["schema_version"], publication_index.INDEX_SCHEMA)
             self.assertEqual(len(document["publications"]), 1)
             entry = document["publications"][0]
@@ -296,6 +299,15 @@ class PublicationIntelligenceTests(unittest.TestCase):
             )
             self.assertTrue(all(asset["url"].startswith("/publications/") for asset in entry["assets"]))
             self.assertTrue(all(asset["chunking_manifest"] for asset in entry["assets"]))
+            self.assertEqual(
+                manifest["schema_version"], publication_index.INDEX_MANIFEST_SCHEMA
+            )
+            self.assertEqual(manifest["describes"], publication_index.INDEX_SCHEMA)
+            self.assertEqual(manifest["root"]["publications"], "publication[]")
+            self.assertEqual(manifest["types"]["asset"]["format"], "pdf|epub")
+            self.assertNotIn("publications", manifest)
+            self.assertNotIn("totals", manifest)
+            self.assertNotIn("index", manifest)
 
     def test_incremental_index_reuses_shared_entry_builder(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
@@ -317,6 +329,21 @@ class PublicationIntelligenceTests(unittest.TestCase):
                     publication=directory,
                 )
             self.assertEqual(builder.call_count, 1)
+
+    def test_index_manifest_is_agnostic_to_index_state_and_quantity(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            index = Path(temporary) / "index.json"
+            manifest = publication_index.write_index_manifest(index)
+            first = manifest.read_bytes()
+            self.assertFalse(index.exists())
+
+            index.write_text('{"publications": [1, 2, 3]}', encoding="utf-8")
+            publication_index.write_index_manifest(index)
+            self.assertEqual(manifest.read_bytes(), first)
+            document = json.loads(first)
+            self.assertNotIn("totals", document)
+            self.assertNotIn("index", document)
+            self.assertEqual(document["root"]["publications"], "publication[]")
 
     def test_local_derivative_is_not_promoted_to_formative_original(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:

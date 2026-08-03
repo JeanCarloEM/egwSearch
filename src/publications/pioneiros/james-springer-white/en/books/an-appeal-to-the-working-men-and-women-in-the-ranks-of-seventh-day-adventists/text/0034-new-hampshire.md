@@ -1,0 +1,3 @@
+#### NEW HAMPSHIRE.
+
+Bradford, A. A., 1 share, $25 assigned. Bradford, Mary A., 1 share, 25 assigned. Farnsworth, C. K., 10 shares, 250 assigned. Farnsworth, Harriet J., 1 share, 25 assigned. Farnsworth, A. P., 1 share, 25 assigned. Gould, Daniel H., 2 shares, 50 assigned. Hastings, L. W., 1 share, 25 assigned. Hastings, E. W., 1 share, 25 assigned. Jones, B. G., 1 share, 25 assigned. Maee, Harriet E., 1 share, 25 assigned. Maee, Mary C., 1 share, 25 assigned. Nichols, C., 1 share, 25 assigned. Nichols, Freeman, 2 shares, 50 assigned. Robinson, D. H., 1 share, 25 assigned. Searle, Ellen W., 1 share, 25 assigned. Smith, A. W., 40 shares, 1000 assigned. Amount from N. H., $1,650

@@ -1,0 +1,3 @@
+### DONATIONS AND LEGACIES
+
+From April 28, 1863, to Jan. 1, 1872.
