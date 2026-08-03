@@ -373,6 +373,78 @@ class DownloaderTests(unittest.TestCase):
             )
             self.assertTrue(completed["discovery_complete"])
 
+    def test_partial_checkpoint_advances_frontier_before_historical_failure(self) -> None:
+        collection = self._checkpoint_collection()
+        historical_failure = self._checkpoint_item("1038", "Falha histórica")
+        confirmed = self._checkpoint_item("1104", "Última confirmada")
+        frontier = self._checkpoint_item("1105", "Primeira pendente")
+        all_items = [historical_failure, confirmed, frontier]
+        completed = {
+            "state": "completed",
+            "downloaded": 0,
+            "skipped": 1,
+            "extracted": 0,
+            "converted": 0,
+        }
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            state_root = root / "state"
+            source_root = root / "publications"
+            checkpoint_path = baixar._collection_checkpoint_path(
+                state_root, collection, None, None
+            )
+            checkpoint = baixar._new_collection_checkpoint(collection, None, None)
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": item.title_original,
+                    "url": item.public_url,
+                    "author": item.author_name,
+                }
+                for item in all_items
+            ]
+            checkpoint["items"] = [
+                baixar._catalog_item_record(item)
+                for item in (historical_failure, confirmed)
+            ]
+            checkpoint["confirmed_remote_ids"] = [confirmed.remote_id]
+            baixar._save_collection_checkpoint(checkpoint_path, checkpoint)
+            manager = baixar.BrowserSessionManager(
+                _runtime(Mock()),
+                {"delay_seconds": 2, "browser_visible": True},
+                self._runtime_paths(root),
+            )
+            manager._enrich_book = Mock(
+                side_effect=AssertionError("a fronteira local não exige rede")
+            )
+            local_items = {item.remote_id: item for item in all_items}
+
+            def local_preflight(remote_id, *_args):
+                return local_items[remote_id]
+
+            with patch.object(
+                baixar, "_validate_network_url"
+            ), patch.object(
+                baixar,
+                "preflight_local_publication",
+                side_effect=local_preflight,
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=completed
+            ) as process:
+                summary = baixar._process_collection(
+                    collection,
+                    self._checkpoint_config(),
+                    source_root,
+                    state_root,
+                    None,
+                    browser_manager=manager,
+                )
+
+            processed_ids = [call.args[0].remote_id for call in process.call_args_list]
+            self.assertEqual(processed_ids, ["1105", "1038"])
+            self.assertEqual(summary["resumed"], 1)
+            self.assertFalse(checkpoint_path.exists())
+            manager._enrich_book.assert_not_called()
+
     def test_collection_processing_resumes_only_unconfirmed_item(self) -> None:
         collection = self._checkpoint_collection()
         items = [

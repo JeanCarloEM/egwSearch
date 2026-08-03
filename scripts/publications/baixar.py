@@ -1392,10 +1392,6 @@ class BrowserSessionManager:
                 raise ContractError("checkpoint concluído com catálogo parcial; use --restart")
             return items
 
-        if on_item_ready is not None:
-            for position, item in enumerate(items, 1):
-                on_item_ready(item, position, active)
-
         for title, url, author in ordered[len(items) :]:
             remote_id = _book_id_from_url(url)
             if restart:
