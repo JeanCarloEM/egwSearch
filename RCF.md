@@ -33,19 +33,19 @@ Obtenção, gestão, preparação e indexação do acervo, assim como a avaliaç
 algoritmos, métodos de chunking e estratégias de RAG, são meios instrumentais.
 Eles não constituem a finalidade pública do produto.
 
-A ferramenta DEVE suportar livros, compilações, devocionais, revistas, jornais,
+A ferramenta DEVE suportar livros, compilações, devocionais, revistas, jornais, [62596f1]
 periódicos, edições, traduções e títulos simultaneamente disponíveis em PDF e
 EPUB, em árvores recursivas de profundidade ilimitada.
 
 Precisão, rastreabilidade, reutilização de tecnologia existente, resiliência,
 processamento incremental, abstinência diante de prova insuficiente e revisão
-controlada de ambiguidades DEVEM prevalecer sobre conveniência de implementação.
+controlada de ambiguidades DEVEM prevalecer sobre conveniência de implementação. [62596f1]
 
 ## 2. Estado material e limites de comunicação
 
-Nenhuma capacidade DEVE ser declarada disponível sem validação material
+Nenhuma capacidade DEVE ser declarada disponível sem validação material [62596f1]
 proporcional e registrada. Intenção, requisito, protótipo, infraestrutura
-preparatória e implementação parcial DEVEM ser identificados como planejados ou
+preparatória e implementação parcial DEVEM ser identificados como planejados ou [62596f1]
 parciais.
 
 No estado validado desta versão:
@@ -61,45 +61,45 @@ No estado validado desta versão:
   semântica e híbrida, equivalência numérica, Modo Pesquisa, Modo Conversa
   probatório, CLI de pesquisa e GUI local.
 
-A existência de publicações e automações não pode ser apresentada como busca,
+A existência de publicações e automações não pode ser apresentada como busca, [62596f1]
 conversa, RAG operacional ou conformidade integral do produto.
 
 ## 3. Direção tecnológica e operação local
 
 Nenhuma linguagem, biblioteca, motor, índice, modelo, banco, runtime ou
-arquitetura DEVE ser escolhido por preferência, reputação ou conveniência
-isolada. A seleção DEVE comparar qualidade, manutenção, licença,
+arquitetura DEVE ser escolhido por preferência, reputação ou conveniência [62596f1]
+isolada. A seleção DEVE comparar qualidade, manutenção, licença, [62596f1]
 compatibilidade, portabilidade, precisão, desempenho, memória, instalação,
 segurança, operação local, integração, maturidade, testes, custo e
 substituibilidade.
 
-Node.js com TypeScript DEVE ser o eixo principal de integração, orquestração,
-configuração e interfaces quando adequado. Python e outros runtimes PODEM ser
+Node.js com TypeScript DEVE ser o eixo principal de integração, orquestração, [62596f1]
+configuração e interfaces quando adequado. Python e outros runtimes PODEM ser [62596f1]
 usados em segmentos especializados quando houver ganho técnico demonstrável.
 
-O perfil local é primário. Serviço, API, modelo ou IA remotos somente PODEM
+O perfil local é primário. Serviço, API, modelo ou IA remotos somente PODEM [62596f1]
 receber conteúdo por autorização e configuração explícitas, com minimização,
 privacidade, limites e fallback. A indisponibilidade de componente avançado não
-pode inutilizar capacidade independente.
+pode inutilizar capacidade independente. [62596f1]
 
-Bootstrap multi-runtime DEVE ser local, idempotente, versionado, segregado,
+Bootstrap multi-runtime DEVE ser local, idempotente, versionado, segregado, [62596f1]
 reproduzível e incapaz de iniciar coleta, modificar runtime global ou expor
-credencial. Reexecução inalterada DEVE reutilizar ambiente válido; falha ou
-incompatibilidade DEVE produzir diagnóstico acionável sem sucesso falso.
+credencial. Reexecução inalterada DEVE reutilizar ambiente válido; falha ou [62596f1]
+incompatibilidade DEVE produzir diagnóstico acionável sem sucesso falso. [62596f1]
 
 ## 4. Reutilização, evidência e contratos centrais
 
-A implementação NÃO DEVE recriar algoritmo, extrator, parser, tokenizador,
+A implementação NÃO DEVE recriar algoritmo, extrator, parser, tokenizador, [62596f1]
 modelo, índice, tradutor ou função já oferecida por solução adequada. Código
-próprio somente DEVE cobrir integração, adaptação, composição, regra editorial
+próprio somente DEVE cobrir integração, adaptação, composição, regra editorial [62596f1]
 específica ou lacuna funcional comprovada.
 
-Texto original, estrutura, normalização, tokens, derivados e evidências DEVEM
+Texto original, estrutura, normalização, tokens, derivados e evidências DEVEM [62596f1]
 permanecer distinguíveis e rastreáveis. Metadado, citação, referência,
-localização, tradução, relação ou autoridade NÃO DEVEM ser inventados.
-Inferência e interpretação DEVEM ser identificadas como tais.
+localização, tradução, relação ou autoridade NÃO DEVEM ser inventados. [62596f1]
+Inferência e interpretação DEVEM ser identificadas como tais. [62596f1]
 
-Toda escrita material DEVE ser incremental, determinística, validada,
+Toda escrita material DEVE ser incremental, determinística, validada, [62596f1]
 retomável e segura contra perda, duplicação, sobrescrita e estado parcial.
 Entrada remota, EPUB, PDF e arquivo compactado são não confiáveis até validação.
 
@@ -128,7 +128,7 @@ especializam.
 
 ## Implementação faseada e aceite global
 
-Mudança material DEVE partir do estado real, possuir FT rastreável e validação
+Mudança material DEVE partir do estado real, possuir FT rastreável e validação [62596f1]
 proporcional. Fase concluída não comprova capacidade posterior nem autoriza
 comunicação antecipada.
 
@@ -137,5 +137,5 @@ cadeia documental, o Modo Pesquisa, o Modo Conversa probatório, a operação
 local/CLI, a GUI aplicável, segurança, privacidade, desempenho, acessibilidade,
 rastreabilidade e conjuntos de avaliação satisfizerem conjuntamente esta suíte.
 
-Até esse aceite, toda superfície pública DEVE distinguir o disponível, o
+Até esse aceite, toda superfície pública DEVE distinguir o disponível, o [62596f1]
 parcial e o planejado.
