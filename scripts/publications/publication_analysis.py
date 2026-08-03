@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import math
@@ -50,6 +51,7 @@ MAX_XML_BYTES = 16 * 1024 * 1024
 MAX_EPUB_TEXT_BYTES = 128 * 1024 * 1024
 MAX_PDF_TEXT_BYTES = 128 * 1024 * 1024
 MAX_EXPERIMENT_CHUNKS = 250_000
+FRESHNESS_WINDOW = timedelta(hours=24)
 
 
 class AnalysisError(ContractError):
@@ -81,6 +83,72 @@ def _write_json_if_changed(path: Path, document: dict) -> bool:
         return False
     write_json_atomic(path, document)
     return True
+
+
+def _effective_now(now: datetime | None = None) -> datetime:
+    """Normaliza o relógio injetável usado pela prova temporal."""
+
+    value = now or datetime.now(timezone.utc)
+    if value.tzinfo is None:
+        raise AnalysisError("relógio de análise sem fuso horário")
+    return value.astimezone(timezone.utc)
+
+
+def _successful_age(document: dict, now: datetime) -> timedelta | None:
+    """Retorna a idade somente de uma conclusão temporal íntegra."""
+
+    execution = document.get("execution")
+    if not isinstance(execution, dict) or execution.get("status") != "completed":
+        return None
+    completed_at = execution.get("completed_at")
+    if not isinstance(completed_at, str):
+        return None
+    try:
+        completed = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if completed.tzinfo is None:
+        return None
+    age = now - completed.astimezone(timezone.utc)
+    return age if age >= timedelta(0) else None
+
+
+def _current_manifest(
+    target: Path,
+    evidence,
+    catalog_hash: str,
+    metadata_path: Path | None,
+) -> dict | None:
+    """Valida identidade, configuração e contexto antes de qualquer reuso."""
+
+    if not target.is_file():
+        return None
+    try:
+        current = json.loads(target.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    asset_state = current.get("asset") if isinstance(current, dict) else None
+    generator = current.get("generator") if isinstance(current, dict) else None
+    current_catalog = current.get("catalog") if isinstance(current, dict) else None
+    metadata_current = (
+        metadata_path is None
+        or target.stat().st_mtime_ns >= metadata_path.stat().st_mtime_ns
+    )
+    if not (
+        isinstance(current, dict)
+        and current.get("schema_version") == MANIFEST_SCHEMA
+        and isinstance(generator, dict)
+        and generator.get("id") == ANALYZER_ID
+        and generator.get("version") == ANALYZER_VERSION
+        and isinstance(current_catalog, dict)
+        and current_catalog.get("sha256") == catalog_hash
+        and isinstance(asset_state, dict)
+        and asset_state.get("size") == evidence.size
+        and asset_state.get("hashes") == evidence.as_dict()
+        and metadata_current
+    ):
+        return None
+    return current
 
 
 def _safe_zip_entries(archive: zipfile.ZipFile) -> list[zipfile.ZipInfo]:
@@ -1196,6 +1264,8 @@ def _analyze_assets(
     reporter: PublicationReporter | None = None,
     rebuild_after: bool = True,
     reuse_existing: bool = False,
+    force_recalculate: bool = False,
+    now: datetime | None = None,
 ) -> list[Path]:
     """Executa e prova experimentos para o conjunto explicitamente solicitado."""
 
@@ -1206,41 +1276,23 @@ def _analyze_assets(
         raise AnalysisError(f"publicação sem EPUB/PDF: {publication}")
     catalog, catalog_hash = _catalog()
     context, metadata_path = _publication_context(publication)
+    current_time = _effective_now(now)
     written = []
+    recalculated = False
     for asset in assets:
         target = manifest_path_for(asset)
-        evidence = hash_file(asset) if reuse_existing else None
-        if reuse_existing and evidence is not None and target.is_file():
-            try:
-                current = json.loads(target.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                current = None
-            asset_state = current.get("asset") if isinstance(current, dict) else None
-            generator = current.get("generator") if isinstance(current, dict) else None
-            current_catalog = current.get("catalog") if isinstance(current, dict) else None
-            metadata_current = (
-                metadata_path is None
-                or target.stat().st_mtime_ns >= metadata_path.stat().st_mtime_ns
-            )
-            if (
-                isinstance(current, dict)
-                and current.get("schema_version") == MANIFEST_SCHEMA
-                and isinstance(generator, dict)
-                and generator.get("id") == ANALYZER_ID
-                and generator.get("version") == ANALYZER_VERSION
-                and isinstance(current_catalog, dict)
-                and current_catalog.get("sha256") == catalog_hash
-                and isinstance(asset_state, dict)
-                and asset_state.get("size") == evidence.size
-                and asset_state.get("hashes") == evidence.as_dict()
-                and metadata_current
-            ):
-                if reporter is not None:
-                    reporter.experiments(
-                        asset.relative_to(root), current.get("experiments") or []
-                    )
-                written.append(target)
-                continue
+        evidence = hash_file(asset)
+        current = _current_manifest(target, evidence, catalog_hash, metadata_path)
+        age = _successful_age(current, current_time) if current is not None else None
+        fresh = age is not None and age < FRESHNESS_WINDOW
+        if current is not None and not force_recalculate and fresh:
+            if reporter is not None:
+                reporter.notice(
+                    "Análise reutilizada",
+                    f"{asset.relative_to(root).as_posix()} · menos de 24 h",
+                )
+            written.append(target)
+            continue
         report = inspect_asset(asset, evidence)
         experiments = _run_experiments(report, context)
         persisted_experiments = [
@@ -1259,6 +1311,10 @@ def _analyze_assets(
         document = {
             "schema_version": MANIFEST_SCHEMA,
             "generator": {"id": ANALYZER_ID, "version": ANALYZER_VERSION},
+            "execution": {
+                "status": "completed",
+                "completed_at": current_time.isoformat().replace("+00:00", "Z"),
+            },
             "catalog": {
                 "id": catalog["catalog_id"],
                 "schema": catalog["schema_version"],
@@ -1332,10 +1388,11 @@ def _analyze_assets(
             ),
         }
         _write_json_if_changed(target, document)
+        recalculated = True
         if reporter is not None:
             reporter.experiments(asset.relative_to(root), experiments)
         written.append(target)
-    if rebuild_after:
+    if rebuild_after and (recalculated or not learning_path_for(root).is_file()):
         rebuild_learning(root, catalog_hash)
     return written
 
@@ -1347,6 +1404,8 @@ def analyze_publication(
     *,
     rebuild_after: bool = True,
     reuse_existing: bool = False,
+    force_recalculate: bool = False,
+    now: datetime | None = None,
 ) -> list[Path]:
     """Analisa todos os EPUB/PDF diretos de uma publicação como uma unidade."""
 
@@ -1363,6 +1422,8 @@ def analyze_publication(
         reporter,
         rebuild_after=rebuild_after,
         reuse_existing=reuse_existing,
+        force_recalculate=force_recalculate,
+        now=now,
     )
 
 
@@ -1395,6 +1456,8 @@ def analyze_scope(
     reporter: PublicationReporter | None = None,
     *,
     reuse_existing: bool = False,
+    force_recalculate: bool = False,
+    now: datetime | None = None,
 ) -> list[Path]:
     candidate = target.resolve()
     root = source_root.resolve()
@@ -1409,6 +1472,8 @@ def analyze_scope(
             root,
             reporter,
             reuse_existing=reuse_existing,
+            force_recalculate=force_recalculate,
+            now=now,
         )
     written = []
     for directory in publication_directories(target, source_root):
@@ -1419,6 +1484,8 @@ def analyze_scope(
                 reporter,
                 rebuild_after=False,
                 reuse_existing=reuse_existing,
+                force_recalculate=force_recalculate,
+                now=now,
             )
         )
     if not written:
@@ -1436,7 +1503,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--resume",
         action="store_true",
-        help="reutiliza somente manifests v2 cujo ativo e contexto seguem válidos",
+        help="mantido por compatibilidade; o reuso válido por 24 h já é automático",
+    )
+    parser.add_argument(
+        "--force-recalculate",
+        action="store_true",
+        help="ignora a conclusão válida das últimas 24 horas e recalcula",
     )
     scope = parser.add_mutually_exclusive_group(required=True)
     scope.add_argument("--asset", type=Path)
@@ -1465,6 +1537,7 @@ def main(argv: Iterable[str] | None = None) -> int:
             source_root,
             reporter,
             reuse_existing=arguments.resume,
+            force_recalculate=arguments.force_recalculate,
         )
         reporter.result(
             "Análise concluída",

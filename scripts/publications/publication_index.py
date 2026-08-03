@@ -25,6 +25,7 @@ from publication_console import PublicationReporter
 
 from publication_analysis import (
     MANIFEST_SCHEMA,
+    analyze_scope,
     extract_metadata_evidence,
     manifest_path_for,
 )
@@ -633,6 +634,16 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
     parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--analyze",
+        action="store_true",
+        help="executa antes o avaliador, respeitando a janela de 24 horas",
+    )
+    parser.add_argument(
+        "--force-recalculate",
+        action="store_true",
+        help="propaga recálculo forçado ao avaliador usado por --analyze",
+    )
     scope = parser.add_mutually_exclusive_group(required=True)
     scope.add_argument("--publication", type=Path)
     scope.add_argument("--scope", type=Path)
@@ -653,6 +664,20 @@ def main(argv: Iterable[str] | None = None) -> int:
             else configured_index_path(config)
         )
         reporter.start(str(output))
+        if arguments.force_recalculate and not arguments.analyze:
+            raise IndexError("--force-recalculate exige --analyze")
+        if arguments.analyze:
+            if arguments.manifest_only:
+                raise IndexError("--analyze não se aplica a --manifest-only")
+            analysis_target = source_root if arguments.all else (
+                arguments.publication or arguments.scope
+            )
+            analyze_scope(
+                Path(analysis_target),
+                source_root,
+                reporter.child("Análise"),
+                force_recalculate=arguments.force_recalculate,
+            )
         manifest_output = None
         if arguments.manifest_only:
             manifest_output = write_index_manifest(output)

@@ -537,6 +537,10 @@ O analisador DEVE produzir fingerprint de formato/estrutura e atualizar uma base
 
 Invocação DEVE aceitar exatamente um escopo entre ativo, publicação, diretório/subárvore e corpus integral. O resultado por ativo DEVE ser idempotente, versionado, explicável e invalidado quando bytes, parser, algoritmo, configuração ou sinais causais mudarem. [62596f1]
 
+Antes de executar experimentos, toda invocação direta ou indireta do avaliador DEVE validar uma prova persistida de conclusão bem-sucedida cuja idade seja inferior a 24 horas e cuja identidade do ativo, hashes, versão do analisador, catálogo/configuração causal e contexto editorial permaneçam íntegros; prova válida DEVE produzir `skipped` sem reescrever manifesto, aprendizado, índice, checkpoint ou timestamp. [PENDENTE-CODIGO]
+
+Somente `--force-recalculate` PODE ignorar a janela válida; downloader, indexador quando invocar análise, wrappers TypeScript e comandos npm DEVEM propagar essa opção sem perda ou mudança semântica. Prova ausente, falha/incompleta, instante futuro/inválido, idade igual ou superior a 24 horas ou mudança material DEVE executar novamente os experimentos. [PENDENTE-CODIGO]
+
 O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da unidade e a atualização compartilhada do índice depois de validar/promover os ativos e antes de confirmar o checkpoint; falha preserva a publicação material, impede confirmação e permite retomada estritamente local sem nova requisição à origem. [62596f1]
 
 ### 43.2.1 Catálogo global de hipóteses experimentais

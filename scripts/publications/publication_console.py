@@ -231,6 +231,19 @@ class PublicationReporter:
     def publication_gap(self) -> None:
         self.stream.write("\n\n")
 
+    def notice(self, stage: str, detail: str) -> None:
+        """Emite um diagnóstico unitário sem abrir tabela redundante."""
+
+        value = compact_path(detail, max(24, self.width - len(stage) - 4))
+        if self._rich:
+            self._console.print(
+                f"[dim cyan]{stage}[/dim cyan]  {value}",
+                no_wrap=True,
+                overflow="ellipsis",
+            )
+        else:
+            self.stream.write(f"{stage}: {value}\n")
+
     def error(self, stage: str, error: BaseException | str) -> None:
         value = compact_path(str(error), max(24, self.width - len(stage) - 9))
         if self._rich:

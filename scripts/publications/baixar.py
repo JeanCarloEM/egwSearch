@@ -2710,6 +2710,8 @@ def finalize_publication_intelligence(
     source_root: Path,
     config: dict,
     reporter: PublicationReporter | None = None,
+    *,
+    force_recalculate: bool = False,
 ) -> dict:
     """Analisa ativos e atualiza o índice antes de confirmar a publicação.
 
@@ -2720,7 +2722,12 @@ def finalize_publication_intelligence(
 
     directory = source_root / item.publication_identity().relative_directory()
     analysis_reporter = reporter.child("Análise") if reporter is not None else None
-    manifests = analyze_publication(directory, source_root, analysis_reporter)
+    manifests = analyze_publication(
+        directory,
+        source_root,
+        analysis_reporter,
+        force_recalculate=force_recalculate,
+    )
     canonical_root = resolve_repository_path(
         str(config["source_root"]), REPOSITORY_ROOT
     ).resolve()
@@ -2769,6 +2776,7 @@ def _process_collection(
     publication_query: str | None = None,
     local_index: dict[str, list[Path]] | None = None,
     restart: bool = False,
+    force_recalculate: bool = False,
     reporter: PublicationReporter | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
@@ -2919,6 +2927,7 @@ def _process_collection(
                         source_root,
                         config,
                         reporter,
+                        force_recalculate=force_recalculate,
                     )
                 except Exception as error:
                     ledger.transition(
@@ -3184,6 +3193,7 @@ def run(
     no_network: bool = False,
     revalidate: bool = False,
     restart: bool = False,
+    force_recalculate: bool = False,
     commit_per_publication: bool = False,
     publication_query: str | None = None,
 ) -> int:
@@ -3278,6 +3288,7 @@ def run(
                         publication_query=publication_query,
                         local_index=local_index,
                         restart=restart,
+                        force_recalculate=force_recalculate,
                         reporter=reporter,
                     )
                 )
@@ -3304,6 +3315,7 @@ def run(
                         publication_query=publication_query,
                         local_index=local_index,
                         restart=restart,
+                        force_recalculate=force_recalculate,
                         reporter=reporter,
                     ): collection["id"]
                     for collection in collections
@@ -3362,6 +3374,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Descarta checkpoints do escopo selecionado e inicia nova execução.",
     )
     parser.add_argument(
+        "--force-recalculate",
+        action="store_true",
+        help="Ignora análises concluídas há menos de 24 horas e recalcula.",
+    )
+    parser.add_argument(
         "--publication",
         help="ID remoto, URL ou trecho de título para uma publicação específica.",
     )
@@ -3391,6 +3408,7 @@ def main(argv: list[str] | None = None) -> int:
             no_network=arguments.no_network,
             revalidate=arguments.revalidate,
             restart=arguments.restart,
+            force_recalculate=arguments.force_recalculate,
             commit_per_publication=arguments.commit,
             publication_query=arguments.publication,
         )

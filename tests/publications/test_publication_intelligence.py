@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import sys
@@ -36,6 +37,7 @@ from publication_analysis import (  # noqa: E402
 )
 from publication_contract import hash_file, write_json_atomic  # noqa: E402
 import publication_index  # noqa: E402
+import baixar  # noqa: E402
 
 
 class SafeEpubEntryTests(unittest.TestCase):
@@ -172,6 +174,120 @@ def _materialize(root: Path, item: CatalogItem) -> tuple[Path, Path, Path]:
 
 
 class PublicationIntelligenceTests(unittest.TestCase):
+    def test_fresh_success_skips_for_24_hours_and_force_recalculates(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, _epub, _pdf = _materialize(root, _item())
+            started = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
+            manifests = analyze_publication(directory, root, now=started)
+            before = {path: path.stat().st_mtime_ns for path in manifests}
+            learning_before = learning_path_for(root).stat().st_mtime_ns
+
+            with patch("publication_analysis.inspect_asset") as inspector:
+                analyze_publication(
+                    directory,
+                    root,
+                    now=started + timedelta(hours=23, minutes=59),
+                )
+            inspector.assert_not_called()
+            self.assertEqual(before, {path: path.stat().st_mtime_ns for path in manifests})
+            self.assertEqual(learning_before, learning_path_for(root).stat().st_mtime_ns)
+
+            forced_at = started + timedelta(hours=1)
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_publication(
+                    directory,
+                    root,
+                    now=forced_at,
+                    force_recalculate=True,
+                )
+            self.assertEqual(inspector.call_count, 2)
+            refreshed = json.loads(manifests[0].read_text(encoding="utf-8"))
+            self.assertEqual(refreshed["execution"]["status"], "completed")
+            self.assertEqual(refreshed["execution"]["completed_at"], "2026-08-02T13:00:00Z")
+
+    def test_expired_or_failed_proof_recalculates(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, epub, _pdf = _materialize(root, _item())
+            started = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
+            analyze_publication(directory, root, now=started)
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_publication(directory, root, now=started + timedelta(hours=24))
+            self.assertEqual(inspector.call_count, 2)
+
+            manifest = manifest_path_for(epub)
+            document = json.loads(manifest.read_text(encoding="utf-8"))
+            document["execution"]["status"] = "failed"
+            write_json_atomic(manifest, document)
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_scope(epub, root, now=started + timedelta(hours=25))
+            self.assertEqual(inspector.call_count, 1)
+
+            document = json.loads(manifest.read_text(encoding="utf-8"))
+            document["execution"]["completed_at"] = "2026-08-04T12:00:00Z"
+            write_json_atomic(manifest, document)
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_scope(epub, root, now=started + timedelta(hours=26))
+            self.assertEqual(inspector.call_count, 1)
+
+    def test_force_flag_propagates_through_downloader_and_indexer(self) -> None:
+        wrapper = (MODULE_ROOT / "run-baixar.ts").read_text(encoding="utf-8")
+        package = json.loads((REPOSITORY_ROOT / "package.json").read_text(encoding="utf-8"))
+        self.assertIn("...rawArguments", wrapper)
+        self.assertIn("--tool=publication_analysis.py", package["scripts"]["publications:analyze"])
+        downloader_arguments = baixar.build_parser().parse_args(["--force-recalculate"])
+        self.assertTrue(downloader_arguments.force_recalculate)
+        index_arguments = publication_index._parser().parse_args(
+            ["--all", "--analyze", "--force-recalculate"]
+        )
+        self.assertTrue(index_arguments.analyze)
+        self.assertTrue(index_arguments.force_recalculate)
+
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, _epub, _pdf = _materialize(root, _item())
+            config = _config(root)
+            target = root / "index.json"
+            target.write_text('{"publications": []}', encoding="utf-8")
+            with (
+                patch.object(publication_index, "load_config", return_value=config),
+                patch.object(publication_index, "configured_index_path", return_value=target),
+                patch.object(publication_index, "analyze_scope", return_value=[]) as analysis,
+                patch.object(publication_index, "update_global_index", return_value=target),
+            ):
+                self.assertEqual(
+                    publication_index.main(
+                        ["--config", "unused.json", "--all", "--analyze", "--force-recalculate"]
+                    ),
+                    0,
+                )
+            self.assertTrue(analysis.call_args.kwargs["force_recalculate"])
+
+            with (
+                patch.object(baixar, "analyze_publication", return_value=[]) as analysis,
+                patch.object(baixar, "update_global_index", return_value=target),
+            ):
+                baixar.finalize_publication_intelligence(
+                    _item(),
+                    root,
+                    config,
+                    force_recalculate=True,
+                )
+            self.assertTrue(analysis.call_args.kwargs["force_recalculate"])
+
     def test_epub_and_pdf_receive_explainable_idempotent_manifests(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
             root = Path(temporary) / "publications"
