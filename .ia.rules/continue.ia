@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-02T22:34:39-03:00`.
+Atualizado_em: `2026-08-03T00:50:19-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-018 concluída, integrada e publicada.
+Escopo_atual: FT-019 concluida e validada localmente.
 Fonte_local: `.ia.rules/state/TODO.ia.md`.
 Fonte_original: solicitação humana capturada em `.ia.rules/state/requests/FT-014/source.md`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -534,7 +534,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 - tipo: `correcao normativa e implementacao de codigo`.
 - origem: `.ia.rules/state/requests/FT-019/source.md`.
-- status: evolucao normativa concluida; codigo pendente de autorizacao.
+- status: concluida.
 - objetivo: respeitar a fronteira ja persistida da colecao e avancar primeiro
   para o item ainda nao visitado, sem reabrir navegador nem repetir
   processamento, analise ou indexacao do prefixo confirmado.
@@ -546,5 +546,12 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   temporarios, localstores ou alteracoes alheias.
 - validacao_normativa: `agent:rcf` aprovado com 948 entradas e 835 sentencas
   materiais; artefatos causais preparados para `baixar.py` e teste direcionado.
-- proximo_ponto: interromper e aguardar autorizacao humana explicita para a
-  fase de codigo, conforme a Norma do Construtor.
+- implementacao: o callback nao reitera o prefixo persistido; a fronteira
+  `ordered[len(items):]` avanca primeiro e falhas historicas ficam para o laco
+  posterior de itens ainda nao confirmados.
+- evidencia: teste reproduz `1038` pendente, `1104` confirmado e `1105` como
+  fronteira; ordem material `1105`, `1038`, sem enriquecimento remoto.
+- validacao: quatro testes direcionados em 0,155 s, `py_compile` e
+  `git diff --check` aprovados.
+- commit_material: `90d53ff33874d0911564f56051ddfeaeaf9423a0`.
+- proximo_ponto: nenhuma pendencia na FT-019; aguardar solicitacao humana.

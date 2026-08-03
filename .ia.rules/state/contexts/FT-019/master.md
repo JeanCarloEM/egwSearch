@@ -5,7 +5,7 @@
 - FT: `FT-019`.
 - tipo: `correcao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-019/source.md`.
-- estado: evolucao normativa concluida; codigo pendente de autorizacao.
+- estado: concluida.
 - prioridade: alta.
 
 ## Problema comprovado
@@ -68,4 +68,19 @@ fronteira inedita, sem bloquear a continuidade da colecao.
 - duas sentencas materiais foram preparadas no mapa causal para
   `baixar.py` e seu teste direcionado;
 - `agent:rcf` aprovado com 948 entradas e 835 sentencas materiais;
-- a fase de codigo permanece pendente da autorizacao humana exigida pela Norma.
+- a fase de codigo foi autorizada explicitamente em `2026-08-03`.
+
+## Fechamento material
+
+- `discover_catalog_items` nao reinvoca mais o callback para o prefixo ja
+  persistido de um checkpoint parcial;
+- a fatia inedita `ordered[len(items):]` e promovida primeiro, enquanto o laco
+  final existente reconsidera somente depois as falhas historicas ainda nao
+  confirmadas;
+- o teste reproduz `1038` pendente, `1104` confirmado e `1105` como fronteira,
+  comprovando a ordem `1105`, `1038` e nenhuma chamada de enriquecimento remoto;
+- quatro testes direcionados passaram em 0,155 s; `py_compile` e
+  `git diff --check` foram aprovados;
+- commit material causal: `90d53ff33874d0911564f56051ddfeaeaf9423a0`;
+- publicacoes, manifestos gerados, caches, temporarios, localstores e runtime
+  permaneceram fora da alteracao.
