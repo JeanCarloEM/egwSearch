@@ -406,6 +406,8 @@ O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte
 
 `publication_analysis.py` DEVE ser a capacidade única de análise de EPUB/PDF e `publication_index.py` a capacidade única do índice global; seus `main()` são invocadores finos das mesmas funções usadas pelo downloader, sem reimplementação de schema ou regra de negócio. [0f85f08]
 
+O indexador DEVE manter ao lado do índice um manifesto estrutural ultrassucinto, tipado, determinístico e agnóstico de estado, quantidade ou conteúdo real, definindo exclusivamente a forma do índice sem replicar publicações ou valores observados. [PENDENTE-CODIGO]
+
 O manifesto de cada ativo DEVE usar schema versionado e registrar somente identidade/hashes, parser realmente executado, estrutura observada, referência normalizada sem texto, experimentos executados, métricas, hashes de prova e recomendação comprovada; benefícios, riscos, descrições, parâmetros genéricos e hipóteses não executadas DEVEM permanecer no catálogo global versionado referenciado por ID/versão/hash. [c960c0f]
 
 Para EPUB gerado pelo produto, a análise DEVE reconhecer o manifesto Markdown reversível, separar capa/proveniência/sumário do spine editorial e aproveitar headings, IDs, unidades e source map já conhecidos; Markdown embutido serve de evidência estrutural e NÃO DEVE ser extraído persistentemente. [0f85f08]

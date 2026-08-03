@@ -42,9 +42,97 @@ from publication_contract import (
 
 
 INDEX_SCHEMA = "publication-global-index/v1"
+INDEX_MANIFEST_SCHEMA = "publication-index-manifest/v1"
 GENERATOR_ID = "egwSearch/publication_index.py"
 GENERATOR_VERSION = "1"
 _INDEX_LOCK = threading.Lock()
+
+INDEX_MANIFEST = {
+    "schema_version": INDEX_MANIFEST_SCHEMA,
+    "describes": INDEX_SCHEMA,
+    "notation": {"T?": "T|null", "T[]": "array<T>"},
+    "root": {
+        "schema_version": f"literal:{INDEX_SCHEMA}",
+        "generation": "generation",
+        "locales": "locale[]",
+        "publications": "publication[]",
+    },
+    "types": {
+        "generation": {
+            "generator": "string",
+            "version": "string",
+            "configuration_sha256": "hex(64)",
+            "source_fingerprint": "hex(64)",
+        },
+        "locale": {
+            "language_path": "string",
+            "category": "string",
+            "type": "string",
+            "publications": "integer",
+        },
+        "publication": {
+            "id": "string",
+            "remote_id": "string?",
+            "title": "title",
+            "author": "author",
+            "localization": "localization",
+            "tags": "string[]",
+            "public_url": "string?",
+            "path": "string",
+            "metadata": "metadata",
+            "cover": "resource?",
+            "assets": "asset[]",
+            "formative_state": "string",
+            "formative_data": "formative?",
+        },
+        "title": {
+            "original": "string",
+            "normalized": "string",
+            "route_slug": "string",
+            "acronym": "string",
+        },
+        "author": {"name": "string", "key": "string"},
+        "localization": {
+            "language": "string",
+            "language_path": "string",
+            "category": "string",
+            "type": "string",
+        },
+        "metadata": {"path": "string", "quality": "string"},
+        "resource": {
+            "path": "string",
+            "url": "string",
+            "size": "integer",
+            "hashes": "hashes",
+        },
+        "asset": {
+            "format": "pdf|epub",
+            "path": "string",
+            "url": "string",
+            "size": "integer",
+            "hashes": "hashes",
+            "chunking_manifest": "string?",
+        },
+        "hashes": {"sha1": "hex(40)", "sha256": "hex(64)", "sha512": "hex(128)"},
+        "formative": {"book": "book", "urls": "url[]", "global_hashes": "global_hash[]"},
+        "book": {
+            "title": "string",
+            "contributors": "contributor[]",
+            "edition": "object",
+            "language": "string",
+            "primary_category": "string",
+            "tags": "string[]",
+        },
+        "contributor": {"name": "string", "role": "string"},
+        "url": {"format": "pdf|epub", "url": "string"},
+        "global_hash": {
+            "format": "pdf|epub",
+            "sha1": "hex(40)",
+            "sha256": "hex(64)",
+            "sha512": "hex(128)",
+        },
+    },
+}
 
 
 class IndexError(ContractError):
@@ -446,6 +534,20 @@ def _valid_existing(path: Path) -> dict | None:
     return value
 
 
+def index_manifest_path(index_path: Path) -> Path:
+    """Mantém o cartão sucinto imediatamente ao lado do índice descrito."""
+
+    return index_path.with_name(f"{index_path.stem}.manifest{index_path.suffix}")
+
+
+def write_index_manifest(index_path: Path) -> Path:
+    """Materializa o mapa tipado, agnóstico de qualquer instância do índice."""
+
+    target = index_manifest_path(index_path)
+    _write_json_if_changed(target, INDEX_MANIFEST)
+    return target
+
+
 def _update_global_index_unlocked(
     source_root: Path,
     index_path: Path,
@@ -479,7 +581,9 @@ def _update_global_index_unlocked(
         entries.append(replacement)
     else:
         entries = [build_index_entry(path, root, config) for path in all_metadata]
-    _write_json_if_changed(target, _document(entries, config))
+    document = _document(entries, config)
+    _write_json_if_changed(target, document)
+    write_index_manifest(target)
     return target
 
 
@@ -510,7 +614,9 @@ def generate_scope_index(
         build_index_entry(path, source_root.resolve(), config)
         for path in _metadata_paths(source_root, scope)
     ]
-    _write_json_if_changed(index_path, _document(entries, config))
+    document = _document(entries, config)
+    _write_json_if_changed(index_path, document)
+    write_index_manifest(index_path)
     return index_path
 
 
@@ -531,6 +637,7 @@ def _parser() -> argparse.ArgumentParser:
     scope.add_argument("--publication", type=Path)
     scope.add_argument("--scope", type=Path)
     scope.add_argument("--all", action="store_true")
+    scope.add_argument("--manifest-only", action="store_true")
     return parser
 
 
@@ -546,7 +653,10 @@ def main(argv: Iterable[str] | None = None) -> int:
             else configured_index_path(config)
         )
         reporter.start(str(output))
-        if arguments.scope is not None:
+        manifest_output = None
+        if arguments.manifest_only:
+            manifest_output = write_index_manifest(output)
+        elif arguments.scope is not None:
             if arguments.output is None:
                 raise IndexError("--scope exige --output para não substituir o índice global")
             generate_scope_index(source_root, output, config, arguments.scope)
@@ -557,15 +667,19 @@ def main(argv: Iterable[str] | None = None) -> int:
                 config,
                 publication=arguments.publication,
             )
-        indexed = json.loads(output.read_text(encoding="utf-8"))
-        reporter.result(
-            "Índice concluído",
-            {
+        indexed = None if manifest_output else json.loads(output.read_text(encoding="utf-8"))
+        summary = (
+            {"manifesto": manifest_output, "schema": INDEX_MANIFEST_SCHEMA}
+            if manifest_output
+            else {
                 "publicações": len(indexed.get("publications") or []),
                 "arquivo": output,
-                "fingerprint": str((indexed.get("generation") or {}).get("source_fingerprint") or "—")[:16],
-            },
+                "fingerprint": str(
+                    (indexed.get("generation") or {}).get("source_fingerprint") or "—"
+                )[:16],
+            }
         )
+        reporter.result("Manifesto concluído" if manifest_output else "Índice concluído", summary)
         return 0
     except (IndexError, ContractError, OSError) as error:
         reporter.error("Índice", error)
