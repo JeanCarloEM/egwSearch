@@ -161,6 +161,7 @@ Na retomada, todo item não confirmado DEVE passar novamente pelo preflight vige
 
 O coletor DEVE gravar checkpoint atômico por coleção, filtro e limite depois da normalização do catálogo, depois de cada enriquecimento e depois de cada item confirmado. [8b60a50]
 Retomada DEVE reutilizar catálogo e itens persistidos e continuar somente os enriquecimentos ou itens pendentes; checkpoint textual DEVE continuar da próxima página editorial ainda não confirmada. [8b60a50]
+Na descoberta parcial retomada, `len(items)` DEVE ser a fronteira do catálogo já enriquecida: o adaptador NÃO DEVE chamar `on_item_ready` para esse prefixo, DEVE enriquecer e processar primeiro `ordered[len(items):]` e somente depois PODE tentar novamente IDs anteriores ainda não confirmados. Item confirmado NÃO PODE acionar navegador, HTTP, fechamento inteligente ou indexação. [PENDENTE-CODIGO]
 Item enriquecido e completo DEVE ser entregue ao processamento logo após seu checkpoint atômico, antes de iniciar o enriquecimento seguinte. Item posterior incompleto, bloqueado ou interrompido NÃO DEVE criar bloqueio em cadeia sobre geração, promoção ou confirmação dos itens anteriores. [fe5d354]
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [8b60a50]
 `--restart` DEVE ser explícito, apagar somente checkpoints de runtime do escopo solicitado e preservar publicações, ledger e ativos canônicos. [8b60a50]

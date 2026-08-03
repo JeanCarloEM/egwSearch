@@ -184,6 +184,7 @@ temporários; parcial nunca DEVE ser promovido ou indexado como concluído. [625
 
 A execução DEVE persistir atomicamente checkpoint de escopo compatível com coleção, filtro e limite, contendo catálogo normalizado, enriquecimentos já comprovados e identidades cujo processamento terminou em estado confirmado. [62596f1]
 Nova invocação do mesmo escopo DEVE retomar automaticamente o primeiro enriquecimento ou item ainda não confirmado, sem consultar novamente páginas, capas, textos ou ativos já preservados pelo checkpoint. [62596f1]
+Durante descoberta parcial retomada, a quantidade ordenada de itens enriquecidos e atomicamente persistidos DEVE definir a fronteira ainda não visitada; o coletor DEVE avançar diretamente dessa fronteira antes de voltar a qualquer falha anterior, e NÃO DEVE reinvocar processamento, análise, indexação, navegador ou rede para o prefixo confirmado. Pendências históricas anteriores permanecem registradas e somente PODEM ser tentadas depois de esgotada a fronteira inédita. [PENDENTE-CODIGO]
 Cada publicação cujo enriquecimento esteja completo DEVE ser processada, validada e promovida imediatamente após a persistência do próprio checkpoint, sem aguardar o enriquecimento integral da coleção; publicação posterior incompleta, bloqueada ou interrompida NÃO PODE impedir a materialização nem desfazer a confirmação das anteriores. [62596f1]
 Interrupção por sinal, encerramento do processo, contenção ou falha transitória NÃO DEVE apagar nem avançar o checkpoint além da última transição confirmada. [62596f1]
 Checkpoint ausente inicia nova execução; checkpoint incompatível, ambíguo ou corrompido DEVE bloquear com diagnóstico e NÃO PODE provocar reinício silencioso. [62596f1]
@@ -935,4 +936,3 @@ O produto somente DEVE ser considerado integralmente conforme quando a operaçã
 Aceite DEVE comprovar ausência de perda ou sobrescrita, URLs estáveis, identidade editorial, correspondência de hashes, regeneração, segurança de EPUB/PDF/rede, incremento, retomada, configuração, desempenho, cross-platform e ausência de regressão. [62596f1]
 
 Relatório final de cada fase DEVE listar arquivos, decisões, colisões, hashes, tecnologias, dependências, comandos, testes, resultados, limitações, fallbacks e pendências sem declarar execução não comprovada. A fase conversacional DEVE registrar ainda normas anteriores preservadas, diferenças entre modos, critérios de uso de LLM, modelo de citação/referência/tradução, prevenção de alucinação, FTs, conjuntos de avaliação e métricas disponíveis. [62596f1]
-

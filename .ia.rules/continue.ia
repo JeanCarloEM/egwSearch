@@ -534,14 +534,17 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 - tipo: `correcao normativa e implementacao de codigo`.
 - origem: `.ia.rules/state/requests/FT-019/source.md`.
-- status: FT criada; evolucao normativa pendente.
-- objetivo: persistir e validar cursor de colecao para retomar diretamente o
-  primeiro item pendente, sem reabrir navegador nem repetir processamento,
-  analise ou indexacao do prefixo integral e confirmado.
-- conflito_evolutivo: substitui a regra anterior que removia checkpoint de
-  colecao concluida, pois ela elimina o estado necessario ao salto eficiente.
+- status: evolucao normativa concluida; codigo pendente de autorizacao.
+- objetivo: respeitar a fronteira ja persistida da colecao e avancar primeiro
+  para o item ainda nao visitado, sem reabrir navegador nem repetir
+  processamento, analise ou indexacao do prefixo confirmado.
+- causa_comprovada: checkpoint `en-pioneers` termina em `1104`, mas o callback
+  atual reitera os 54 itens persistidos e tenta duas falhas historicas antes de
+  alcancar `1105`.
 - contexto_mestre: `.ia.rules/state/contexts/FT-019/master.md`.
 - preservacao: nao incorporar publicacoes, manifestos gerados, caches,
   temporarios, localstores ou alteracoes alheias.
-- proximo_ponto: evoluir e validar o RCF em commit normativo exclusivo; depois
-  interromper e aguardar autorizacao humana para a fase de codigo.
+- validacao_normativa: `agent:rcf` aprovado com 948 entradas e 835 sentencas
+  materiais; artefatos causais preparados para `baixar.py` e teste direcionado.
+- proximo_ponto: interromper e aguardar autorizacao humana explicita para a
+  fase de codigo, conforme a Norma do Construtor.
