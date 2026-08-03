@@ -52,3 +52,5 @@ propagado sem perda por toda a cadeia.
 - skip fresco não reescreve manifesto nem aprendizado agregado;
 - 46 testes Python, cinco testes documentais, rastreabilidade e diff aprovados;
 - commits causais: `c9c4f44` e `0a47d86`.
+- fechamento canônico: `a80a65d`; `dev` e `main` publicados e convergentes;
+- GitHub Pages: workflow `30777046483` concluído com sucesso.
