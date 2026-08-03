@@ -5,7 +5,7 @@
 - FT: `FT-020`.
 - tipo: `evolucao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-020/source.md`.
-- estado: normativa em andamento; implementacao bloqueada pelo gate de fase.
+- estado: evolucao normativa concluida; implementacao bloqueada pelo gate de fase.
 - prioridade: alta.
 
 ## Evolucao requerida
@@ -87,3 +87,17 @@ cursor aplicavel.
 3. interromper e aguardar autorizacao humana explicita para a fase material;
 4. implementar a capacidade unica e integra-la aos tres invocadores;
 5. validar, criar commit material, sincronizar rastreabilidade e concluir.
+
+## Fechamento normativo
+
+- o contrato opt-in foi substituido por commit automatico obrigatorio depois
+  da analise e indexacao de cada publicacao alterada;
+- downloader, analisador e indexador composto foram vinculados a uma unica
+  capacidade transacional, com fixture segregada como unica excecao sem Git;
+- a allowlist inclui somente a arvore da publicacao e globais causalmente
+  alterados, excluindo runtime, logs, checkpoints, caches e worktree alheia;
+- o modo global recebeu diario estruturado, atomico e versionado, retomada
+  automatica exata e reset explicito propagado;
+- 21 sentencas materiais foram preparadas para os artefatos causais da fase de
+  codigo e testes direcionados;
+- a fase material permanece pendente de autorizacao humana explicita.

@@ -382,32 +382,23 @@ entrada final. HTTP de sucesso, existência ou stream encerrado isoladamente nã
 comprovam conclusão. Ambiguidade material exige `review_required`.
 [PENDENTE-CÓDIGO]
 
-Download, promoção, metadado, derivados, índice e eventual commit DEVEM formar [PENDENTE-CÓDIGO] [62596f1]
-uma transação lógica por publicação. Falha DEVE remover ou isolar preparatórios, [PENDENTE-CÓDIGO] [62596f1]
-restaurar índice anterior, manter runtime retomável e impedir commit. Reexecução
-inalterada DEVE resultar em `skipped` sem commit, timestamp ou derivado [PENDENTE-CÓDIGO] [62596f1]
-divergente. [PENDENTE-CÓDIGO]
+Download, promoção, metadado, derivados, análise de chunking, aprendizado agregado, índice e commit DEVEM formar uma transação lógica por publicação; falha DEVE preservar ou restaurar estado canônico íntegro, manter runtime retomável e impedir conclusão falsa. [PENDENTE-CODIGO]
 
-Efeito Git DEVE ser opt-in explícito por execução e somente PODE ocorrer em [PENDENTE-CÓDIGO] [62596f1]
-`dev`, em repositório Git validado, sem operação Git concorrente e com identidade
-configurada. A allowlist DEVE ser calculada por identidade da publicação e [PENDENTE-CÓDIGO] [62596f1]
-derivados globais inevitáveis; `git add .`, `git add -A`, glob aberto ou
-inclusão de runtime são proibidos. Alteração alheia permanece fora do índice; [PENDENTE-CÓDIGO] [62596f1]
-conflito no mesmo arquivo bloqueia. [PENDENTE-CÓDIGO]
+Em execução canônica, direta ou composta, que crie ou altere artefato de uma publicação, o efeito Git DEVE ser pós-condição automática e obrigatória, ocorrer imediatamente depois do enriquecimento, dos experimentos aplicáveis e da indexação e anteceder a confirmação final da publicação. [PENDENTE-CODIGO]
 
-Antes do commit, o coletor DEVE validar novamente os blobs staged, schemas, [PENDENTE-CÓDIGO] [62596f1]
-hashes, referências, índice, ausência de segredo/runtime e conteúdo exato da
-allowlist. O commit DEVE conter exatamente uma publicação completa e seus [PENDENTE-CÓDIGO] [62596f1]
-derivados inevitáveis, possuir mensagem com identificador estável e ter seu
-hash confirmado no ledger. Commit vazio, parcial, agrupado, fragmentado ou
-recriado após retomada é proibido. [PENDENTE-CÓDIGO] [62596f1]
+A mesma capacidade transacional DEVE ser reutilizada pelo downloader, pelo analisador isolado e pelo indexador quando este invocar análise; fixture ou teste em raiz segregada fora do acervo canônico NÃO DEVE produzir efeito Git. [PENDENTE-CODIGO]
 
-Downloads distintos PODEM ser concorrentes, mas promoção, índice, staging e [PENDENTE-CÓDIGO] [62596f1]
-commit DEVEM ser serializados por lock de runtime. Push é operação separada, [PENDENTE-CÓDIGO] [62596f1]
-opt-in, posterior à validação de branch, upstream e sincronização; falha de push
-preserva o commit local e nunca o recria. Testes DEVEM cobrir worktree alheia, [PENDENTE-CÓDIGO] [62596f1]
-conflito, completude, parcial, índice quebrado, falhas antes/depois do staging,
-concorrência, retomada, commit exato e ausência de runtime. [PENDENTE-CÓDIGO]
+O commit somente PODE ocorrer em `dev`, em repositório Git validado, sem operação Git concorrente e com identidade configurada; push permanece operação separada e nunca é efeito implícito da publicação. [PENDENTE-CODIGO]
+
+A allowlist positiva DEVE conter exatamente a árvore canônica da publicação e os artefatos globais causalmente alterados por ela, incluindo índice, manifesto estrutural e aprendizado agregado quando efetivamente modificados; `git add .`, `git add -A`, glob aberto, runtime, log, checkpoint, cache, temporário, localstore ou alteração alheia são proibidos. [PENDENTE-CODIGO]
+
+Antes do commit, a transação DEVE validar novamente blobs staged, schemas, hashes, referências, índice, ausência de segredo/runtime e igualdade entre staged e allowlist; conflito no mesmo path global ou mudança após staging DEVE bloquear sem absorver a worktree concorrente. [PENDENTE-CODIGO]
+
+Cada commit DEVE conter exatamente uma publicação completa e seus artefatos globais inevitáveis, possuir mensagem com identificador estável e ter seu hash confirmado no ledger; commit vazio, parcial, agrupado, fragmentado ou recriado após retomada é proibido. [PENDENTE-CODIGO]
+
+Reexecução inalterada DEVE resultar em `skipped` sem commit, timestamp ou derivado divergente; falha Git DEVE conservar `commit_pending`, impedir `completed` e retomar localmente sem repetir download nem experimento ainda válido. [PENDENTE-CODIGO]
+
+Downloads distintos PODEM ser concorrentes, mas fechamento, aprendizado, índice, staging e commit DEVEM ser serializados por lock de runtime; testes DEVEM cobrir execução direta e composta, worktree alheia, conflito, completude, parcial, índice quebrado, falhas antes/depois do staging, retomada, commit exato e ausência de runtime. [PENDENTE-CODIGO]
 
 ### 42.12 Completude observável da descoberta e da derivação
 
@@ -543,6 +534,12 @@ Antes de executar experimentos, toda invocação direta ou indireta do avaliador
 Somente `--force-recalculate` PODE ignorar a janela válida; downloader, indexador quando invocar análise, wrappers TypeScript e comandos npm DEVEM propagar essa opção sem perda ou mudança semântica. Prova ausente, falha/incompleta, instante futuro/inválido, idade igual ou superior a 24 horas ou mudança material DEVE executar novamente os experimentos. [f0c7638]
 
 O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da unidade e a atualização compartilhada do índice depois de validar/promover os ativos e antes de confirmar o checkpoint; falha preserva a publicação material, impede confirmação e permite retomada estritamente local sem nova requisição à origem. [62596f1]
+
+Em escopo global, downloader e analisador DEVEM manter diário de runtime versionado e atômico que registre identidade do escopo, ordenação, fingerprint causal, publicação, ativo, fase e último limite integralmente confirmado; log operacional textual sem estado estruturado não satisfaz esse contrato. [PENDENTE-CODIGO]
+
+Nova invocação global compatível DEVE retomar automaticamente do limite confirmado sem repetir publicação, ativo, experimento, indexação ou commit; somente parâmetro explícito de reset, propagado por wrappers e composições, PODE descartar o cursor estritamente pertencente ao escopo solicitado. [PENDENTE-CODIGO]
+
+Cursor ausente DEVE iniciar o escopo, enquanto cursor corrompido, ambíguo, futuro ou incompatível com configuração, corpus, catálogo ou versão do algoritmo DEVE bloquear com diagnóstico e exigir reset explícito, sem reinício silencioso; o diário permanece fora de Git, publicação, índice, build e Pages. [PENDENTE-CODIGO]
 
 ### 43.2.1 Catálogo global de hipóteses experimentais
 
