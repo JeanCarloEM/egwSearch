@@ -584,3 +584,20 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   bootstrap, cinco testes documentais, compilacao e diff-check aprovados.
 - commit_material: `2490e744b54aedb3567a2747b3211dbbef8db96d`.
 - proximo_ponto: nenhuma pendencia da FT-020; aguardar solicitacao humana.
+
+## FT-021 - Varredura global, espera causal e progresso observável
+
+- tipo: `correcao normativa e implementacao de codigo`.
+- origem: `.ia.rules/state/requests/FT-021/source.md`.
+- status: criada; fase RCF pendente.
+- objetivo: impedir que falhas unitarias encerrem a varredura global, conciliar
+  metadados legados válidos com a transacao v3, cobrar atraso somente por
+  request real e apresentar progresso global/corrente com total, percentual,
+  processadas, restantes e ETA observado sem duplicacao na cadeia.
+- causas: `break` após falha de coleção; preflight legado incompatível com o
+  fechamento v3; ausência de propriedade e métricas globais na apresentação.
+- contexto_mestre: `.ia.rules/state/contexts/FT-021/master.md`.
+- preservacao: não incluir publicações, caches, temporários, localstores,
+  checkpoints, logs ou saídas concorrentes.
+- proximo_ponto: evoluir e validar os RCFs; depois interromper para autorização
+  humana explícita da fase material.
