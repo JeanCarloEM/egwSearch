@@ -192,12 +192,18 @@ Reinício somente PODE ocorrer por opção explícita `--restart`, limitada ao e
 `--revalidate` NÃO equivale a reinício e DEVE preservar a posição retomável, alterando somente a política de validação remota dos itens ainda pendentes. [62596f1]
 Checkpoint de coleção concluída sem falha DEVE ser removido atomicamente, pois a próxima invocação constitui nova execução e precisa observar novamente o catálogo vigente. [62596f1]
 
+Falha ou bloqueio de item DEVE permanecer pendente e diagnosticável, mas NÃO DEVE encerrar a varredura global nem impedir a descoberta e o processamento de coleções independentes posteriores; somente falha global que invalide a segurança ou a autoridade de toda a execução PODE interromper o laço. [PENDENTE-CODIGO]
+
+O diário global DEVE registrar confirmações e pendências por identidade estável, inclusive quando não contíguas, e retomar somente as pendências sem exigir um prefixo integralmente bem-sucedido; uma coleção visitada com falhas NÃO PODE ser tratada como conclusão, nem provocar `break` ou ocultar coleções futuras. [PENDENTE-CODIGO]
+
 ### 42.5 Acesso responsável e contenção
 
 O cliente DEVE ser sequencial por padrão, com concorrência `1`, atraso base [62596f1]
 configurável de no mínimo dois segundos entre requests e jitter moderado
 positivo. Aumento até concorrência `2` somente PODE ocorrer por configuração [62596f1]
 explícita e evidência de que a origem o tolera; valor superior é proibido. [62596f1]
+
+Esse atraso regula exclusivamente requests realmente emitidos: sua marcação e eventual espera DEVEM ocorrer na mesma fronteira causal imediatamente anterior ao HTTP ou à navegação remota. Preflight local, skip, checkpoint, cache, hash, análise, indexação, commit ou qualquer caminho sem request DEVEM produzir zero espera de rate limit. [PENDENTE-CODIGO]
 
 Timeout, limite de bytes, sessão reutilizável, cache, deduplicação de request,
 `User-Agent` identificável, número máximo de três tentativas e backoff
@@ -424,6 +430,8 @@ O catálogo da coleção PODE ser acessado uma vez para conhecer o conjunto vige
 
 Metadado legado sem `remote_id` DEVE participar desse preflight por identidade composta exclusivamente de dados já presentes na listagem da coleção — ID/URL pública, título normalizado, autor, categoria, idioma e tipo — e do path canônico ou alias local oficialmente admitido. Havendo PDF e EPUB registrados, íntegros e inequivocamente pareados, a ausência de schema v3 NÃO autoriza abrir a página individual. [62596f1]
 
+Quando o fechamento transacional exigir schema posterior, publicação legada localmente completa DEVE ser promovida de forma determinística e estritamente local antes da validação final, preservando bytes, proveniência, identidade, hashes e referências comprovados; a versão antiga isoladamente NÃO PODE causar request, falha em massa ou encerramento da coleção. [PENDENTE-CODIGO]
+
 Request HTTP específico da publicação somente PODE ser emitido depois de o gate local registrar causa objetiva que a torne necessária: prova ausente ou inconclusiva, divergência, ambiguidade, corrupção, ativo obrigatório ausente ou `--revalidate` explícito. Caminho feliz local completo DEVE possuir teste que falha diante de qualquer chamada de rede. [62596f1]
 
 Checkpoint persistido NÃO PODE substituir o gate vigente: antes de processar cada item ainda não confirmado, o coletor DEVE reaplicar o preflight local atual independentemente do valor histórico de `local_complete`, promover no checkpoint a prova local superveniente e impedir que estado antigo falso libere request. [62596f1]
@@ -576,6 +584,12 @@ Cada ativo analisado DEVE produzir uma tabela curta que compare somente experime
 Cada publicação iterada DEVE possuir identidade visual inequívoca e ser separada da seguinte por duas linhas em branco ou separador equivalente consistente; progresso interno NÃO DEVE apagar, reescrever ou misturar publicação anterior. [62596f1]
 
 Execução isolada DEVE emitir título de etapa, corpo e resumo suficientes; composição pelo downloader DEVE compartilhar o mesmo contexto visual, manter limites explícitos de análise e indexação e suprimir cabeçalhos, separadores e resumos equivalentes já apresentados pelo pai. [62596f1]
+
+Antes da varredura material global, o downloader DEVE formar um inventário normalizado de todas as coleções habilitadas e seus itens, reutilizando checkpoints válidos e consultando somente catálogos ainda desconhecidos. Esse inventário DEVE fixar o total global observado sem abrir página ou ativo de publicação apenas para calcular progresso. [PENDENTE-CODIGO]
+
+Downloader global e analisador global isolado DEVEM apresentar, de forma sucinta e atualizada a cada unidade visitada, escopo corrente, percentual, total, processadas, restantes, média observada por unidade e ETA derivada dessa média; antes da primeira amostra, média e ETA DEVEM aparecer como indeterminadas, nunca como estimativa inventada. [PENDENTE-CODIGO]
+
+Sucesso, reutilização e falha contam como unidade visitada na execução corrente para percentual e ETA, enquanto somente conclusão válida avança o diário de retomada. Em composição, o invocador raiz DEVE ser o único proprietário do progresso principal e filhos DEVEM suprimir indicador equivalente, preservando apenas resultados e diagnósticos próprios não redundantes. [PENDENTE-CODIGO]
 
 [^chunk-rag-best-practices]: Wang et al. *Searching for Best Practices in Retrieval-Augmented Generation*. EMNLP 2024. DOI: [10.18653/v1/2024.emnlp-main.981](https://doi.org/10.18653/v1/2024.emnlp-main.981).
 [^chunk-mc-indexing]: Dong et al. *MC-indexing: Effective Long Document Retrieval via Multi-view Content-aware Indexing*. Findings of EMNLP 2024. DOI: [10.18653/v1/2024.findings-emnlp.150](https://doi.org/10.18653/v1/2024.findings-emnlp.150).

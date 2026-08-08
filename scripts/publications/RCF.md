@@ -166,6 +166,10 @@ Item enriquecido e completo DEVE ser entregue ao processamento logo após seu ch
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [8b60a50]
 `--restart` DEVE ser explícito, apagar somente checkpoints de runtime do escopo solicitado e preservar publicações, ledger e ativos canônicos. [8b60a50]
 
+Falha ou bloqueio de item deve permanecer no checkpoint e no resumo, mas `baixar.py` NÃO DEVE executar `break` do laço global por esse motivo: todas as coleções independentes posteriores DEVEM ser visitadas, e o diário global DEVE aceitar confirmações e pendências por ID não contíguas para retomar somente o trabalho não concluído. [PENDENTE-CODIGO]
+
+Antes de processar a primeira publicação no modo global, o downloader DEVE materializar em runtime um inventário normalizado de todas as coleções habilitadas, reutilizando catálogo persistido válido e descobrindo apenas o que ainda não estiver conhecido; essa fase NÃO DEVE abrir páginas ou ativos individuais somente para obter a contagem total. [PENDENTE-CODIGO]
+
 Título obtido da interface DEVE permanecer candidato editorial integral e NÃO DEVE constituir prova autossuficiente; somente sua projeção de path DEVE aplicar o slug comum, sem remover artigo, parêntese, tag, pontuação ou qualificador do título preservado. [62596f1]
 
 Somente URL HTTPS de host allowlisted DEVE ser aceita. Cada request DEVE validar URL, DNS/IP público e redirecionamento; conexão DEVE usar timeout, limite de bytes, streaming, cancelamento por interrupção e arquivo parcial no destino. [62596f1]
@@ -191,6 +195,8 @@ O cliente DEVE operar sequencialmente por padrão, com concorrência `1`, atraso
 base mínimo de dois segundos e jitter positivo configurável. Concorrência `2`
 é o máximo e exige opt-in e evidência; qualquer valor superior DEVE ser [ef2f0c4]
 rejeitado.
+
+`RateLimiter.before_request()` somente DEVE ser chamado na fronteira imediata de um `session.get`, `driver.get` ou request equivalente efetivamente emitido; preflight, skip local, cache, checkpoint, análise, índice e transação Git NÃO DEVEM marcar request nem dormir. Testes-sentinela DEVEM correlacionar contagem de chamadas remotas e esperas. [PENDENTE-CODIGO]
 
 Sessão reutilizável, `User-Agent` identificável, timeout, limite de bytes,
 streaming, cache, deduplicação, cancelamento, no máximo três tentativas e
@@ -421,6 +427,10 @@ Integração opcional com IA DEVE receber somente representação previamente no
 
 `publication_console.py` DEVE ser a camada visual compartilhada de `baixar.py`, `publication_analysis.py` e `publication_index.py`; modo isolado possui cabeçalho/resumo próprios e modo embutido reutiliza o contexto pai sem duplicá-los. [25d99c4]
 
+A camada compartilhada DEVE possuir um progresso determinístico que receba total fixado, unidade corrente e resultados visitados e apresente percentual, processadas, restantes, média monotônica observada e ETA calculada por `restantes × média`; sem amostra, os campos temporais DEVEM ser `—`. [PENDENTE-CODIGO]
+
+Downloader é proprietário do progresso principal quando compõe análise e indexação; analisador ou indexador embutido NÃO DEVE criar progresso, cabeçalho ou resumo concorrente. Executados isoladamente em modo global, analisador e indexador DEVEM possuir o mesmo conjunto essencial de indicadores. [PENDENTE-CODIGO]
+
 Rich DEVE renderizar tabelas sem wrap acidental, com largura limitada e truncamento previsível de paths/títulos; ambiente não TTY, `NO_COLOR` ou indisponibilidade controlada DEVE usar fallback textual sem ANSI e com os mesmos dados essenciais. [25d99c4]
 
 Tabela experimental por ativo DEVE sintetizar método, estado, chunks, duração/throughput, acerto, erro e códigos de diagnóstico, preservando métricas completas somente no JSON. Publicações consecutivas DEVEM manter duas linhas em branco ou separador visual inequívoco. [25d99c4]
@@ -436,6 +446,8 @@ Toda invocação direta ou indireta da análise DEVE reutilizar sem reexecução
 Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB/PDF, valida os manifestos, atualiza índice/aprendizado e cria o commit exclusivo; somente então PODE marcar o remote ID como confirmado. [f8db96d]
 
 Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos; na retomada, o preflight editorial válido DEVE permitir reparar análise/índice somente com arquivos locais, mantendo `network=skipped`. [1fd53ef]
+
+Metadado legado aceito pelo preflight e integralmente comprovado DEVE ser promovido local e deterministicamente a `publication-source/v3` antes do fechamento obrigatório, preservando bytes e proveniência; o schema legado isoladamente NÃO DEVE emitir rede nem `PublicationTransactionError`. [PENDENTE-CODIGO]
 
 Nos modos globais, downloader e analisador DEVEM persistir atomicamente em runtime um diário versionado com escopo, ordem, fingerprint, publicação, ativo, fase e último limite confirmado e DEVEM retomá-lo automaticamente sem reiterar unidades concluídas. [f8db96d]
 

@@ -5,7 +5,7 @@
 - FT: `FT-021`.
 - tipo: `correcao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-021/source.md`.
-- estado: criada; fase RCF pendente.
+- estado: fase RCF concluída; implementação pendente de autorização.
 - prioridade: alta.
 
 ## Causas comprovadas
@@ -77,3 +77,17 @@ analisador.
 3. interromper e aguardar autorização humana explícita para código;
 4. implementar em capacidades compartilhadas e testes direcionados;
 5. validar, criar commit material e sincronizar rastreabilidade.
+
+## Fechamento normativo
+
+- causas foram confirmadas diretamente no laço global, no contrato
+  transacional e na camada de apresentação;
+- o RCF agora diferencia falha unitária de falha global e exige diário por
+  identidade não contígua, sem interrupção das coleções posteriores;
+- espera de rate limit foi restrita à fronteira de request realmente emitido;
+- legado local completo deve ser promovido deterministicamente a v3 sem rede;
+- inventário global prévio e progresso compartilhado receberam total,
+  processadas, restantes, percentual, média observada e ETA, com propriedade
+  única do processo raiz na composição;
+- 13 sentenças materiais foram vinculadas aos artefatos e testes causais;
+- a implementação permanece pendente de autorização humana explícita.
