@@ -477,6 +477,53 @@ Todo XHTML editorial gerado DEVE ser XML bem-formado e livre de caractere de con
 Os arquivos `.md` externos somente PODEM ser removidos depois de EPUB validado e teste de reversão byte a byte; falha de manifesto, hash ou restauração DEVE preservar os intermediários e impedir `completed`. [62596f1]
 Uma página inicial de proveniência, imediatamente após a capa e antes do sumário, DEVE declarar-se “Nota de proveniência (não editorial)” e registrar autor, título, plataforma, URL oficial clicável e data de acesso em referência de estilo ABNT, sem contaminar o conteúdo editorial nem a fonte Markdown reversível. [62596f1]
 Depois da proveniência e do sumário, cada seção de conteúdo DEVE declarar cabeçalho corrente contextual e rodapé com contador de página por caixas de margem paginada, fora do corpo XHTML indexável; a primeira página de capítulo, seção ou unidade equivalente DEVE suprimir o cabeçalho, mas preservar a numeração no rodapé. [62596f1]
+
+### 42.13 Corpora bíblicos, lexicais e concordâncias
+
+`Reference` (`en/6`) e `Bible` (`en/22`) são agrupadores heterogêneos e NÃO DEVEM ser materializados como obra: configuração e descoberta DEVEM percorrer suas folhas, preservar a autoria comprovada de cada item e classificar por estrutura observada entre versão bíblica, léxico/dicionário, concordância/índice, comentário, plano de leitura e obra geral. [PENDENTE-CODIGO]
+
+As folhas obrigatórias inicialmente observadas são versões `en/1368`, concordâncias `en/1369`, dicionários/léxicos `en/1370`, comentários `en/1371`, planos `en/1476`, índice escriturístico `en/1414` e Bíblia portuguesa `pt/68`; equivalente português adicional somente DEVE ser habilitado depois de descoberto e comprovado, nunca por trocar idioma ou ID na URL. [PENDENTE-CODIGO]
+
+Título, ícone, breadcrumb, extensão, MIME ou classificação remota isolados NÃO DEVEM decidir o modelo: o parser DEVE confirmar o tipo pela estrutura e pelo conteúdo, e divergência material DEVE produzir `review_required` sem promover artefato. [PENDENTE-CODIGO]
+
+Versão bíblica ou corpus textual equivalente DEVE produzir JSON `scripture-corpus/v1` em UTF-8 sem BOM; PDF é dispensável e EPUB somente DEVE ser gerado quando a fonte e a licença permitirem representação editorial adequada. [PENDENTE-CODIGO]
+
+O envelope bíblico DEVE conter exatamente `schema`, `meta`, `text` e `proof`; `text` DEVE ser navegável por `text.<version>.<collection>.<book>.<chapter>.<verse>` e suportar Bíblia completa ou parcial, Tanakh/Torá, LXX, somente AT/NT, cânones distintos, deuterocanônicos/apócrifos e ordens editoriais diferentes sem alterar o schema. [PENDENTE-CODIGO]
+
+`meta` DEVE mapear versões, coleções e livros por códigos canônicos estáveis, preservando nome, abreviações, idioma, escrita, cânon, versificação e ordem observada; coleção/testamento e ordem são dados declarados, não enumeração fixa do código. [PENDENTE-CODIGO]
+
+Cada chave final de versículo DEVE apontar para exatamente um item isolado com `content`, formado por fragmentos textuais ordenados e opcionais `marks`; múltiplos números/intervalos no mesmo item, versículo vazio, duplicado, ausente, fora de ordem ou texto residual não atribuído DEVEM bloquear a obra. [PENDENTE-CODIGO]
+
+`marks` somente PODE conter semântica observada e validada, inclusive itálico, negrito, sobrescrito, subscrito, small caps, citação, nota, quebra e alinhamento; reconstruir a concatenação de todos os fragmentos DEVE reproduzir integralmente o texto do versículo, sem normalização editorial além de Unicode NFC e controles proibidos. [PENDENTE-CODIGO]
+
+Cabeçalho, número de página, controle do leitor, referência duplicada, nota de interface, comentário ou conteúdo de outra obra NÃO DEVEM integrar o versículo; material editorial legítimo não classificável como versículo DEVE ocupar estrutura própria declarada ou bloquear, nunca ser anexado ao versículo adjacente. [PENDENTE-CODIGO]
+
+`proof` DEVE registrar origem primária, acesso, hash do JSON, contagens por versão/coleção/livro/capítulo, primeira/última referência, lacunas/duplicatas e contraprovas independentes com fonte, licença/termos, método, amostra e resultado. [PENDENTE-CODIGO]
+
+Completude bíblica DEVE ser avaliada contra o cânon e a versificação declarados da própria edição, com totais e limites por livro/capítulo; diferença legítima entre tradições NÃO é omissão, mas divergência sem explicação ou incorporação de conteúdo estranho impede `completed`. [PENDENTE-CODIGO]
+
+Amostras críticas DEVEM ser comparadas com ao menos duas fontes independentes confiáveis quando juridicamente e tecnicamente disponíveis; APIs públicas somente PODEM ser usadas conforme autorização, termos e rate limits, sem evasão, e contraprova nunca substitui silenciosamente a fonte primária. [PENDENTE-CODIGO]
+
+LXX, Textus Receptus, Tanakh, Texto Massorético, Qumran, Codex Sinaiticus, Codex Vaticanus e Texto Majoritário/Bizantino somente PODEM ser habilitados por entrada declarativa com identidade da tradição/edição, fonte legítima, licença/termos compatíveis, escopo real e parser validado; nome da tradição não autoriza presumir completude nem domínio público da edição digital. [PENDENTE-CODIGO]
+
+`tanach.us` PODE servir como fonte ou contraprova do Tanakh somente após registrar edição, formato, termos e limites aplicáveis; indisponibilidade ou impedimento jurídico DEVE ser explícito e não autoriza espelho ou contorno. [PENDENTE-CODIGO]
+
+Dicionário, léxico ou conteúdo indexado por palavra/expressão DEVE produzir JSON `lexical-corpus/v1` e EPUB adequado; PDF é dispensável, e cada entrada DEVE preservar chave estável, lema original, idioma, escrita ISO 15924 quando conhecida, romanização, pronúncia/identificadores, definição original `en`, traduções, referências, índices e relações existentes. [PENDENTE-CODIGO]
+
+O envelope lexical DEVE conter exatamente `schema`, `meta`, `entries` e `proof`; `entries` DEVE ser objeto ordenado por ID canônico, e cada entrada DEVE conter `lemma`, `language`, `script`, `romanization`, `pronunciation`, `ids`, `definitions`, `translations`, `references` e `relations`, usando valor vazio tipado quando a fonte não oferecer o dado. [PENDENTE-CODIGO]
+
+`definitions.en` é autoridade preservada e NÃO PODE ser substituída pela tradução; `translations.pt-BR` DEVE registrar texto, estado, método, mecanismo/provedor, versão e data, distinguir tradução automática de fonte e permanecer ausente quando não houver mecanismo local ou serviço autorizado com qualidade suficiente. [PENDENTE-CODIGO]
+
+Tradução DEVE preservar lema, referências, identificadores, marcações e sentido, usar entrada inteira como unidade mínima e bloquear publicação quando validação detectar truncamento, adição, troca de idioma ou perda material; segredo, payload externo ou resposta bruta NÃO integram o acervo. [PENDENTE-CODIGO]
+
+Concordância bíblica DEVE produzir JSON `concordance-corpus/v1` e EPUB adequado, preservando termo/lema, formas observadas, referências individualizadas, índices e relações; referência DEVE declarar versão quando conhecida, livro, capítulo e versículo separadamente, sem convertê-la em definição lexical inexistente. [PENDENTE-CODIGO]
+
+Todo artefato textual próprio — JSON, Markdown, XHTML, CSV/TSV, manifesto e log persistente — DEVE usar UTF-8 sem BOM e LF; outra codificação somente PODE ser lida diante de impedimento técnico comprovado, registrando bytes/hashes originais, encoding detectado, confiança, transcoding e prova de ausência de perda, enquanto a saída canônica permanece UTF-8. [PENDENTE-CODIGO]
+
+JSON estruturado DEVE ser determinístico, relido e validado após escrita atômica, receber SHA-1/SHA-256/SHA-512 sobre seus bytes UTF-8 e integrar metadado, índice, completude, análise e commit da mesma publicação sem ser apresentado como fonte nativa quando derivado localmente. [PENDENTE-CODIGO]
+
+Testes sem rede DEVEM cobrir livros históricos, poéticos, proféticos e cartas com estruturas distintas; cânones/ordens distintos; versículo único, duplicado, concatenado, ausente e contaminado; marcação semântica; léxico, tradução identificada, concordância, divergência de classe, UTF-8 e determinismo byte a byte. [PENDENTE-CODIGO]
+
 ## 43. Índice global
 
 Um índice JSON global DEVE representar todas as publicações e ser gerado deterministicamente por uma única fonte ou etapa canônica. [62596f1]

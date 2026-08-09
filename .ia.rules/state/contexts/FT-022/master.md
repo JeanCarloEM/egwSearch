@@ -5,7 +5,7 @@
 - FT: `FT-022`.
 - tipo: `evolucao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-022/source.md`.
-- estado: fonte e arquitetura registradas; RCF e implementação autorizados.
+- estado: RCF concluído; implementação autorizada e em andamento.
 - prioridade: crítica para integridade do corpus.
 
 ## Dependências
@@ -88,3 +88,13 @@ UTF-8, com JSON obrigatório nos domínios estruturados e EPUB quando adequado.
 3. implementação material da FT-021;
 4. configuração, modelo universal, integração e testes da FT-022;
 5. validação, commits materiais e sincronização de rastreabilidade/estado.
+
+## Fechamento normativo
+
+- RCF global centraliza agrupadores/folhas, schemas bíblico, lexical e de
+  concordância, UTF-8, contraprovas, licenças e critérios de integridade;
+- RCF especializado vincula `content_model`, `structured_content.py`, escrita
+  atômica, metadado v3, índice/análise, tradução opt-in e testes;
+- 36 sentenças materiais foram registradas como pendências causais da FT-022;
+- `agent:rcf` validou o mapa com 1.018 entradas e 887 sentenças materiais,
+  preservando apenas o estado global `RCF_DEGRADED` já conhecido da raiz.

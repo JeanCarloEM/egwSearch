@@ -2069,7 +2069,7 @@ Conclusão: commits materiais `6b0bc6d` e `8bc5ab7`; 1.103 recursos analisados,
 - [x] Capturar integralmente a solicitação e a evidência observada.
 - [x] Decompor a arquitetura universal e vincular a dependência material da
   FT-021.
-- [ ] Normatizar UTF-8, coleções, classificação semântica, JSON bíblico,
+- [x] Normatizar UTF-8, coleções, classificação semântica, JSON bíblico,
   léxico, concordância, contraprovas, licenças e integridade.
 - [ ] Implementar a FT-021 já autorizada como pré-condição de cobertura global.
 - [ ] Implementar catálogo ampliado, parsers universais, JSON/EPUB e integração

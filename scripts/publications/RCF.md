@@ -372,6 +372,36 @@ Cada documento de conteúdo DEVE declarar cabeçalho corrente contextual conform
 A pseudo-página `:first` de cada capítulo, seção ou unidade equivalente DEVE suprimir o cabeçalho corrente e manter o rodapé numerado. [9679008]
 Metadado de segmentos DEVE referenciar paths internos do EPUB e a validação incremental DEVE comprovar os hashes diretamente no contêiner, sem depender de `.md` externo. [84df7a6]
 
+### 8.1 Conteúdo estruturado universal
+
+Coleção configurada DEVE declarar `content_model` entre `publication`, `scripture`, `lexical`, `concordance`, `commentary`, `reading-plan` e `scripture-index`; agrupadores declaram somente `children` e NÃO entram na lista material de obras. [PENDENTE-CODIGO]
+
+`structured_content.py` DEVE ser a capacidade única, sem rede e baseada na biblioteca padrão, para classificar HTML editorial, materializar/validar `scripture-corpus/v1`, `lexical-corpus/v1` e `concordance-corpus/v1`, serializar UTF-8 e devolver artefatos/hashes ao downloader. [PENDENTE-CODIGO]
+
+O `CatalogItem` DEVE transportar o `content_model` declarado pela folha e o parser DEVE confirmá-lo por estrutura antes da escrita; mismatch entre declarado e observado DEVE falhar fechado. [PENDENTE-CODIGO]
+
+Para `scripture`, o extrator DEVE reconhecer referências somente a partir de atributos/IDs editoriais ou cabeçalhos inequívocos, decompor livro/capítulo/versículo e rejeitar intervalo, lista ou múltiplos números associados ao mesmo bloco de conteúdo. [PENDENTE-CODIGO]
+
+Cada versículo DEVE ser consumido exatamente uma vez, preservar em `content` todos os nós de texto e marcas semânticas em ordem, e deixar zero texto editorial residual fora de elemento classificado; contador por capítulo e sequência declarada DEVEM detectar lacuna e duplicação. [PENDENTE-CODIGO]
+
+Para `lexical`, o extrator DEVE delimitar uma entrada por heading/ID editorial, separar lema/escrita/romanização/identificadores/definição/referências/relações e impedir que a próxima entrada seja concatenada à anterior. [PENDENTE-CODIGO]
+
+Para `concordance`, o extrator DEVE separar entrada, formas e cada referência escriturística, preservando a associação forma→referências quando observada e rejeitando texto sem destino semântico. [PENDENTE-CODIGO]
+
+O escritor estruturado DEVE produzir `<acronimo>.structured.json` por replace atômico, validar UTF-8 sem BOM, raiz/chaves/tipos/domínios, reconstrução de texto, ordem, unicidade, contagens e SHA-256 interno antes de devolver sucesso. [PENDENTE-CODIGO]
+
+Quando o modelo for `scripture`, `lexical` ou `concordance`, a ausência de PDF NÃO é falha; JSON é obrigatório e o EPUB derivado continua pelo pipeline textual existente quando `derive_epub=true`, sem duplicar aquisição, capa, Markdown ou transação. [PENDENTE-CODIGO]
+
+Metadado `publication-source/v3` DEVE registrar JSON como derivação `structured-json`, com schema, path, gerador, encoding, tamanho e três hashes, e manter separadas as fontes HTML/textuais que o originaram. [PENDENTE-CODIGO]
+
+`publication_index.py`, `publication_analysis.py` e `validate_complete_publication` DEVEM aceitar e validar a derivação JSON; análise de chunking NÃO DEVE tratar JSON bíblico como prosa nem recombinar versículos, e o índice DEVE expor schema/modelo/path/hash sem copiar o corpus. [PENDENTE-CODIGO]
+
+Configuração DEVE registrar fontes de validação separadamente das coleções de ingestão, com `id`, `role`, URL, escopo, licença/termos, rate limit e estado habilitado; fonte sem autorização comprovada permanece desabilitada e diagnosticável. [PENDENTE-CODIGO]
+
+Nenhuma rotina DEVE chamar tradutor externo implicitamente; tradução `pt-BR` exige adaptador explicitamente configurado e autorizado, preserva o original `en` e registra resultado como tradução, nunca como `definition.en`. [PENDENTE-CODIGO]
+
+Testes direcionados DEVEM usar fixtures HTML reduzidas representativas de variações reais e sentinelas para omissão, concatenação, contaminação, classe errada, encoding, escrita parcial, hash, reexecução e integração JSON/EPUB/metadado/índice. [PENDENTE-CODIGO]
+
 ## 9. Segurança, validação e fronteira
 
 Todo dado remoto DEVE ser não confiável. URL, esquema, host allowlisted, [ef2f0c4]
