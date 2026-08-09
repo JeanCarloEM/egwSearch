@@ -92,12 +92,19 @@ class GlobalProgressJournal:
         scope: str,
         fingerprint: str,
         order: list[str],
+        legacy_fingerprints: Iterable[str] = (),
         reset: bool = False,
     ) -> None:
         self.path = path.resolve()
         self.tool = tool
         self.scope = scope
         self.fingerprint = fingerprint
+        self.legacy_fingerprints = frozenset(legacy_fingerprints)
+        if any(
+            re.fullmatch(r"[0-9a-f]{64}", value) is None
+            for value in self.legacy_fingerprints
+        ):
+            raise PublicationTransactionError("fingerprint legado inválido")
         self.order = list(order)
         if len(self.order) != len(set(self.order)):
             raise PublicationTransactionError("diário global possui ordem duplicada")
@@ -155,17 +162,20 @@ class GlobalProgressJournal:
             raise PublicationTransactionError(
                 f"diário global incompatível; use reset explícito: {self.path}"
             )
+        legacy_migration = False
         if (
             set(document) == legacy_required
             and document.get("schema_version") == LEGACY_PROGRESS_SCHEMA
             and isinstance(document.get("order"), list)
             and isinstance(document.get("next_index"), int)
+            and document.get("fingerprint") in self.legacy_fingerprints
         ):
             legacy_order = document["order"]
             legacy_next = document["next_index"]
             if 0 <= legacy_next <= len(legacy_order):
                 document["schema_version"] = PROGRESS_SCHEMA
                 document["confirmed"] = legacy_order[:legacy_next]
+                legacy_migration = True
 
         stored_order = document.get("order")
         next_index = document.get("next_index")
@@ -181,7 +191,10 @@ class GlobalProgressJournal:
             or document.get("schema_version") != PROGRESS_SCHEMA
             or document.get("tool") != self.tool
             or document.get("scope") != self.scope
-            or document.get("fingerprint") != self.fingerprint
+            or (
+                document.get("fingerprint") != self.fingerprint
+                and not legacy_migration
+            )
             or not isinstance(stored_order, list)
             or not all(isinstance(value, str) and value for value in stored_order)
             or not isinstance(next_index, int)
@@ -197,6 +210,8 @@ class GlobalProgressJournal:
             )
         appended = [value for value in self.order if value not in set(stored_order)]
         self.order = [*stored_order, *appended]
+        if legacy_migration:
+            document["fingerprint"] = self.fingerprint
         if appended:
             document["order"] = self.order
             document["status"] = "running"

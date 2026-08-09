@@ -92,6 +92,55 @@ class NotModified(DownloadError):
     """Resposta condicional confirmou que o ativo remoto não mudou."""
 
 
+V4_GLOBAL_COLLECTION_IDS = (
+    "pt-br-livros",
+    "pt-br-devocionais",
+    "en-books",
+    "en-devotionals",
+    "en-manuscript",
+    "en-pamphlets",
+    "en-periodicals",
+    "en-misc",
+    "pt-br-pioneiros",
+    "en-pioneers",
+)
+
+
+def _downloader_progress_fingerprint(
+    config: dict,
+    collections: list[dict],
+    *,
+    schema: int | None = None,
+) -> str:
+    return progress_fingerprint(
+        {
+            "schema": config["schema_version"] if schema is None else schema,
+            "source_root": str(config["source_root"]),
+            "collections": [
+                {
+                    "id": collection["id"],
+                    "url": collection["catalog_url"],
+                    "language": collection["language"],
+                    "type": collection["type"],
+                }
+                for collection in collections
+            ],
+            "analyzer": ANALYZER_VERSION,
+        }
+    )
+
+
+def _known_legacy_downloader_fingerprints(
+    config: dict,
+    collections: list[dict],
+) -> set[str]:
+    by_id = {str(collection["id"]): collection for collection in collections}
+    if not all(identity in by_id for identity in V4_GLOBAL_COLLECTION_IDS):
+        return set()
+    legacy = [by_id[identity] for identity in V4_GLOBAL_COLLECTION_IDS]
+    return {_downloader_progress_fingerprint(config, legacy, schema=4)}
+
+
 class OfficialCoverMissing(DownloadError):
     """O endpoint oficial comprovou que a capa declarada não existe."""
 
@@ -3374,23 +3423,11 @@ def run(
             paths["logs"] / "baixar.global.json",
             tool="baixar.py",
             scope="all",
-            fingerprint=progress_fingerprint(
-                {
-                    "schema": config["schema_version"],
-                    "source_root": str(config["source_root"]),
-                    "collections": [
-                        {
-                            "id": collection["id"],
-                            "url": collection["catalog_url"],
-                            "language": collection["language"],
-                            "type": collection["type"],
-                        }
-                        for collection in collections
-                    ],
-                    "analyzer": ANALYZER_VERSION,
-                }
-            ),
+            fingerprint=_downloader_progress_fingerprint(config, collections),
             order=collection_order,
+            legacy_fingerprints=_known_legacy_downloader_fingerprints(
+                config, collections
+            ),
             reset=restart,
         )
     if needs_browser:

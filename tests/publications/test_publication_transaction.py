@@ -286,6 +286,52 @@ class PublicationTransactionTests(unittest.TestCase):
             self.assertEqual(reset.next_index, 0)
             self.assertEqual(reset.document["order"], ["x"])
 
+    def test_global_journal_migrates_only_allowlisted_v1_fingerprint(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "baixar.global.json"
+            legacy = progress_fingerprint({"schema": 4})
+            current = progress_fingerprint({"schema": 5})
+            legacy_document = {
+                "schema_version": "publication-global-progress/v1",
+                "tool": "baixar.py",
+                "scope": "all",
+                "fingerprint": legacy,
+                "order": ["a", "b"],
+                "next_index": 1,
+                "current": {"position": 1, "identity": "b", "phase": "processing"},
+                "last_confirmed": {"position": 0, "identity": "a", "commit": None},
+                "status": "running",
+            }
+            write_json_atomic(path, legacy_document)
+            migrated = GlobalProgressJournal(
+                path,
+                tool="baixar.py",
+                scope="all",
+                fingerprint=current,
+                legacy_fingerprints={legacy},
+                order=["a", "b", "c"],
+            )
+            self.assertEqual(
+                migrated.document["schema_version"],
+                "publication-global-progress/v2",
+            )
+            self.assertEqual(migrated.document["fingerprint"], current)
+            self.assertEqual(migrated.document["confirmed"], ["a"])
+            self.assertEqual(migrated.document["next_index"], 1)
+            self.assertEqual(migrated.document["current"]["identity"], "b")
+            self.assertEqual(migrated.document["order"], ["a", "b", "c"])
+
+            rejected_path = Path(temporary) / "rejected.json"
+            write_json_atomic(rejected_path, legacy_document)
+            with self.assertRaisesRegex(PublicationTransactionError, "reset explícito"):
+                GlobalProgressJournal(
+                    rejected_path,
+                    tool="baixar.py",
+                    scope="all",
+                    fingerprint=current,
+                    order=["a", "b", "c"],
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
