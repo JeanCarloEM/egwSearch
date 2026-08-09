@@ -89,6 +89,18 @@ TYPE_ALIASES = {
     "manuscript": "manuscript",
     "article": "articles",
     "articles": "articles",
+    "bible": "bible",
+    "bibles": "bible",
+    "scripture": "bible",
+    "dictionary": "dictionaries",
+    "dictionaries": "dictionaries",
+    "lexicon": "lexicons",
+    "lexicons": "lexicons",
+    "concordance": "concordances",
+    "concordances": "concordances",
+    "commentary": "commentaries",
+    "commentaries": "commentaries",
+    "reference": "reference",
 }
 
 
@@ -192,10 +204,24 @@ class CatalogItem:
     assets: tuple[CatalogAsset, ...] = ()
     segments: tuple[CatalogSegment, ...] = ()
     local_complete: bool = False
+    content_model: str = "publication"
+    content_options: dict = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         """Canonicaliza a projeção editorial sem alterar a evidência original."""
 
+        if self.content_model not in {
+            "publication",
+            "scripture",
+            "lexical",
+            "concordance",
+            "commentary",
+            "reading-plan",
+            "scripture-index",
+        }:
+            raise ContractError(f"modelo de conteúdo inválido: {self.content_model}")
+        if not isinstance(self.content_options, dict):
+            raise ContractError("opções de conteúdo devem ser objeto")
         object.__setattr__(
             self,
             "title_normalized",
@@ -223,6 +249,8 @@ class CatalogItem:
                 self.title_normalized,
                 self.edition,
                 self.cover_url,
+                self.content_model,
+                json.dumps(self.content_options, ensure_ascii=False, sort_keys=True),
             )
         )
         return hashlib.sha256(material.encode("utf-8")).hexdigest()
@@ -339,7 +367,7 @@ def parse_catalog_payload(payload: object, collection: dict) -> list[CatalogItem
             collection_id=str(collection["id"]),
             collection_name=str(collection["name"]),
             author_name=author,
-            author_key=canonical_author_key(author),
+            author_key=str(collection.get("default_author_key") or canonical_author_key(author)),
             language_original=language_original,
             language=language,
             language_path=language_path,
@@ -353,6 +381,8 @@ def parse_catalog_payload(payload: object, collection: dict) -> list[CatalogItem
             edition=str(_first(raw, "edition", "version", "pub_year", default="")),
             assets=tuple(sorted(assets, key=lambda item: (item.format != "epub", item.url))),
             segments=segments,
+            content_model=str(collection.get("content_model") or "publication"),
+            content_options=dict(collection.get("content_options") or {}),
         )
         if item.stable_key() in seen:
             continue
@@ -1145,6 +1175,7 @@ def build_source_v3(
             "category_original": item.category_name,
             "category": item.category_path,
             "type": item.publication_type,
+            "content_model": item.content_model,
             "edition": item.edition,
             "acronym": identity.acronym,
             "route_slug": identity.route_slug,
@@ -1156,6 +1187,7 @@ def build_source_v3(
             "name": item.collection_name,
             "category_original": item.category_name,
             "category": item.category_path,
+            "content_model": item.content_model,
         },
         "state": state,
         "sources": sorted(sources, key=lambda value: (value.get("format", ""), value.get("url", ""))),

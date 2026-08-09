@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import io
+import json
 from dataclasses import replace
 from pathlib import Path
 import sys
@@ -33,6 +34,7 @@ from publication_contract import (  # noqa: E402
     publication_identity,
     write_json_atomic,
 )
+from publication_index import build_index_entry  # noqa: E402
 
 
 class _Progress:
@@ -253,6 +255,98 @@ class DownloaderTests(unittest.TestCase):
                 baixar._fixture_source_root(canonical, runtime, canonical)
             with self.assertRaises(baixar.ContractError):
                 baixar._fixture_source_root(canonical, runtime, root)
+
+    def test_existing_native_assets_promote_legacy_metadata_before_skip(self) -> None:
+        item = self._checkpoint_item("42", "Publicação legada")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root = root / "publications"
+            ledger = AcquisitionLedger(root / "state" / "ledger.json")
+            existing = source_root / "existing.epub"
+            existing.parent.mkdir(parents=True)
+            existing.write_bytes(b"fixture")
+            record = {
+                "format": "epub",
+                "url": item.assets[0].url,
+                "result": "skipped",
+            }
+            with patch.object(
+                baixar,
+                "preflight_existing_asset",
+                return_value=(existing, record),
+            ), patch.object(baixar, "promote_legacy_publication") as promote:
+                result = baixar._process_catalog_item(
+                    item,
+                    source_root,
+                    Mock(),
+                    self._checkpoint_config()["download"],
+                    lambda **_kwargs: _Progress(),
+                    ledger,
+                    no_network=True,
+                )
+
+            self.assertEqual(result["state"], "skipped")
+            promote.assert_called_once_with(item, source_root)
+            self.assertEqual(ledger.get(item.stable_key())["reason"], "already-complete")
+
+    def test_structured_scripture_generates_json_and_epub_without_pdf(self) -> None:
+        item = replace(
+            self._checkpoint_item("77", "Verified Bible"),
+            assets=(),
+            cover_url="",
+            publication_type="bible",
+            category_name="Bible",
+            category_path="biblia",
+            content_model="scripture",
+            content_options={"collection": "BODY", "script": "Latn"},
+            segments=(
+                CatalogSegment(
+                    remote_id="77.1",
+                    url="https://example.test/read/77.1",
+                    order=1,
+                    title="Genesis 1",
+                    html=(
+                        '<p data-book="Genesis" data-chapter="1" data-verse="1">'
+                        'In the <em>beginning</em>.</p>'
+                    ),
+                ),
+            ),
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            ledger = AcquisitionLedger(root / "state" / "ledger.json")
+            result = baixar._process_catalog_item(
+                item,
+                root / "publications",
+                None,
+                {"_download_tmp_dir": str(root / "tmp")},
+                lambda **_kwargs: _Progress(),
+                ledger,
+                no_network=True,
+            )
+            directory = root / "publications" / item.publication_identity().relative_directory()
+            metadata = json.loads(
+                (directory / item.publication_identity().metadata_name()).read_text(
+                    encoding="utf-8"
+                )
+            )
+            structured = [
+                record
+                for record in metadata["derivations"]
+                if record.get("method") == "structured-json"
+            ]
+            self.assertEqual(result["state"], "completed")
+            self.assertEqual(len(structured), 1)
+            self.assertTrue((directory / structured[0]["path"]).is_file())
+            self.assertTrue((directory / item.publication_identity().asset_name("epub", "derived")).is_file())
+            self.assertFalse(any(directory.glob("*.pdf")))
+            indexed = build_index_entry(
+                directory / item.publication_identity().metadata_name(),
+                root / "publications",
+                {"public_root": "/publications", "authors": {}},
+            )
+            self.assertEqual(indexed["structured"]["model"], "scripture")
+            self.assertEqual(indexed["structured"]["schema"], "scripture-corpus/v1")
 
     def test_lightweight_public_projection_preserves_path_and_book_id(self) -> None:
         projected = baixar._lightweight_public_url(

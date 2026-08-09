@@ -247,19 +247,24 @@ class PublicationTransactionTests(unittest.TestCase):
                 tool="publication_analysis.py",
                 scope="all",
                 fingerprint=fingerprint,
-                order=["a", "b"],
+                order=["a", "b", "c"],
             )
             journal.record(0, "a", "analysis")
             journal.confirm(0, "a", commit="a" * 40)
+            journal.record(2, "c", "analysis")
+            journal.confirm(2, "c", commit="c" * 40)
+            self.assertTrue(journal.is_confirmed("c"))
+            self.assertEqual(journal.next_index, 1)
 
             resumed = GlobalProgressJournal(
                 path,
                 tool="publication_analysis.py",
                 scope="all",
                 fingerprint=fingerprint,
-                order=["a", "b", "c"],
+                order=["a", "b", "c", "d"],
             )
             self.assertEqual(resumed.next_index, 1)
+            self.assertEqual(resumed.document["confirmed"], ["a", "c"])
             self.assertEqual(resumed.document["current"], None)
             with self.assertRaisesRegex(PublicationTransactionError, "reset explícito"):
                 GlobalProgressJournal(
@@ -267,7 +272,7 @@ class PublicationTransactionTests(unittest.TestCase):
                     tool="publication_analysis.py",
                     scope="all",
                     fingerprint=fingerprint,
-                    order=["x", "b", "c"],
+                    order=["x", "b", "c", "d"],
                 )
 
             reset = GlobalProgressJournal(

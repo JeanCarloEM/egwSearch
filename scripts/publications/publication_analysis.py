@@ -38,7 +38,7 @@ from publication_contract import (
     write_json_atomic,
 )
 from acquisition import AcquisitionLedger
-from publication_console import PublicationReporter
+from publication_console import PublicationProgress, PublicationReporter
 
 
 MANIFEST_SCHEMA = "publication-chunking-analysis/v2"
@@ -1562,52 +1562,80 @@ def analyze_and_commit_scope(
         directories = [by_identity[identity] for identity in order]
     written: list[Path] = []
     commits: list[str] = []
+    failures: list[tuple[str, Exception]] = []
+    progress = (
+        PublicationProgress(
+            len(order),
+            processed=sum(1 for identity in order if journal.is_confirmed(identity)),
+        )
+        if journal is not None
+        and reporter is not None
+        and not reporter.embedded
+        else None
+    )
+    if progress is not None:
+        reporter.progress("Global", progress.snapshot())
     for position, directory in enumerate(directories):
         identity = order[position]
-        if journal is not None and position < journal.next_index:
+        if journal is not None and journal.is_confirmed(identity):
             if reporter is not None:
                 reporter.notice("Publicação retomada", identity)
             continue
-        item = catalog_item_from_publication(directory)
-        previous = ledger.get(item.stable_key()) or {}
-        publisher.preflight(
-            item,
-            resume=previous.get("git_state") == "commit_pending",
+        if progress is not None:
+            progress.start_item(identity)
+        try:
+            item = catalog_item_from_publication(directory)
+            previous = ledger.get(item.stable_key()) or {}
+            publisher.preflight(
+                item,
+                resume=previous.get("git_state") == "commit_pending",
+            )
+            if journal is not None:
+                journal.record(position, identity, "analysis")
+
+            def operation() -> tuple[list[Path], Path]:
+                manifests = (
+                    _analyze_assets(
+                        directory,
+                        [asset],
+                        root,
+                        reporter,
+                        force_recalculate=force_recalculate,
+                    )
+                    if asset is not None
+                    else analyze_publication(
+                        directory,
+                        root,
+                        reporter,
+                        force_recalculate=force_recalculate,
+                    )
+                )
+                updated = update_global_index(
+                    root,
+                    index_path,
+                    config,
+                    publication=directory,
+                )
+                return manifests, updated
+
+            (manifests, _updated), commit = publisher.finalize(item, ledger, operation)
+            written.extend(manifests)
+            if commit:
+                commits.append(commit)
+            if journal is not None:
+                journal.confirm(position, identity, commit=commit)
+        except Exception as error:
+            failures.append((identity, error))
+            if reporter is not None:
+                reporter.error("Análise da publicação", f"{identity}: {error}")
+        finally:
+            if progress is not None:
+                reporter.progress("Global", progress.finish_item(identity))
+    if failures:
+        raise AnalysisError(
+            f"{len(failures)} publicação(ões) falharam; primeira: "
+            f"{failures[0][0]}: {failures[0][1]}"
         )
-        if journal is not None:
-            journal.record(position, identity, "analysis")
-
-        def operation() -> tuple[list[Path], Path]:
-            manifests = (
-                _analyze_assets(
-                    directory,
-                    [asset],
-                    root,
-                    reporter,
-                    force_recalculate=force_recalculate,
-                )
-                if asset is not None
-                else analyze_publication(
-                    directory,
-                    root,
-                    reporter,
-                    force_recalculate=force_recalculate,
-                )
-            )
-            updated = update_global_index(
-                root,
-                index_path,
-                config,
-                publication=directory,
-            )
-            return manifests, updated
-
-        (manifests, _updated), commit = publisher.finalize(item, ledger, operation)
-        written.extend(manifests)
-        if commit:
-            commits.append(commit)
-        if journal is not None:
-            journal.confirm(position, identity, commit=commit)
     return written, commits
 
 

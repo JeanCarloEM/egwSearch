@@ -22,10 +22,12 @@ from publication_contract import (
     hash_file,
     validate_file_signature,
 )
+from structured_content import validate_structured_artifact
 
 
 MANIFEST_SCHEMA = "publication-chunking-analysis/v2"
-PROGRESS_SCHEMA = "publication-global-progress/v1"
+PROGRESS_SCHEMA = "publication-global-progress/v2"
+LEGACY_PROGRESS_SCHEMA = "publication-global-progress/v1"
 T = TypeVar("T")
 
 
@@ -107,6 +109,11 @@ class GlobalProgressJournal:
     def next_index(self) -> int:
         return int(self.document["next_index"])
 
+    def is_confirmed(self, identity: str) -> bool:
+        """Informa se a unidade já possui confirmação durável, sem exigir contiguidade."""
+
+        return identity in set(self.document["confirmed"])
+
     def _initial(self) -> dict:
         return {
             "schema_version": PROGRESS_SCHEMA,
@@ -114,6 +121,7 @@ class GlobalProgressJournal:
             "scope": self.scope,
             "fingerprint": self.fingerprint,
             "order": self.order,
+            "confirmed": [],
             "next_index": 0,
             "current": None,
             "last_confirmed": None,
@@ -131,7 +139,7 @@ class GlobalProgressJournal:
             raise PublicationTransactionError(
                 f"diário global corrompido; use reset explícito: {self.path}"
             ) from error
-        required = {
+        legacy_required = {
             "schema_version",
             "tool",
             "scope",
@@ -142,12 +150,26 @@ class GlobalProgressJournal:
             "last_confirmed",
             "status",
         }
+        required = {*legacy_required, "confirmed"}
         if not isinstance(document, dict):
             raise PublicationTransactionError(
                 f"diário global incompatível; use reset explícito: {self.path}"
             )
+        if (
+            set(document) == legacy_required
+            and document.get("schema_version") == LEGACY_PROGRESS_SCHEMA
+            and isinstance(document.get("order"), list)
+            and isinstance(document.get("next_index"), int)
+        ):
+            legacy_order = document["order"]
+            legacy_next = document["next_index"]
+            if 0 <= legacy_next <= len(legacy_order):
+                document["schema_version"] = PROGRESS_SCHEMA
+                document["confirmed"] = legacy_order[:legacy_next]
+
         stored_order = document.get("order")
         next_index = document.get("next_index")
+        confirmed = document.get("confirmed")
         order_compatible = (
             isinstance(stored_order, list)
             and len(stored_order) == len(set(stored_order))
@@ -166,6 +188,9 @@ class GlobalProgressJournal:
             or next_index < 0
             or next_index > len(stored_order)
             or not order_compatible
+            or not isinstance(confirmed, list)
+            or len(confirmed) != len(set(confirmed))
+            or not all(value in stored_order for value in confirmed)
         ):
             raise PublicationTransactionError(
                 f"diário global incompatível; use reset explícito: {self.path}"
@@ -175,16 +200,31 @@ class GlobalProgressJournal:
         if appended:
             document["order"] = self.order
             document["status"] = "running"
-            _write_json_atomic(self.path, document)
+        confirmed_set = set(document["confirmed"])
+        document["confirmed"] = [value for value in self.order if value in confirmed_set]
+        document["next_index"] = next(
+            (
+                position
+                for position, value in enumerate(self.order)
+                if value not in confirmed_set
+            ),
+            len(self.order),
+        )
+        document["status"] = (
+            "completed" if len(confirmed_set) == len(self.order) else "running"
+        )
+        _write_json_atomic(self.path, document)
         return document
 
     def record(self, position: int, identity: str, phase: str) -> None:
         """Atualiza a fase corrente sem avançar o limite confirmado."""
 
-        if position < self.next_index or position >= len(self.order):
+        if position < 0 or position >= len(self.order):
             raise PublicationTransactionError("posição inválida no diário global")
         if self.order[position] != identity:
             raise PublicationTransactionError("identidade divergente no diário global")
+        if self.is_confirmed(identity):
+            raise PublicationTransactionError("unidade já confirmada no diário global")
         self.document["current"] = {
             "position": position,
             "identity": identity,
@@ -194,11 +234,25 @@ class GlobalProgressJournal:
         _write_json_atomic(self.path, self.document)
 
     def confirm(self, position: int, identity: str, *, commit: str | None = None) -> None:
-        """Avança somente a próxima unidade e persiste a prova de confirmação."""
+        """Confirma uma unidade concluída sem bloquear coleções independentes."""
 
-        if position != self.next_index or self.order[position] != identity:
-            raise PublicationTransactionError("avanço não contíguo no diário global")
-        self.document["next_index"] = position + 1
+        if position < 0 or position >= len(self.order) or self.order[position] != identity:
+            raise PublicationTransactionError("confirmação divergente no diário global")
+        if self.is_confirmed(identity):
+            raise PublicationTransactionError("unidade já confirmada no diário global")
+        confirmed = set(self.document["confirmed"])
+        confirmed.add(identity)
+        self.document["confirmed"] = [
+            value for value in self.order if value in confirmed
+        ]
+        self.document["next_index"] = next(
+            (
+                candidate
+                for candidate, value in enumerate(self.order)
+                if value not in confirmed
+            ),
+            len(self.order),
+        )
         self.document["current"] = None
         self.document["last_confirmed"] = {
             "position": position,
@@ -206,7 +260,7 @@ class GlobalProgressJournal:
             "commit": commit,
         }
         self.document["status"] = (
-            "completed" if position + 1 == len(self.order) else "running"
+            "completed" if len(confirmed) == len(self.order) else "running"
         )
         _write_json_atomic(self.path, self.document)
 
@@ -390,6 +444,16 @@ def validate_complete_publication(
             raise PublicationTransactionError("derivado divergente")
         if record.get("format") == "epub":
             validate_file_signature(candidate, "epub")
+        if record.get("method") == "structured-json":
+            if record.get("encoding") != "utf-8" or record.get("format") != "json":
+                raise PublicationTransactionError("derivado estruturado sem UTF-8/JSON")
+            try:
+                validate_structured_artifact(
+                    candidate,
+                    str(record.get("model") or "") or None,
+                )
+            except ContractError as error:
+                raise PublicationTransactionError("derivado estruturado inválido") from error
         referenced.add(candidate)
 
     editorial_assets = sorted(

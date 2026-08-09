@@ -120,10 +120,21 @@ class IdentityAndCatalogTests(unittest.TestCase):
 
     def test_config_exposes_both_new_collections_and_conservative_defaults(self) -> None:
         config = load_config(REPOSITORY_ROOT / "config" / "publications.json")
-        self.assertEqual(config["schema_version"], 4)
+        self.assertEqual(config["schema_version"], 5)
         identifiers = {item["id"] for item in config["collections"]}
         self.assertIn("pt-br-pioneiros", identifiers)
         self.assertIn("en-pioneers", identifiers)
+        self.assertIn("en-bible-versions", identifiers)
+        self.assertIn("pt-br-bible-versions", identifiers)
+        self.assertIn("en-bible-dictionaries", identifiers)
+        self.assertIn("en-bible-concordances", identifiers)
+        reference_children = {
+            item["catalog_url"]
+            for item in config["collections"]
+            if item.get("parent_catalog_url")
+            == "https://egwwritings.org/allCollection/en/6"
+        }
+        self.assertEqual(len(reference_children), 10)
         en_pioneers = next(
             item for item in config["collections"] if item["id"] == "en-pioneers"
         )
@@ -137,6 +148,12 @@ class IdentityAndCatalogTests(unittest.TestCase):
         self.assertEqual(
             config["intelligence"]["index_path"], "src/publications/index.json"
         )
+        self.assertFalse(config["validation_sources"][0]["enabled"])
+        self.assertEqual(config["translation"], {
+            "enabled": False,
+            "target": "pt-BR",
+            "adapter": "none",
+        })
         source_root = REPOSITORY_ROOT / config["source_root"]
         self.assertNotIn(source_root, MODULE_ROOT.parents)
         self.assertTrue((MODULE_ROOT / "requirements.txt").is_file())

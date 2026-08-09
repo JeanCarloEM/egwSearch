@@ -21,7 +21,7 @@ import threading
 from typing import Iterable
 from urllib.parse import quote, urlsplit
 
-from publication_console import PublicationReporter
+from publication_console import PublicationProgress, PublicationReporter
 
 from publication_analysis import (
     MANIFEST_SCHEMA,
@@ -40,6 +40,7 @@ from publication_contract import (
     validate_file_signature,
     write_json_atomic,
 )
+from structured_content import validate_structured_artifact
 
 
 INDEX_SCHEMA = "publication-global-index/v1"
@@ -83,6 +84,7 @@ INDEX_MANIFEST = {
             "metadata": "metadata",
             "cover": "resource?",
             "assets": "asset[]",
+            "structured": "structured?",
             "formative_state": "string",
             "formative_data": "formative?",
         },
@@ -113,6 +115,14 @@ INDEX_MANIFEST = {
             "size": "integer",
             "hashes": "hashes",
             "chunking_manifest": "string?",
+        },
+        "structured": {
+            "model": "scripture|lexical|concordance",
+            "schema": "string",
+            "path": "string",
+            "url": "string",
+            "size": "integer",
+            "hashes": "hashes",
         },
         "hashes": {"sha1": "hex(40)", "sha256": "hex(64)", "sha512": "hex(128)"},
         "formative": {"book": "book", "urls": "url[]", "global_hashes": "global_hash[]"},
@@ -302,6 +312,11 @@ def _asset_record(asset: Path, source_root: Path, public_root: str) -> dict:
     }
 
 
+def _public_url(public_root: str, relative: str) -> str:
+    encoded = "/".join(quote(part, safe="-._~") for part in relative.split("/"))
+    return f"{public_root.rstrip('/')}/{encoded}"
+
+
 def _cover_record(directory: Path, source_root: Path, public_root: str) -> dict | None:
     cover = directory / "cover.png"
     if not cover.is_file():
@@ -418,6 +433,36 @@ def build_index_entry(metadata_path: Path, source_root: Path, config: dict) -> d
     ]
     if not assets:
         raise IndexError(f"publicação sem ativo editorial: {metadata_path}")
+    structured = None
+    if value.get("schema_version") == "publication-source/v3":
+        structured_records = [
+            record
+            for record in value.get("derivations", [])
+            if record.get("method") == "structured-json"
+        ]
+        if len(structured_records) > 1:
+            raise IndexError(f"publicação com múltiplos corpora estruturados: {metadata_path}")
+        if structured_records:
+            record = structured_records[0]
+            candidate = (metadata_path.parent / str(record.get("path") or "")).resolve()
+            if metadata_path.parent.resolve() not in candidate.parents or not candidate.is_file():
+                raise IndexError(f"corpus estruturado ausente: {metadata_path}")
+            evidence = hash_file(candidate)
+            if evidence.as_dict() != record.get("hashes") or evidence.size != record.get("size"):
+                raise IndexError(f"corpus estruturado divergente: {metadata_path}")
+            try:
+                document = validate_structured_artifact(candidate, str(record.get("model") or ""))
+            except ContractError as error:
+                raise IndexError(f"corpus estruturado inválido: {metadata_path}") from error
+            relative = candidate.relative_to(source_root).as_posix()
+            structured = {
+                "model": record["model"],
+                "schema": document["schema"],
+                "path": relative,
+                "url": _public_url(public_root, relative),
+                "size": evidence.size,
+                "hashes": evidence.as_dict(),
+            }
     formative_state, formative_data = _formative(identity, records)
     relative_directory = metadata_path.parent.relative_to(source_root).as_posix()
     remote_id = str(identity.get("remote_id") or _remote_id(records))
@@ -453,6 +498,7 @@ def build_index_entry(metadata_path: Path, source_root: Path, config: dict) -> d
         },
         "cover": _cover_record(metadata_path.parent, source_root, public_root),
         "assets": sorted(assets, key=lambda asset: (asset["format"] != "pdf", asset["path"])),
+        "structured": structured,
         "formative_state": formative_state,
         "formative_data": formative_data,
     }
@@ -500,6 +546,9 @@ def _document(entries: list[dict], config: dict) -> dict:
                         "id": entry["id"],
                         "metadata": entry["metadata"]["path"],
                         "assets": [asset["hashes"] for asset in entry["assets"]],
+                        "structured": (
+                            entry["structured"]["hashes"] if entry.get("structured") else None
+                        ),
                     }
                     for entry in ordered
                 ]
@@ -554,6 +603,7 @@ def _update_global_index_unlocked(
     index_path: Path,
     config: dict,
     publication: Path | None = None,
+    reporter: PublicationReporter | None = None,
 ) -> Path:
     """Atualiza uma publicação quando há cobertura íntegra; senão reconstrói."""
 
@@ -581,7 +631,7 @@ def _update_global_index_unlocked(
         entries = [entry for entry in existing["publications"] if entry["id"] != replacement["id"]]
         entries.append(replacement)
     else:
-        entries = [build_index_entry(path, root, config) for path in all_metadata]
+        entries = _build_entries(all_metadata, root, config, reporter)
     document = _document(entries, config)
     _write_json_if_changed(target, document)
     write_index_manifest(target)
@@ -593,6 +643,7 @@ def update_global_index(
     index_path: Path,
     config: dict,
     publication: Path | None = None,
+    reporter: PublicationReporter | None = None,
 ) -> Path:
     """Serializa atualizações concorrentes dentro do processo do downloader."""
 
@@ -602,7 +653,40 @@ def update_global_index(
             index_path,
             config,
             publication,
+            reporter,
         )
+
+
+def _build_entries(
+    metadata_paths: list[Path],
+    source_root: Path,
+    config: dict,
+    reporter: PublicationReporter | None = None,
+) -> list[dict]:
+    progress = PublicationProgress(len(metadata_paths)) if reporter is not None else None
+    if progress is not None:
+        reporter.progress("Global", progress.snapshot())
+    entries: list[dict] = []
+    failures: list[tuple[Path, Exception]] = []
+    for metadata_path in metadata_paths:
+        identity = metadata_path.relative_to(source_root).as_posix()
+        if progress is not None:
+            progress.start_item(identity)
+        try:
+            entries.append(build_index_entry(metadata_path, source_root, config))
+        except Exception as error:
+            failures.append((metadata_path, error))
+            if reporter is not None:
+                reporter.error("Indexação da publicação", f"{identity}: {error}")
+        finally:
+            if progress is not None:
+                reporter.progress("Global", progress.finish_item(identity))
+    if failures:
+        raise IndexError(
+            f"{len(failures)} publicação(ões) inválidas; primeira: "
+            f"{failures[0][0]}: {failures[0][1]}"
+        )
+    return entries
 
 
 def generate_scope_index(
@@ -610,11 +694,14 @@ def generate_scope_index(
     index_path: Path,
     config: dict,
     scope: Path,
+    reporter: PublicationReporter | None = None,
 ) -> Path:
-    entries = [
-        build_index_entry(path, source_root.resolve(), config)
-        for path in _metadata_paths(source_root, scope)
-    ]
+    entries = _build_entries(
+        _metadata_paths(source_root, scope),
+        source_root.resolve(),
+        config,
+        reporter,
+    )
     document = _document(entries, config)
     _write_json_if_changed(index_path, document)
     write_index_manifest(index_path)
@@ -700,6 +787,7 @@ def main(argv: Iterable[str] | None = None) -> int:
                 output,
                 config,
                 publication=arguments.publication,
+                reporter=reporter if arguments.all else None,
             )
         indexed = None if manifest_output else json.loads(output.read_text(encoding="utf-8"))
         summary = (

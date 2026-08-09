@@ -72,7 +72,7 @@ from publication_contract import (
     write_json_atomic,
 )
 from publication_analysis import ANALYZER_VERSION, analyze_publication
-from publication_console import PublicationReporter
+from publication_console import PublicationProgress, PublicationReporter
 from publication_index import configured_index_path, update_global_index
 from publication_transaction import (
     GlobalProgressJournal,
@@ -81,6 +81,7 @@ from publication_transaction import (
     progress_fingerprint,
     validate_complete_publication,
 )
+from structured_content import STRUCTURED_MODELS, write_structured_artifact
 
 
 class DownloadError(RuntimeError):
@@ -947,6 +948,8 @@ def _catalog_item_from_element(book, collection: dict, runtime: dict) -> Catalog
             runtime,
             [".author", ".book-author", "[class*='author']"],
         )
+        if not author and collection.get("allow_missing_author"):
+            author = str(collection.get("unknown_author_name") or "Autoria não informada")
         if not author:
             raise ContractError("publicacao multiautor sem autor comprovado")
     public_url = ""
@@ -992,6 +995,8 @@ def _catalog_item_from_element(book, collection: dict, runtime: dict) -> Catalog
         assets=tuple(
             sorted(assets, key=lambda item: (item.format != "epub", item.url))
         ),
+        content_model=str(collection.get("content_model") or "publication"),
+        content_options=dict(collection.get("content_options") or {}),
     )
 
 
@@ -1101,6 +1106,8 @@ def _catalog_item_record(item: CatalogItem) -> dict:
             for segment in item.segments
         ],
         "local_complete": item.local_complete,
+        "content_model": item.content_model,
+        "content_options": item.content_options,
     }
 
 
@@ -1130,6 +1137,8 @@ def _catalog_item_from_record(value: object) -> CatalogItem:
             assets=assets,
             segments=segments,
             local_complete=bool(value.get("local_complete", False)),
+            content_model=str(value.get("content_model") or "publication"),
+            content_options=dict(value.get("content_options") or {}),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ContractError("item inválido no checkpoint de coleção") from error
@@ -1305,89 +1314,28 @@ class BrowserSessionManager:
         active = checkpoint or _new_collection_checkpoint(
             collection, limit, publication_query
         )
-        stored_entries = active.get("catalog_entries") or []
         items = list(active.get("_items") or [])
-        if stored_entries:
-            ordered = [
-                (entry["title"], entry["url"], entry["author"])
-                for entry in stored_entries
-            ]
+        stored_entries = active.get("catalog_entries") or []
+        if not stored_entries:
+            active = self.discover_catalog_entries(
+                collection,
+                limiter,
+                limit=limit,
+                publication_query=publication_query,
+                checkpoint_path=checkpoint_path,
+                checkpoint=active,
+            )
+            stored_entries = active["catalog_entries"]
+            items = list(active.get("_items") or [])
+        ordered = [
+            (entry["title"], entry["url"], entry["author"])
+            for entry in stored_entries
+        ]
+        if items:
             print(
                 f"CATALOG_DISCOVERY_RESUME collection={collection['id']} "
                 f"enriched={len(items)} publications={len(ordered)}"
             )
-        else:
-            driver = self._usable_driver()
-            limiter.before_request()
-            print(
-                f"BROWSER_TAB_REUSE collection={collection['id']} "
-                f"profile={self._safe_profile_label()}"
-            )
-            catalog_url = _lightweight_public_url(collection["catalog_url"])
-            driver.get(catalog_url)
-            driver = self._wait_for_human_release(collection["id"])
-            if urlsplit(catalog_url).hostname != "text.egwwritings.org":
-                self._accept_cookie_banner()
-            links = self._discover_catalog_links(collection, limiter)
-            if not links:
-                # Compatibilidade com a aplicação completa e fixtures Selenium
-                # antigas, sem checkpoint incremental para DOM virtualizado.
-                virtualized: dict[str, CatalogItem] = {}
-                self._harvest_virtualized_cards(collection, virtualized)
-                self._scroll_until_stable(
-                    on_step=lambda: self._harvest_virtualized_cards(
-                        collection, virtualized
-                    )
-                )
-                self._wait_for_catalog_grid(collection["id"])
-                self._harvest_virtualized_cards(collection, virtualized)
-                values = sorted(
-                    virtualized.values(),
-                    key=lambda item: item.title_normalized.casefold(),
-                )
-                values = values[:limit] if limit is not None else values
-                if checkpoint_path is None:
-                    return values
-                active["catalog_entries"] = [
-                    {
-                        "title": item.title_original,
-                        "url": item.public_url,
-                        "author": item.author_name,
-                    }
-                    for item in values
-                ]
-                active["items"] = [_catalog_item_record(item) for item in values]
-                active["_items"] = values
-                active["discovery_complete"] = True
-                if checkpoint_path is not None:
-                    _save_collection_checkpoint(checkpoint_path, active)
-                return values
-            print(
-                f"CATALOG_DISCOVERED collection={collection['id']} "
-                f"publications={len(links)} source=lightweight-public"
-            )
-            ordered = sorted(links.values(), key=lambda value: value[0].casefold())
-            if publication_query:
-                query = publication_query.casefold().strip()
-                ordered = [
-                    value
-                    for value in ordered
-                    if query in value[0].casefold()
-                    or query in value[1].casefold()
-                    or query == _book_id_from_url(value[1])
-                ]
-                if not ordered:
-                    raise ContractError(
-                        f"publicação não encontrada na coleção: {publication_query}"
-                    )
-            if limit is not None:
-                ordered = ordered[:limit]
-            active["catalog_entries"] = [
-                {"title": title, "url": url, "author": author}
-                for title, url, author in ordered
-            ]
-            if checkpoint_path is not None:
-                _save_collection_checkpoint(checkpoint_path, active)
 
         if active.get("discovery_complete"):
             if len(items) != len(ordered):
@@ -1432,6 +1380,93 @@ class BrowserSessionManager:
         if checkpoint_path is not None:
             _save_collection_checkpoint(checkpoint_path, active)
         return items
+
+    def discover_catalog_entries(
+        self,
+        collection: dict,
+        limiter: RateLimiter,
+        *,
+        limit: int | None = None,
+        publication_query: str | None = None,
+        checkpoint_path: Path | None = None,
+        checkpoint: dict | None = None,
+    ) -> dict:
+        """Fixa o inventário da coleção sem abrir fichas nem textos das obras."""
+
+        active = checkpoint or _new_collection_checkpoint(
+            collection, limit, publication_query
+        )
+        if active.get("catalog_entries"):
+            return active
+        driver = self._usable_driver()
+        limiter.before_request()
+        print(
+            f"BROWSER_TAB_REUSE collection={collection['id']} "
+            f"profile={self._safe_profile_label()}"
+        )
+        catalog_url = _lightweight_public_url(collection["catalog_url"])
+        driver.get(catalog_url)
+        driver = self._wait_for_human_release(collection["id"])
+        if urlsplit(catalog_url).hostname != "text.egwwritings.org":
+            self._accept_cookie_banner()
+        links = self._discover_catalog_links(collection, limiter)
+        virtualized_by_url: dict[str, CatalogItem] = {}
+        if links:
+            ordered = sorted(links.values(), key=lambda value: value[0].casefold())
+            source = "lightweight-public"
+        else:
+            virtualized: dict[str, CatalogItem] = {}
+            self._harvest_virtualized_cards(collection, virtualized)
+            self._scroll_until_stable(
+                on_step=lambda: self._harvest_virtualized_cards(collection, virtualized)
+            )
+            self._wait_for_catalog_grid(collection["id"])
+            self._harvest_virtualized_cards(collection, virtualized)
+            virtualized_items = sorted(
+                virtualized.values(),
+                key=lambda item: item.title_normalized.casefold(),
+            )
+            ordered = [
+                (item.title_original, item.public_url, item.author_name)
+                for item in virtualized_items
+            ]
+            virtualized_by_url = {item.public_url: item for item in virtualized_items}
+            source = "virtualized-public"
+        if publication_query:
+            query = publication_query.casefold().strip()
+            ordered = [
+                value
+                for value in ordered
+                if query in value[0].casefold()
+                or query in value[1].casefold()
+                or query == _book_id_from_url(value[1])
+            ]
+            if not ordered:
+                raise ContractError(
+                    f"publicação não encontrada na coleção: {publication_query}"
+                )
+        if limit is not None:
+            ordered = ordered[:limit]
+        if not ordered:
+            raise ContractError(f"catálogo sem obras: {collection['id']}")
+        active["catalog_entries"] = [
+            {"title": title, "url": url, "author": author}
+            for title, url, author in ordered
+        ]
+        if virtualized_by_url:
+            active["_items"] = [virtualized_by_url[url] for _title, url, _author in ordered]
+            active["discovery_complete"] = True
+            if checkpoint_path is not None:
+                active["items"] = [
+                    _catalog_item_record(item) for item in active["_items"]
+                ]
+        if checkpoint_path is not None:
+            _save_collection_checkpoint(checkpoint_path, active)
+        print(
+            f"CATALOG_DISCOVERED collection={collection['id']} "
+            f"publications={len(ordered)} source={source}"
+        )
+        return active
 
     def _text_checkpoint_path(self, book_id: str) -> Path:
         return self.state_root / "acquisition" / "text" / f"{book_id}.json"
@@ -1505,6 +1540,8 @@ class BrowserSessionManager:
             [".book-info-content__subtitle__author", "[class*='author']"],
         ) or author_candidate or str(collection.get("default_author_name") or "")
         author = re.sub(r"^\s*By[\s\u00a0]+", "", author, flags=re.IGNORECASE).strip()
+        if not author and collection.get("allow_missing_author"):
+            author = str(collection.get("unknown_author_name") or "Autoria não informada")
         if not title or not author:
             raise ContractError("página individual sem título ou autor comprovado")
         cover_url = ""
@@ -1531,7 +1568,8 @@ class BrowserSessionManager:
             try:
                 publication_format = format_from_url(absolute)
             except ContractError:
-                if "/read/" in urlsplit(absolute).path and not read_url:
+                read_path = urlsplit(absolute).path.rstrip("/")
+                if (read_path == "/read" or "/read/" in read_path) and not read_url:
                     read_url = _lightweight_public_url(absolute)
                 continue
             assets[(publication_format, absolute)] = CatalogAsset(
@@ -1543,7 +1581,11 @@ class BrowserSessionManager:
         category_path = str(collection.get("category") or "").strip()
         if not category_name or not category_path or uri_slug(category_path) != category_path:
             raise ContractError("colecao sem categoria editorial oficial")
+        content_model = str(collection.get("content_model") or "publication")
+        structured = content_model in STRUCTURED_MODELS
         segments: tuple[CatalogSegment, ...] = ()
+        if structured:
+            assets.clear()
         if not assets:
             if not read_url:
                 raise ContractError("obra sem ativo nativo e sem URL Read Online")
@@ -1571,6 +1613,8 @@ class BrowserSessionManager:
             cover_url=cover_url,
             assets=tuple(sorted(assets.values(), key=lambda item: (item.format != "epub", item.url))),
             segments=segments,
+            content_model=content_model,
+            content_options=dict(collection.get("content_options") or {}),
         )
 
     def _discover_text_segments(
@@ -2089,6 +2133,30 @@ def _write_v3_metadata(
     return metadata_path
 
 
+def promote_legacy_publication(item: CatalogItem, source_root: Path) -> Path:
+    """Promove metadado legado completo a v3 sem acessar ou alterar ativos."""
+
+    identity = item.publication_identity()
+    directory = source_root / identity.relative_directory()
+    metadata_path = directory / identity.metadata_name()
+    try:
+        existing = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise ContractError("metadado legado ilegível para promoção") from error
+    if existing.get("schema_version") == "publication-source/v3":
+        return metadata_path
+    records = _complete_legacy_records(
+        read_source_records(metadata_path),
+        identity,
+        directory,
+    )
+    expected = {asset.format for asset in item.assets}
+    actual = {str(record.get("format") or "") for record in records}
+    if not expected or expected != actual:
+        raise ContractError("promoção legada diverge dos ativos comprovados")
+    return _write_v3_metadata(source_root, item, "completed", records)
+
+
 def preflight_existing_text(
     item: CatalogItem,
     source_root: Path,
@@ -2302,6 +2370,8 @@ def _local_item_from_metadata(
         assets=assets,
         segments=local_segments,
         local_complete=True,
+        content_model=str(identity.get("content_model") or recorded_collection.get("content_model") or collection.get("content_model") or "publication"),
+        content_options=dict(collection.get("content_options") or {}),
     )
 
 
@@ -2389,6 +2459,8 @@ def _preflight_legacy_native_publication(
             public_url=public_url,
             category_name=category_name,
             category_path=category_path,
+            content_model=str(collection.get("content_model") or "publication"),
+            content_options=dict(collection.get("content_options") or {}),
         )
     except (KeyError, ContractError):
         return None
@@ -2472,6 +2544,7 @@ def _process_catalog_item(
     skipped = downloaded = extracted = converted = 0
     try:
         if item.local_complete and not revalidate:
+            promote_legacy_publication(item, source_root)
             ledger.transition(
                 key,
                 "skipped",
@@ -2523,6 +2596,9 @@ def _process_catalog_item(
             if downloaded:
                 _write_v3_metadata(source_root, item, "completed", records)
             elif skipped:
+                # FIX-BUG: a publicação legada validada também seguirá pela
+                # inteligência e pela transação; promova antes desse fechamento.
+                promote_legacy_publication(item, source_root)
                 ledger.transition(
                     key,
                     "skipped",
@@ -2584,6 +2660,12 @@ def _process_catalog_item(
             )
             extracted = len(segment_evidence)
             accessed_at = datetime.now(timezone.utc).isoformat()
+            structured_derivation = None
+            if item.content_model in STRUCTURED_MODELS:
+                structured_path, structured_derivation = write_structured_artifact(
+                    directory, item, accessed_at=accessed_at
+                )
+                installed_assets.append(structured_path)
             epub_path = generate_epub(
                 directory / identity.asset_name("epub", "derived"),
                 item,
@@ -2632,6 +2714,8 @@ def _process_catalog_item(
                     "size": epub_hashes.size,
                 }
             ]
+            if structured_derivation is not None:
+                derivations.append(structured_derivation)
             if cover_derivation is not None:
                 derivations.append(cover_derivation)
             for evidence, markdown_path in zip(segment_evidence, markdown_paths, strict=True):
@@ -2778,6 +2862,7 @@ def _process_collection(
     reporter: PublicationReporter | None = None,
     global_journal: GlobalProgressJournal | None = None,
     collection_position: int | None = None,
+    global_progress: PublicationProgress | None = None,
 ) -> dict:
     """Descobre e processa uma coleção sequencialmente, com parada por bloqueio."""
 
@@ -2894,6 +2979,9 @@ def _process_collection(
             _save_collection_checkpoint(checkpoint_path, active)
 
         attempted_this_run.add(item.remote_id)
+        progress_identity = f"{collection['id']}:{item.remote_id}"
+        if global_progress is not None:
+            global_progress.start_item(progress_identity)
         summary["discovered"] = max(summary["discovered"], position)
         if reporter is not None:
             reporter.section(
@@ -2999,6 +3087,11 @@ def _process_collection(
                 f"error={type(error).__name__}:{error}",
                 file=sys.stderr,
             )
+        finally:
+            if global_progress is not None:
+                snapshot = global_progress.finish_item(progress_identity)
+                if reporter is not None:
+                    reporter.progress("Global", snapshot)
 
     try:
         if checkpoint is not None and checkpoint.get("discovery_complete"):
@@ -3143,7 +3236,7 @@ class _NullProgress:
 
 
 def _selected_collections(config: dict, selected: set[str] | None) -> list[dict]:
-    if config["schema_version"] in {2, 3, 4}:
+    if config["schema_version"] in {2, 3, 4, 5}:
         collections = list(config["collections"])
     else:
         collections = [
@@ -3307,9 +3400,66 @@ def run(
             )
         browser_manager = BrowserSessionManager(runtime, config["download"], paths)
     try:
+        global_progress = None
+        inventory_failures: dict[str, Exception] = {}
+        if global_mode:
+            if browser_manager is None:
+                raise ContractError("inventário global exige navegador")
+            inventory_total = 0
+            inventory_confirmed = 0
+            for collection in collections:
+                checkpoint_path = _collection_checkpoint_path(
+                    state_root, collection, None, None
+                )
+                checkpoint = _load_collection_checkpoint(
+                    checkpoint_path, collection, None, None
+                )
+                try:
+                    active = browser_manager.discover_catalog_entries(
+                        collection,
+                        shared_limiter,
+                        checkpoint_path=checkpoint_path,
+                        checkpoint=checkpoint,
+                    )
+                except Exception as error:
+                    inventory_failures[str(collection["id"])] = error
+                    reporter.error(f"Inventário {collection['id']}", error)
+                    continue
+                collection_total = len(active["catalog_entries"])
+                inventory_total += collection_total
+                inventory_confirmed += (
+                    collection_total
+                    if global_journal is not None
+                    and global_journal.is_confirmed(str(collection["id"]))
+                    else len(active.get("confirmed_remote_ids", []))
+                )
+            global_progress = PublicationProgress(
+                inventory_total,
+                processed=inventory_confirmed,
+            )
+            reporter.progress("Global", global_progress.snapshot())
         if worker_count == 1:
             for collection_position, collection in enumerate(collections):
-                if global_journal is not None and collection_position < global_journal.next_index:
+                inventory_error = inventory_failures.get(str(collection["id"]))
+                if inventory_error is not None:
+                    results.append(
+                        {
+                            "collection": collection["id"],
+                            "discovered": 0,
+                            "downloaded": 0,
+                            "skipped": 0,
+                            "extracted": 0,
+                            "converted": 0,
+                            "review_required": 0,
+                            "failures": 1,
+                            "blocked": isinstance(inventory_error, OriginBlocked),
+                            "resumed": 0,
+                        }
+                    )
+                    continue
+                if global_journal is not None and global_journal.is_confirmed(
+                    str(collection["id"])
+                ):
                     print(f"COLLECTION_GLOBAL_RESUMED collection={collection['id']}")
                     continue
                 result = _process_collection(
@@ -3336,6 +3486,7 @@ def run(
                         reporter=reporter,
                         global_journal=global_journal,
                         collection_position=collection_position,
+                        global_progress=global_progress,
                     )
                 results.append(result)
                 if (
@@ -3344,8 +3495,6 @@ def run(
                     and not result["blocked"]
                 ):
                     global_journal.confirm(collection_position, collection["id"])
-                elif global_journal is not None:
-                    break
         else:
             with ThreadPoolExecutor(max_workers=worker_count) as executor:
                 futures = {

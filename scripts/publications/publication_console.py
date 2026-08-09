@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import shutil
 import sys
+import time
 from typing import Iterable, TextIO
 
 
@@ -45,6 +46,42 @@ def compact_path(value: str | Path, width: int) -> str:
 
 def _percent(ppm: int | None) -> str:
     return "—" if ppm is None else f"{ppm / 10_000:.1f}%"
+
+
+class PublicationProgress:
+    """Mantém total fixo, média observada e ETA sem projetar catálogo desconhecido."""
+
+    def __init__(self, total: int, *, processed: int = 0, clock=time.monotonic) -> None:
+        if total < 0 or processed < 0 or processed > total:
+            raise ValueError("progresso global inválido")
+        self.total = total
+        self.processed = processed
+        self._clock = clock
+        self._started: dict[str, float] = {}
+        self._durations: list[float] = []
+
+    def start_item(self, identity: str) -> None:
+        self._started[identity] = self._clock()
+
+    def finish_item(self, identity: str) -> dict[str, object]:
+        started = self._started.pop(identity, None)
+        if started is None:
+            raise ValueError("item sem início no progresso global")
+        self._durations.append(max(0.0, self._clock() - started))
+        self.processed = min(self.total, self.processed + 1)
+        return self.snapshot()
+
+    def snapshot(self) -> dict[str, object]:
+        remaining = self.total - self.processed
+        mean = sum(self._durations) / len(self._durations) if self._durations else None
+        return {
+            "processed": self.processed,
+            "total": self.total,
+            "remaining": remaining,
+            "percent": (self.processed * 100.0 / self.total) if self.total else 100.0,
+            "mean_seconds": mean,
+            "eta_seconds": (mean * remaining) if mean is not None else None,
+        }
 
 
 class PublicationReporter:
@@ -227,6 +264,23 @@ class PublicationReporter:
             self._console.print(table)
         else:
             self.stream.write(f"{stage}: " + " ".join(f"{key}={value}" for key, value in pairs) + "\n")
+
+    def progress(self, scope: str, snapshot: dict[str, object]) -> None:
+        """Emite uma única linha global baseada apenas em durações observadas."""
+
+        mean = snapshot.get("mean_seconds")
+        eta = snapshot.get("eta_seconds")
+        mean_text = "—" if mean is None else f"{float(mean):.1f}s"
+        eta_text = "—" if eta is None else f"{float(eta):.0f}s"
+        line = (
+            f"{scope} {int(snapshot['processed'])}/{int(snapshot['total'])} "
+            f"({float(snapshot['percent']):.1f}%) restantes={int(snapshot['remaining'])} "
+            f"média={mean_text} ETA={eta_text}"
+        )
+        if self._rich:
+            self._console.print(line, style="cyan", no_wrap=True, overflow="ellipsis")
+        else:
+            self.stream.write(f"PROGRESSO {line}\n")
 
     def publication_gap(self) -> None:
         self.stream.write("\n\n")

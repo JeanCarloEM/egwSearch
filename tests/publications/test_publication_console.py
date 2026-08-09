@@ -15,10 +15,24 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 MODULE_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(MODULE_ROOT))
 
-from publication_console import PublicationReporter, compact_path  # noqa: E402
+from publication_console import PublicationProgress, PublicationReporter, compact_path  # noqa: E402
 
 
 class PublicationConsoleTests(unittest.TestCase):
+    def test_global_progress_uses_fixed_total_and_observed_eta(self) -> None:
+        ticks = iter([10.0, 14.0, 20.0, 26.0])
+        progress = PublicationProgress(5, processed=1, clock=lambda: next(ticks))
+        progress.start_item("a")
+        first = progress.finish_item("a")
+        self.assertEqual(first["processed"], 2)
+        self.assertEqual(first["remaining"], 3)
+        self.assertEqual(first["mean_seconds"], 4.0)
+        self.assertEqual(first["eta_seconds"], 12.0)
+        progress.start_item("b")
+        second = progress.finish_item("b")
+        self.assertEqual(second["mean_seconds"], 5.0)
+        self.assertEqual(second["eta_seconds"], 10.0)
+
     def test_long_path_is_truncated_predictably_with_basename(self) -> None:
         value = "src/publications/" + "segmento-muito-longo/" * 8 + "livro.epub"
         compact = compact_path(value, 42)

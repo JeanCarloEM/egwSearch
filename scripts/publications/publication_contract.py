@@ -147,6 +147,11 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
         "transaction",
         "intelligence",
     }
+    required_v5 = {
+        *required_v4,
+        "validation_sources",
+        "translation",
+    }
     if schema == 1 and set(data) != required_v1:
         raise ContractError("configuracao deve seguir publications-config/v1")
     if schema == 2 and set(data) != required_v2:
@@ -155,11 +160,13 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
         raise ContractError("configuracao deve seguir publications-config/v3")
     if schema == 4 and set(data) != required_v4:
         raise ContractError("configuracao deve seguir publications-config/v4")
-    if schema not in {1, 2, 3, 4}:
+    if schema == 5 and set(data) != required_v5:
+        raise ContractError("configuracao deve seguir publications-config/v5")
+    if schema not in {1, 2, 3, 4, 5}:
         raise ContractError("schema de configuracao nao suportado")
     if not isinstance(data["authors"], dict) or not data["authors"]:
         raise ContractError("configuracao sem autores")
-    if schema in {2, 3, 4}:
+    if schema in {2, 3, 4, 5}:
         if not isinstance(data["collections"], list) or not data["collections"]:
             raise ContractError("configuracao sem colecoes")
         ids = [item.get("id") for item in data["collections"] if isinstance(item, dict)]
@@ -176,7 +183,15 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
                 or not category_name.strip()
             ):
                 raise ContractError("colecao sem categoria editorial")
-    if schema in {3, 4}:
+            content_model = collection.get("content_model", "publication")
+            if content_model not in {
+                "publication", "scripture", "lexical", "concordance",
+                "commentary", "reading-plan", "scripture-index",
+            }:
+                raise ContractError("colecao com modelo de conteudo invalido")
+            if not isinstance(collection.get("content_options", {}), dict):
+                raise ContractError("colecao com opcoes de conteudo invalidas")
+    if schema in {3, 4, 5}:
         transaction = data["transaction"]
         expected_transaction = {"branch", "commit_per_publication"}
         if schema == 3:
@@ -202,6 +217,50 @@ def load_config(path: Path | str = DEFAULT_CONFIG_PATH) -> dict:
             )
             if index_path != source_root and source_root not in index_path.parents:
                 raise ContractError("indice global fora da raiz de publicacoes")
+        if schema == 5:
+            sources = data["validation_sources"]
+            if not isinstance(sources, list):
+                raise ContractError("fontes de validacao invalidas")
+            source_ids: set[str] = set()
+            for source in sources:
+                if (
+                    not isinstance(source, dict)
+                    or set(source)
+                    != {"id", "role", "url", "scope", "terms", "license", "requests_per_minute", "enabled"}
+                    or not isinstance(source["id"], str)
+                    or not source["id"]
+                    or source["id"] in source_ids
+                    or source["role"] not in {"source", "countercheck"}
+                    or not isinstance(source["url"], str)
+                    or urlsplit(source["url"]).scheme != "https"
+                    or not urlsplit(source["url"]).hostname
+                    or not isinstance(source["scope"], list)
+                    or not source["scope"]
+                    or not all(isinstance(value, str) and value for value in source["scope"])
+                    or not isinstance(source["terms"], str)
+                    or not isinstance(source["license"], str)
+                    or not isinstance(source["requests_per_minute"], (int, float))
+                    or isinstance(source["requests_per_minute"], bool)
+                    or source["requests_per_minute"] <= 0
+                    or not isinstance(source["enabled"], bool)
+                ):
+                    raise ContractError("fonte de validacao invalida")
+                source_ids.add(source["id"])
+                if source["enabled"] and (
+                    source["terms"] in {"", "unverified"}
+                    or source["license"] in {"", "unverified"}
+                ):
+                    raise ContractError("fonte habilitada sem termos e licenca verificados")
+            translation = data["translation"]
+            if (
+                not isinstance(translation, dict)
+                or set(translation) != {"enabled", "target", "adapter"}
+                or not isinstance(translation["enabled"], bool)
+                or translation["target"] != "pt-BR"
+                or not isinstance(translation["adapter"], str)
+                or (translation["enabled"] and translation["adapter"] == "none")
+            ):
+                raise ContractError("configuracao de traducao invalida")
     return data
 
 
