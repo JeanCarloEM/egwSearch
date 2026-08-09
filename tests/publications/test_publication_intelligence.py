@@ -546,6 +546,30 @@ class PublicationIntelligenceTests(unittest.TestCase):
                 )
             self.assertEqual(builder.call_count, 1)
 
+    def test_duplicate_existing_entry_forces_integral_index_rebuild(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, _epub, _pdf = _materialize(root, _item())
+            analyze_publication(directory, root)
+            config = _config(root)
+            target = root / "index.json"
+            publication_index.update_global_index(root, target, config)
+            document = json.loads(target.read_text(encoding="utf-8"))
+            duplicate = json.loads(json.dumps(document["publications"][0]))
+            duplicate["id"] = "corrupt:duplicate"
+            document["publications"].append(duplicate)
+            write_json_atomic(target, document)
+
+            publication_index.update_global_index(
+                root,
+                target,
+                config,
+                publication=directory,
+            )
+
+            repaired = json.loads(target.read_text(encoding="utf-8"))
+            self.assertEqual(len(repaired["publications"]), 1)
+
     def test_index_manifest_is_agnostic_to_index_state_and_quantity(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
             index = Path(temporary) / "index.json"

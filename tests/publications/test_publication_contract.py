@@ -93,6 +93,19 @@ class PublicationContractTests(unittest.TestCase):
         self.assertEqual(title_acronym("Maranatha"), "maranatha")
         self.assertRegex(title_acronym("東京"), r"^u[0-9a-f]{12}$")
 
+    def test_physical_discriminator_does_not_change_editorial_identity(self) -> None:
+        identity = publication_identity(
+            "author",
+            "en",
+            "books",
+            "Same Work",
+            route_slug="same-work-1333",
+            acronym="sw",
+        )
+        self.assertEqual(identity.title, "Same Work")
+        self.assertEqual(identity.route_slug, "same-work-1333")
+        self.assertEqual(identity.acronym, "sw")
+
     def test_hashes_signatures_and_variants(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

@@ -418,18 +418,31 @@ def publication_identity(
     publication_type: str,
     title: str,
     category: str = "geral",
+    *,
+    route_slug: str | None = None,
+    acronym: str | None = None,
 ) -> PublicationIdentity:
-    """Materializa identidade somente depois de validar seus componentes."""
+    """Materializa identidade editorial e eventual rota física já comprovada.
+
+    ``route_slug`` e ``acronym`` preservam a identidade registrada quando uma
+    colisão física exige desambiguação sem adulterar título, autoria ou obra.
+    """
 
     normalized_title = normalize_editorial_title(title)
+    canonical_route = uri_slug(normalized_title)
+    canonical_acronym = title_acronym(normalized_title)
     return PublicationIdentity(
         author=validate_slug(author, "autor"),
         language=validate_language(language),
         category=uri_slug(category),
         publication_type=validate_slug(publication_type, "tipo"),
         title=normalized_title,
-        acronym=title_acronym(normalized_title),
-        route_slug=uri_slug(normalized_title),
+        acronym=(
+            validate_slug(acronym, "acronimo") if acronym is not None else canonical_acronym
+        ),
+        route_slug=(
+            validate_slug(route_slug, "rota") if route_slug is not None else canonical_route
+        ),
     )
 
 

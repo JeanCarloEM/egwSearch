@@ -6,11 +6,14 @@
 from __future__ import annotations
 
 from contextlib import contextmanager
+from dataclasses import replace
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 from typing import Callable, Iterable, TypeVar
 import zipfile
@@ -554,6 +557,152 @@ def _status_paths(root: Path, relative_directory: Path) -> set[str]:
     return paths
 
 
+def _metadata_remote_id_bytes(payload: bytes) -> str:
+    try:
+        document = json.loads(payload.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return ""
+    if not isinstance(document, dict):
+        return ""
+    return str((document.get("identity") or {}).get("remote_id") or "")
+
+
+def _metadata_remote_id(path: Path) -> str:
+    try:
+        return _metadata_remote_id_bytes(path.read_bytes())
+    except OSError:
+        return ""
+
+
+def _head_metadata_remote_id(root: Path, metadata_path: Path) -> str:
+    relative = metadata_path.resolve().relative_to(root.resolve()).as_posix()
+    result = _git(root, ["show", f"HEAD:{relative}"], check=False)
+    return _metadata_remote_id_bytes(result.stdout) if result.returncode == 0 else ""
+
+
+def _snapshot_changed_paths(
+    root: Path,
+    recovery_root: Path,
+    changed: set[str],
+    *,
+    reason: str,
+) -> Path | None:
+    """Copia bytes divergentes para runtime antes de qualquer reconciliação."""
+
+    if not changed:
+        return None
+    evidence: list[dict] = []
+    for relative in sorted(changed):
+        candidate = (root / relative).resolve()
+        if not _inside(candidate, root):
+            raise PublicationTransactionError("path divergente fora do repositório")
+        record: dict = {"path": relative, "exists": candidate.is_file()}
+        if candidate.is_file():
+            record["sha256"] = hashlib.sha256(candidate.read_bytes()).hexdigest()
+            record["size"] = candidate.stat().st_size
+        evidence.append(record)
+    fingerprint = hashlib.sha256(
+        json.dumps(evidence, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()[:24]
+    destination = recovery_root / "snapshots" / fingerprint
+    manifest = destination / "recovery.json"
+    if manifest.is_file():
+        return destination
+    for record in evidence:
+        if not record["exists"]:
+            continue
+        source = root / str(record["path"])
+        target = destination / "files" / str(record["path"])
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+    _write_json_atomic(
+        manifest,
+        {
+            "schema_version": "publication-recovery/v1",
+            "kind": "non-destructive-snapshot",
+            "reason": reason,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "files": evidence,
+        },
+    )
+    return destination
+
+
+def recover_tracked_publication(
+    repository_root: Path,
+    source_root: Path,
+    directory: Path,
+    recovery_root: Path,
+    *,
+    reason: str,
+    expected_remote_id: str,
+) -> Path:
+    """Restaura uma unidade rastreada com rollback e cópia integral auditável."""
+
+    root = repository_root.resolve()
+    source = source_root.resolve()
+    target = directory.resolve()
+    if not _inside(target, source) or target == source or not _inside(target, root):
+        raise PublicationTransactionError("unidade de recuperação fora da fonte")
+    relative = target.relative_to(root)
+    tracked = _nul_paths(
+        _git(root, ["ls-tree", "-r", "--name-only", "-z", "HEAD", "--", relative.as_posix()]).stdout
+    )
+    if not tracked:
+        raise PublicationTransactionError("unidade divergente não possui base Git confiável")
+    fingerprint = hashlib.sha256(
+        f"{relative.as_posix()}\0{reason}\0{expected_remote_id}".encode("utf-8")
+    ).hexdigest()[:24]
+    destination = recovery_root / "transactions" / fingerprint
+    backup = destination / "tree"
+    if destination.exists():
+        destination = destination.with_name(
+            f"{destination.name}-{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')}"
+        )
+        backup = destination / "tree"
+    destination.mkdir(parents=True, exist_ok=False)
+    if target.is_dir():
+        shutil.copytree(target, backup)
+    _write_json_atomic(
+        destination / "recovery.json",
+        {
+            "schema_version": "publication-recovery/v1",
+            "kind": "tracked-publication-rollback",
+            "reason": reason,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "path": relative.as_posix(),
+            "expected_remote_id": expected_remote_id,
+            "tracked_files": sorted(tracked),
+        },
+    )
+    try:
+        if target.is_dir():
+            shutil.rmtree(target)
+        for tracked_relative in tracked:
+            restored = (root / tracked_relative).resolve()
+            if not _inside(restored, target):
+                raise PublicationTransactionError("snapshot Git contém path fora da unidade")
+            payload = _git(root, ["show", f"HEAD:{tracked_relative}"]).stdout
+            restored.parent.mkdir(parents=True, exist_ok=True)
+            restored.write_bytes(payload)
+        metadata = sorted(target.glob("*.source.json"))
+        if len(metadata) != 1 or _metadata_remote_id(metadata[0]) != expected_remote_id:
+            raise PublicationTransactionError("snapshot Git não restaurou a identidade esperada")
+        remaining = _status_paths(root, relative)
+        if remaining:
+            raise PublicationTransactionError(
+                "unidade restaurada ainda diverge do snapshot Git: "
+                + ", ".join(sorted(remaining))
+            )
+        return destination
+    except Exception:
+        if target.is_dir():
+            shutil.rmtree(target)
+        if backup.is_dir():
+            shutil.copytree(backup, target)
+        raise
+
+
 @contextmanager
 def _exclusive_lock(path: Path):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -574,6 +723,53 @@ def _exclusive_lock(path: Path):
                 path.unlink()
         except OSError:
             pass
+
+
+@contextmanager
+def exclusive_process_lock(path: Path):
+    """Serializa uma execução longa com lock de SO que não deixa stale lock."""
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    stream = path.open("a+b")
+    locked = False
+    try:
+        stream.seek(0, os.SEEK_END)
+        if stream.tell() == 0:
+            stream.write(b"\0")
+            stream.flush()
+        stream.seek(0)
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+            locked = True
+        except OSError as error:
+            raise PublicationTransactionError(
+                "outra execução canônica do downloader está ativa"
+            ) from error
+        stream.seek(0)
+        stream.truncate()
+        stream.write(f"{os.getpid()}\n".encode("utf-8"))
+        stream.flush()
+        os.fsync(stream.fileno())
+        yield
+    finally:
+        if locked:
+            stream.seek(0)
+            if os.name == "nt":
+                import msvcrt
+
+                msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+        stream.close()
 
 
 class GitPublicationPublisher:
@@ -647,34 +843,88 @@ class GitPublicationPublisher:
         branch = _git(self.repository_root, ["branch", "--show-current"]).stdout.decode().strip()
         if branch != self.branch:
             raise PublicationTransactionError(f"commit exige branch {self.branch}")
-        staged = _nul_paths(_git(self.repository_root, ["diff", "--cached", "--name-only", "-z"]).stdout)
-        if staged:
-            raise PublicationTransactionError("índice Git já contém alterações alheias")
-
     def preflight(self, item: CatalogItem, *, resume: bool = False) -> None:
+        """Preserva estado parcial da unidade e deixa a etapa idempotente repará-lo."""
+
         self._validate_repository()
         directory = self.source_root / item.publication_identity().relative_directory()
         relative = directory.relative_to(self.repository_root)
-        source_relative = self.source_root.relative_to(self.repository_root)
-        dirty = _status_paths(self.repository_root, source_relative)
-        unit_prefix = f"{relative.as_posix()}/"
-        globals_relative = {
-            path.relative_to(self.repository_root).as_posix()
-            for path in self.global_paths
-        }
-        unit_dirty = {
-            path for path in dirty if path == relative.as_posix() or path.startswith(unit_prefix)
-        }
-        global_dirty = dirty & globals_relative
-        unrelated = dirty - unit_dirty - global_dirty
-        if unrelated:
-            raise PublicationTransactionError(
-                "outra publicação possui alterações: " + ", ".join(sorted(unrelated))
+        unit_dirty = _status_paths(self.repository_root, relative)
+        if unit_dirty and not resume:
+            _snapshot_changed_paths(
+                self.repository_root,
+                self.lock_path.parent.parent / "recovery",
+                unit_dirty,
+                reason=f"preflight:{item.collection_id}:{item.remote_id}",
             )
-        if not resume and (unit_dirty or global_dirty):
-            raise PublicationTransactionError(
-                "unidade possui alterações anteriores; preservar e resolver antes da coleta"
+
+    def resolve_item_identity(self, item: CatalogItem) -> CatalogItem:
+        """Reserva uma rota física sem permitir que IDs remotos se sobrescrevam."""
+
+        base_item = replace(item, route_slug="", acronym="")
+        base_identity = base_item.publication_identity()
+        base_directory = self.source_root / base_identity.relative_directory()
+        base_metadata = base_directory / base_identity.metadata_name()
+        current_remote_id = _metadata_remote_id(base_metadata)
+        committed_remote_id = _head_metadata_remote_id(
+            self.repository_root, base_metadata
+        )
+        if (
+            committed_remote_id == item.remote_id
+            and current_remote_id
+            and current_remote_id != item.remote_id
+        ):
+            recover_tracked_publication(
+                self.repository_root,
+                self.source_root,
+                base_directory,
+                self.lock_path.parent.parent / "recovery",
+                reason=(
+                    f"identity-regression:{committed_remote_id}->{current_remote_id}"
+                ),
+                expected_remote_id=committed_remote_id,
             )
+            return base_item
+        occupant = committed_remote_id or current_remote_id
+        if not occupant or occupant == item.remote_id:
+            return base_item
+
+        if current_remote_id == item.remote_id and committed_remote_id:
+            recover_tracked_publication(
+                self.repository_root,
+                self.source_root,
+                base_directory,
+                self.lock_path.parent.parent / "recovery",
+                reason=(
+                    f"identity-collision:{committed_remote_id}->{item.remote_id}"
+                ),
+                expected_remote_id=committed_remote_id,
+            )
+
+        discriminator = re.sub(r"[^a-z0-9]+", "-", item.remote_id.casefold()).strip("-")
+        if not discriminator:
+            discriminator = item.stable_key()[:12]
+        route_slug = f"{base_identity.route_slug}-{discriminator}"
+        resolved = replace(
+            item,
+            route_slug=route_slug,
+            acronym=base_identity.acronym,
+        )
+        resolved_identity = resolved.publication_identity()
+        resolved_metadata = (
+            self.source_root
+            / resolved_identity.relative_directory()
+            / resolved_identity.metadata_name()
+        )
+        resolved_occupant = _metadata_remote_id(resolved_metadata) or _head_metadata_remote_id(
+            self.repository_root, resolved_metadata
+        )
+        if resolved_occupant and resolved_occupant != item.remote_id:
+            resolved = replace(
+                resolved,
+                route_slug=f"{route_slug}-{item.stable_key()[:8]}",
+            )
+        return resolved
 
     def finalize(
         self,

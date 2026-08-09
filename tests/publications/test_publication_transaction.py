@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -28,6 +29,7 @@ from publication_contract import hash_file, write_json_atomic  # noqa: E402
 from publication_analysis import analyze_publication  # noqa: E402
 from publication_index import update_global_index  # noqa: E402
 from publication_transaction import (  # noqa: E402
+    exclusive_process_lock,
     GlobalProgressJournal,
     GitPublicationPublisher,
     PublicationTransactionError,
@@ -178,6 +180,7 @@ class PublicationTransactionTests(unittest.TestCase):
                 publication=directory,
             )
             (root / "unrelated.txt").write_text("preservar\n", encoding="utf-8")
+            _git(root, "add", "--", "unrelated.txt")
             ledger = AcquisitionLedger(root / "constructor" / ".state" / "ledger.json")
             publisher = GitPublicationPublisher(
                 root,
@@ -200,7 +203,7 @@ class PublicationTransactionTests(unittest.TestCase):
                     "src/publications/index.manifest.json",
                 },
             )
-            self.assertIn("?? unrelated.txt", _git(root, "status", "--short"))
+            self.assertIn("A  unrelated.txt", _git(root, "status", "--short"))
             self.assertEqual(ledger.get(item.stable_key())["commit"], commit)
             index = json.loads(
                 (root / "src" / "publications" / "index.json").read_text(
@@ -222,7 +225,7 @@ class PublicationTransactionTests(unittest.TestCase):
             with self.assertRaises(PublicationTransactionError):
                 validate_complete_publication(item, source_root, root)
 
-    def test_preflight_blocks_preexisting_change_in_same_unit(self) -> None:
+    def test_preflight_snapshots_preexisting_change_and_continues(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             _git(root, "init", "-b", "dev")
@@ -235,8 +238,102 @@ class PublicationTransactionTests(unittest.TestCase):
                 source_root,
                 root / "constructor" / ".state" / "locks" / "publication-git.lock",
             )
-            with self.assertRaises(PublicationTransactionError):
-                publisher.preflight(item)
+            publisher.preflight(item)
+            snapshots = list(
+                (root / "constructor" / ".state" / "recovery" / "snapshots").glob(
+                    "*/recovery.json"
+                )
+            )
+            self.assertEqual(len(snapshots), 1)
+            self.assertEqual(
+                json.loads(snapshots[0].read_text(encoding="utf-8"))["kind"],
+                "non-destructive-snapshot",
+            )
+
+    def test_identity_collision_restores_committed_unit_and_disambiguates_new_item(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _git(root, "init", "-b", "dev")
+            _git(root, "config", "user.name", "Fixture")
+            _git(root, "config", "user.email", "fixture@example.test")
+            item = _item()
+            source_root = _materialize(root, item)
+            _git(root, "add", "--", "src/publications")
+            _git(root, "commit", "-m", "Materializa publicação")
+            identity = item.publication_identity()
+            metadata_path = (
+                source_root / identity.relative_directory() / identity.metadata_name()
+            )
+            replacement = replace(
+                item,
+                remote_id="1333",
+                public_url="https://example.test/book/1333",
+            )
+            corrupted = json.loads(metadata_path.read_text(encoding="utf-8"))
+            corrupted["identity"]["remote_id"] = replacement.remote_id
+            corrupted["identity"]["public_url"] = replacement.public_url
+            write_json_atomic(metadata_path, corrupted)
+            publisher = GitPublicationPublisher(
+                root,
+                source_root,
+                root / "constructor" / ".state" / "locks" / "publication-git.lock",
+            )
+
+            resolved = publisher.resolve_item_identity(replacement)
+
+            restored = json.loads(metadata_path.read_text(encoding="utf-8"))
+            self.assertEqual(restored["identity"]["remote_id"], item.remote_id)
+            self.assertEqual(resolved.title_original, replacement.title_original)
+            self.assertEqual(
+                resolved.publication_identity().route_slug,
+                "atomic-publication-1333",
+            )
+            recoveries = list(
+                (root / "constructor" / ".state" / "recovery" / "transactions").glob(
+                    "*/recovery.json"
+                )
+            )
+            self.assertEqual(len(recoveries), 1)
+
+    def test_preflight_preserves_dirty_other_publication_without_blocking(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            _git(root, "init", "-b", "dev")
+            _git(root, "config", "user.name", "Fixture")
+            _git(root, "config", "user.email", "fixture@example.test")
+            item = _item()
+            source_root = _materialize(root, item)
+            other = source_root / "author" / "en" / "books" / "other" / "other.json"
+            other.parent.mkdir(parents=True)
+            other.write_text('{"state":"original"}\n', encoding="utf-8")
+            _git(root, "add", "--", "src/publications")
+            _git(root, "commit", "-m", "Materializa publicações")
+            other.write_text('{"state":"preservar"}\n', encoding="utf-8")
+            publisher = GitPublicationPublisher(
+                root,
+                source_root,
+                root / "constructor" / ".state" / "locks" / "publication-git.lock",
+            )
+
+            publisher.preflight(item)
+
+            self.assertIn(
+                "M src/publications/author/en/books/other/other.json",
+                _git(root, "status", "--short"),
+            )
+
+    def test_process_lock_rejects_concurrency_and_releases_automatically(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "locks" / "baixar.process.lock"
+            with exclusive_process_lock(path):
+                with self.assertRaisesRegex(
+                    PublicationTransactionError, "outra execução canônica"
+                ):
+                    with exclusive_process_lock(path):
+                        self.fail("lock concorrente não pode ser adquirido")
+            with exclusive_process_lock(path):
+                pass
+            self.assertEqual(path.read_text(encoding="utf-8"), f"{os.getpid()}\n")
 
     def test_global_journal_resumes_append_only_and_reset_is_explicit(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

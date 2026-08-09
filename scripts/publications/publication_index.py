@@ -16,6 +16,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 import threading
 from typing import Iterable
@@ -26,6 +27,7 @@ from publication_console import PublicationProgress, PublicationReporter
 from publication_analysis import (
     MANIFEST_SCHEMA,
     analyze_and_commit_scope,
+    rebuild_learning,
     extract_metadata_evidence,
     manifest_path_for,
 )
@@ -37,10 +39,12 @@ from publication_contract import (
     load_config,
     read_source_records,
     resolve_repository_path,
+    runtime_paths,
     validate_file_signature,
     write_json_atomic,
 )
 from structured_content import validate_structured_artifact
+from publication_transaction import exclusive_process_lock, recover_tracked_publication
 
 
 INDEX_SCHEMA = "publication-global-index/v1"
@@ -622,7 +626,20 @@ def _update_global_index_unlocked(
         if existing is not None
         else set()
     )
-    incremental = publication is not None and existing is not None and existing_paths == expected_paths
+    existing_entries = existing["publications"] if existing is not None else []
+    existing_ids = [
+        str(entry.get("id") or "")
+        for entry in existing_entries
+        if isinstance(entry, dict)
+    ]
+    incremental = (
+        publication is not None
+        and existing is not None
+        and existing_paths == expected_paths
+        and len(existing_entries) == len(expected_paths)
+        and len(existing_ids) == len(existing_entries)
+        and len(set(existing_ids)) == len(existing_ids)
+    )
     if incremental:
         selected = _metadata_paths(root, publication)
         if len(selected) != 1:
@@ -633,6 +650,8 @@ def _update_global_index_unlocked(
     else:
         entries = _build_entries(all_metadata, root, config, reporter)
     document = _document(entries, config)
+    if not incremental:
+        rebuild_learning(root)
     _write_json_if_changed(target, document)
     write_index_manifest(target)
     return target
@@ -663,6 +682,7 @@ def _build_entries(
     config: dict,
     reporter: PublicationReporter | None = None,
 ) -> list[dict]:
+    _repair_tracked_identity_regressions(metadata_paths, source_root, config)
     progress = PublicationProgress(len(metadata_paths)) if reporter is not None else None
     if progress is not None:
         reporter.progress("Global", progress.snapshot())
@@ -673,7 +693,21 @@ def _build_entries(
         if progress is not None:
             progress.start_item(identity)
         try:
-            entries.append(build_index_entry(metadata_path, source_root, config))
+            try:
+                entries.append(build_index_entry(metadata_path, source_root, config))
+            except Exception as first_error:
+                try:
+                    analyze_publication(
+                        metadata_path.parent,
+                        source_root,
+                        reporter.child("Reparo local") if reporter is not None else None,
+                        force_recalculate=True,
+                    )
+                    entries.append(build_index_entry(metadata_path, source_root, config))
+                except Exception as repair_error:
+                    raise IndexError(
+                        f"reparo local não convergiu: {first_error}; {repair_error}"
+                    ) from repair_error
         except Exception as error:
             failures.append((metadata_path, error))
             if reporter is not None:
@@ -687,6 +721,74 @@ def _build_entries(
             f"{failures[0][0]}: {failures[0][1]}"
         )
     return entries
+
+
+def _repair_tracked_identity_regressions(
+    metadata_paths: list[Path],
+    source_root: Path,
+    config: dict,
+) -> None:
+    """Restaura somente metadado rastreado cujo ID foi substituído no worktree."""
+
+    if not metadata_paths:
+        return
+    probe = subprocess.run(
+        ["git", "-c", "maintenance.auto=false", "rev-parse", "--show-toplevel"],
+        cwd=source_root,
+        capture_output=True,
+        check=False,
+    )
+    if probe.returncode != 0:
+        return
+    repository_root = Path(probe.stdout.decode("utf-8", "replace").strip()).resolve()
+    root = source_root.resolve()
+    if repository_root != root and repository_root not in root.parents:
+        return
+    recovery_root = runtime_paths(config, repository_root)["root"] / "recovery"
+    for metadata_path in metadata_paths:
+        relative = metadata_path.resolve().relative_to(repository_root).as_posix()
+        dirty = subprocess.run(
+            [
+                "git",
+                "-c",
+                "maintenance.auto=false",
+                "status",
+                "--porcelain=v1",
+                "--untracked-files=all",
+                "--",
+                relative,
+            ],
+            cwd=repository_root,
+            capture_output=True,
+            check=False,
+        )
+        if dirty.returncode != 0 or not dirty.stdout:
+            continue
+        committed = subprocess.run(
+            ["git", "-c", "maintenance.auto=false", "show", f"HEAD:{relative}"],
+            cwd=repository_root,
+            capture_output=True,
+            check=False,
+        )
+        if committed.returncode != 0:
+            continue
+        try:
+            current_document = _read_json(metadata_path)
+            committed_document = json.loads(committed.stdout.decode("utf-8-sig"))
+        except (IndexError, UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        current_id = str((current_document.get("identity") or {}).get("remote_id") or "")
+        committed_id = str((committed_document.get("identity") or {}).get("remote_id") or "")
+        if not current_id or not committed_id or current_id == committed_id:
+            continue
+        recover_tracked_publication(
+            repository_root,
+            root,
+            metadata_path.parent,
+            recovery_root,
+            reason=f"index-identity-regression:{committed_id}->{current_id}",
+            expected_remote_id=committed_id,
+        )
 
 
 def generate_scope_index(
@@ -749,6 +851,18 @@ def main(argv: Iterable[str] | None = None) -> int:
     try:
         arguments = _parser().parse_args(list(argv) if argv is not None else None)
         config = load_config(arguments.config)
+        paths = runtime_paths(config, REPOSITORY_ROOT)
+        with exclusive_process_lock(paths["locks"] / "baixar.process.lock"):
+            return _run(arguments, config, reporter)
+    except (IndexError, ContractError, OSError) as error:
+        reporter.error("Índice", error)
+        return 4
+
+
+def _run(arguments: argparse.Namespace, config: dict, reporter: PublicationReporter) -> int:
+    """Executa análise/indexação sob a mesma exclusão mútua do downloader."""
+
+    try:
         source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
         output = (
             arguments.output.resolve()

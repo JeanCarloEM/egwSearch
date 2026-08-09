@@ -27,12 +27,15 @@ adventistas e literatura pertinente à investigação hermenêutica.
 ```powershell
 npm install
 npm run publications:baixar -- --help
+npm run publications:materialize
 npm run site:build
 npm run site:validate
 ```
 
 O downloader pode exigir intervenção humana legítima no navegador e preserva
-seu estado local fora do Git. O site gerado fica em `dist/`.
+seu estado local fora do Git. `publications:materialize` retoma somente
+checkpoints e arquivos já persistidos, sem HTTP, DNS ou navegador. O site gerado
+fica em `dist/`.
 
 ## Documentação
 

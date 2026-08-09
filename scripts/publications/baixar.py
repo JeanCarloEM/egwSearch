@@ -75,6 +75,7 @@ from publication_analysis import ANALYZER_VERSION, analyze_publication
 from publication_console import PublicationProgress, PublicationReporter
 from publication_index import configured_index_path, update_global_index
 from publication_transaction import (
+    exclusive_process_lock,
     GlobalProgressJournal,
     GitPublicationPublisher,
     PublicationTransactionError,
@@ -605,6 +606,71 @@ def generate_technical_cover(
         "hashes": evidence.as_dict(),
     }
     return target, source_record, derivation_record
+
+
+def recover_cover_from_runtime(
+    item: CatalogItem,
+    source_root: Path,
+    download_config: dict,
+) -> tuple[Path, dict, dict] | None:
+    """Reutiliza capa validada preservada por uma recuperação transacional."""
+
+    recovery_value = str(download_config.get("_recovery_root") or "")
+    if not recovery_value:
+        return None
+    recovery_root = Path(recovery_value).resolve()
+    if not recovery_root.is_dir():
+        return None
+    for metadata_path in sorted(recovery_root.rglob("*.source.json")):
+        try:
+            document = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if str((document.get("identity") or {}).get("remote_id") or "") != item.remote_id:
+            continue
+        source_records = [
+            record
+            for record in document.get("sources", [])
+            if isinstance(record, dict)
+            and record.get("format") == "cover"
+            and record.get("method") == "official-cover-unavailable"
+        ]
+        derivations = [
+            record
+            for record in document.get("derivations", [])
+            if isinstance(record, dict)
+            and record.get("format") == "cover"
+            and record.get("method") == "deterministic-technical-cover"
+        ]
+        if len(source_records) != 1 or len(derivations) != 1:
+            continue
+        derivation = derivations[0]
+        candidate = (metadata_path.parent / str(derivation.get("path") or "")).resolve()
+        expected = derivation.get("hashes") or {}
+        try:
+            evidence = hash_file(candidate)
+            if (
+                recovery_root != candidate
+                and recovery_root not in candidate.parents
+                or evidence.as_dict() != expected
+                or evidence.size != derivation.get("size")
+            ):
+                continue
+            validate_cover_png(candidate, download_config)
+        except (OSError, ContractError):
+            continue
+        directory = source_root / item.publication_identity().relative_directory()
+        directory.mkdir(parents=True, exist_ok=True)
+        target = directory / "cover.png"
+        temporary = directory / f".cover-recovery-{os.getpid()}.png.partial"
+        try:
+            shutil.copy2(candidate, temporary)
+            validate_cover_png(temporary, download_config)
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
+        return target, dict(source_records[0]), dict(derivation)
+    return None
 
 
 def download_cover(
@@ -1157,6 +1223,8 @@ def _catalog_item_record(item: CatalogItem) -> dict:
         "local_complete": item.local_complete,
         "content_model": item.content_model,
         "content_options": item.content_options,
+        "route_slug": item.route_slug,
+        "acronym": item.acronym,
     }
 
 
@@ -1188,6 +1256,8 @@ def _catalog_item_from_record(value: object) -> CatalogItem:
             local_complete=bool(value.get("local_complete", False)),
             content_model=str(value.get("content_model") or "publication"),
             content_options=dict(value.get("content_options") or {}),
+            route_slug=str(value.get("route_slug") or ""),
+            acronym=str(value.get("acronym") or ""),
         )
     except (KeyError, TypeError, ValueError) as error:
         raise ContractError("item inválido no checkpoint de coleção") from error
@@ -1241,10 +1311,9 @@ def _load_collection_checkpoint(
         return None
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
-        raise ContractError(
-            f"checkpoint de coleção inválido; use --restart: {path}"
-        ) from error
+    except (OSError, json.JSONDecodeError):
+        _quarantine_invalid_checkpoint(path, "json-invalido")
+        return None
     expected = _new_collection_checkpoint(collection, limit, publication_query)
     if not isinstance(value, dict) or any(
         value.get(key) != expected[key]
@@ -1256,7 +1325,8 @@ def _load_collection_checkpoint(
             "publication_query",
         )
     ):
-        raise ContractError(f"checkpoint de coleção incompatível; use --restart: {path}")
+        _quarantine_invalid_checkpoint(path, "escopo-incompativel")
+        return None
     entries = value.get("catalog_entries")
     items = value.get("items")
     confirmed = value.get("confirmed_remote_ids")
@@ -1275,7 +1345,8 @@ def _load_collection_checkpoint(
         )
         or any(not isinstance(remote_id, str) or not remote_id for remote_id in confirmed)
     ):
-        raise ContractError(f"checkpoint de coleção corrompido; use --restart: {path}")
+        _quarantine_invalid_checkpoint(path, "estrutura-corrompida")
+        return None
     parsed_items = [_catalog_item_from_record(item) for item in items]
     remote_ids = [item.remote_id for item in parsed_items]
     try:
@@ -1292,9 +1363,74 @@ def _load_collection_checkpoint(
         or not set(confirmed).issubset(set(remote_ids))
         or mapping_invalid
     ):
-        raise ContractError(f"checkpoint de coleção ambíguo; use --restart: {path}")
+        _quarantine_invalid_checkpoint(path, "identidade-ambigua")
+        return None
     value["_items"] = parsed_items
     return value
+
+
+def _quarantine_invalid_checkpoint(path: Path, reason: str) -> Path | None:
+    """Preserva checkpoint inválido e remove somente o cursor não reutilizável."""
+
+    if not path.is_file():
+        return None
+    payload = path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()[:24]
+    recovery = path.parent / "recovery" / f"{path.stem}.{digest}.json"
+    recovery.parent.mkdir(parents=True, exist_ok=True)
+    if not recovery.is_file():
+        recovery.write_bytes(payload)
+        write_json_atomic(
+            recovery.with_suffix(".recovery.json"),
+            {
+                "schema_version": "publication-checkpoint-recovery/v1",
+                "reason": reason,
+                "source": path.name,
+                "sha256": hashlib.sha256(payload).hexdigest(),
+            },
+        )
+    path.unlink()
+    print(f"COLLECTION_CHECKPOINT_RECOVERED checkpoint={path.name} reason={reason}")
+    return recovery
+
+
+def _derive_scoped_checkpoint(
+    checkpoint: dict,
+    collection: dict,
+    limit: int | None,
+    publication_query: str | None,
+) -> dict | None:
+    """Projeta escopo local menor a partir de inventário global comprovado."""
+
+    if not checkpoint.get("discovery_complete") and not publication_query:
+        return None
+    items = checkpoint["_items"]
+    pairs = list(
+        zip(checkpoint["catalog_entries"][: len(items)], items, strict=True)
+    )
+    if publication_query:
+        query = publication_query.casefold().strip()
+        pairs = [
+            (entry, item)
+            for entry, item in pairs
+            if query == item.remote_id.casefold()
+            or query in item.title_original.casefold()
+            or query in item.public_url.casefold()
+        ]
+    if limit is not None:
+        pairs = pairs[:limit]
+    if not pairs:
+        return None
+    derived = _new_collection_checkpoint(collection, limit, publication_query)
+    derived["catalog_entries"] = [entry for entry, _item in pairs]
+    derived["items"] = [_catalog_item_record(item) for _entry, item in pairs]
+    derived["_items"] = [item for _entry, item in pairs]
+    selected_ids = {item.remote_id for _entry, item in pairs}
+    derived["confirmed_remote_ids"] = sorted(
+        selected_ids.intersection(checkpoint.get("confirmed_remote_ids", []))
+    )
+    derived["discovery_complete"] = True
+    return derived
 
 
 def _save_collection_checkpoint(path: Path, checkpoint: dict) -> None:
@@ -1388,8 +1524,24 @@ class BrowserSessionManager:
 
         if active.get("discovery_complete"):
             if len(items) != len(ordered):
-                raise ContractError("checkpoint concluído com catálogo parcial; use --restart")
-            return items
+                if checkpoint_path is not None:
+                    _quarantine_invalid_checkpoint(
+                        checkpoint_path,
+                        "conclusao-com-catalogo-parcial",
+                    )
+                items = items[: len(ordered)]
+                active["items"] = [_catalog_item_record(item) for item in items]
+                active["_items"] = items
+                active["confirmed_remote_ids"] = sorted(
+                    set(active.get("confirmed_remote_ids", [])).intersection(
+                        item.remote_id for item in items
+                    )
+                )
+                active["discovery_complete"] = False
+                if checkpoint_path is not None:
+                    _save_collection_checkpoint(checkpoint_path, active)
+            else:
+                return items
 
         for title, url, author in ordered[len(items) :]:
             remote_id = _book_id_from_url(url)
@@ -1690,7 +1842,7 @@ class BrowserSessionManager:
                     or checkpoint.get("initial_url") != current
                     or not isinstance(checkpoint.get("segments"), list)
                 ):
-                    raise ContractError("checkpoint textual incompatível; use --restart")
+                    raise ValueError("checkpoint textual incompatível")
                 segments = [
                     CatalogSegment(
                         remote_id=str(value["remote_id"]),
@@ -1708,12 +1860,14 @@ class BrowserSessionManager:
                 print(
                     f"TEXT_DISCOVERY_RESUME book={book_id} units={len(segments)}"
                 )
-            except ContractError:
-                raise
-            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as error:
-                raise ContractError(
-                    f"checkpoint textual inválido; use --restart: {checkpoint_path}"
-                ) from error
+            except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError):
+                _quarantine_invalid_checkpoint(
+                    checkpoint_path,
+                    "checkpoint-textual-invalido",
+                )
+                current = _lightweight_public_url(initial_url)
+                visited = set()
+                segments = []
         driver = self._usable_driver()
         by = self.runtime["By"]
         while current:
@@ -2421,6 +2575,8 @@ def _local_item_from_metadata(
         local_complete=True,
         content_model=str(identity.get("content_model") or recorded_collection.get("content_model") or collection.get("content_model") or "publication"),
         content_options=dict(collection.get("content_options") or {}),
+        route_slug=str(identity.get("route_slug") or ""),
+        acronym=str(identity.get("acronym") or ""),
     )
 
 
@@ -2687,22 +2843,32 @@ def _process_catalog_item(
             cover_derivation: dict | None = None
             if item.cover_url:
                 if no_network:
-                    ledger.transition(key, "pending", reason="cover-network-disabled")
-                    return {
-                        "state": "pending",
-                        "downloaded": 0,
-                        "skipped": 0,
-                        "extracted": 0,
-                        "converted": 0,
-                    }
-                cover_path, cover_source, cover_derivation = download_cover(
-                    session,
-                    item,
-                    source_root,
-                    download_config,
-                )
+                    recovered_cover = recover_cover_from_runtime(
+                        item,
+                        source_root,
+                        download_config,
+                    )
+                    if recovered_cover is None:
+                        ledger.transition(key, "pending", reason="cover-network-disabled")
+                        return {
+                            "state": "pending",
+                            "downloaded": 0,
+                            "skipped": 0,
+                            "extracted": 0,
+                            "converted": 0,
+                        }
+                    cover_path, cover_source, cover_derivation = recovered_cover
+                    skipped += 1
+                else:
+                    cover_path, cover_source, cover_derivation = download_cover(
+                        session,
+                        item,
+                        source_root,
+                        download_config,
+                    )
                 installed_assets.append(cover_path)
-                downloaded += 1
+                if not no_network:
+                    downloaded += 1
             markdown_paths, segment_evidence = write_markdown_publication(
                 directory,
                 item,
@@ -2923,7 +3089,7 @@ def _process_collection(
         collection["catalog_url"],
         allowed_catalog_hosts,
         require_format=False,
-        resolve_dns=not (no_network and fixture_payload is not None),
+        resolve_dns=not no_network,
     )
     limiter = shared_limiter or RateLimiter(_rate_policy(download_config))
     download_config["_rate_limiter"] = limiter
@@ -2956,6 +3122,7 @@ def _process_collection(
         "skipped": 0,
         "extracted": 0,
         "converted": 0,
+        "pending": 0,
         "review_required": 0,
         "failures": 0,
         "blocked": False,
@@ -3027,6 +3194,19 @@ def _process_collection(
             active["_items"] = values
             _save_collection_checkpoint(checkpoint_path, active)
 
+        if publisher is not None:
+            resolved = publisher.resolve_item_identity(item)
+            if isinstance(resolved, CatalogItem) and resolved != item:
+                item = resolved
+                values[position - 1] = item
+                active["items"] = [_catalog_item_record(value) for value in values]
+                active["_items"] = values
+                _save_collection_checkpoint(checkpoint_path, active)
+                print(
+                    f"PUBLICATION_IDENTITY_DISAMBIGUATED remote_id={item.remote_id} "
+                    f"route={item.publication_identity().route_slug}"
+                )
+
         attempted_this_run.add(item.remote_id)
         progress_identity = f"{collection['id']}:{item.remote_id}"
         if global_progress is not None:
@@ -3094,6 +3274,8 @@ def _process_collection(
                 result["global_index"] = intelligence["index"].name
             for key in ("downloaded", "skipped", "extracted", "converted"):
                 summary[key] += result[key]
+            if result["state"] == "pending":
+                summary["pending"] += 1
             if result["state"] == "review_required":
                 summary["review_required"] += 1
             if commit:
@@ -3347,6 +3529,7 @@ def run(
     fixture_path: Path | None = None,
     output_root: Path | None = None,
     no_network: bool = False,
+    materialize_only: bool = False,
     revalidate: bool = False,
     restart: bool = False,
     force_recalculate: bool = False,
@@ -3355,6 +3538,12 @@ def run(
     reporter = PublicationReporter("Downloader de publicações")
     reporter.start(str(config_path))
     config = load_config(config_path)
+    if materialize_only and fixture_path is not None:
+        raise ContractError("--materialize não aceita --fixture")
+    if materialize_only and revalidate:
+        raise ContractError("--materialize não aceita --revalidate")
+    if materialize_only and restart:
+        raise ContractError("--materialize preserva checkpoints e não aceita --restart")
     canonical_source_root = resolve_repository_path(config["source_root"], REPOSITORY_ROOT)
     paths = runtime_paths(config, REPOSITORY_ROOT)
     if fixture_path is not None:
@@ -3370,13 +3559,18 @@ def run(
     state_root = paths["acquisition"]
     state_root.mkdir(parents=True, exist_ok=True)
     config["download"]["_download_tmp_dir"] = str(paths["downloads"])
+    config["download"]["_recovery_root"] = str(paths["root"] / "recovery")
     fixture = None
     if fixture_path is not None:
         try:
             fixture = json.loads(Path(fixture_path).read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
             raise ContractError(f"fixture invalida: {fixture_path}: {error}") from error
-    runtime = None if fixture is not None and no_network else _runtime_dependencies()
+    runtime = (
+        None
+        if materialize_only or (fixture is not None and no_network)
+        else _runtime_dependencies()
+    )
     collections = _selected_collections(config, selected)
     worker_count = workers or config["download"]["workers"]
     maximum_workers = min(
@@ -3393,7 +3587,7 @@ def run(
     validate_unique_asset_sha512(asset_identity_index)
     config["download"]["_asset_identity_index"] = asset_identity_index
     shared_limiter = RateLimiter(_rate_policy(config["download"]))
-    needs_browser = fixture is None and not no_network
+    needs_browser = fixture is None and not no_network and not materialize_only
     browser_manager = None
     transaction_enabled = fixture_path is None and source_root == canonical_source_root
     publisher = None
@@ -3430,6 +3624,62 @@ def run(
             ),
             reset=restart,
         )
+    offline_inventory: dict[str, dict] = {}
+    offline_pending: dict[str, str] = {}
+    offline_failures: dict[str, Exception] = {}
+    if materialize_only:
+        for collection in collections:
+            collection_id = str(collection["id"])
+            if global_journal is not None and global_journal.is_confirmed(collection_id):
+                continue
+            checkpoint_path = _collection_checkpoint_path(
+                state_root,
+                collection,
+                limit,
+                publication_query,
+            )
+            try:
+                checkpoint = _load_collection_checkpoint(
+                    checkpoint_path,
+                    collection,
+                    limit,
+                    publication_query,
+                )
+            except Exception as error:
+                offline_failures[collection_id] = error
+                continue
+            if checkpoint is None and (limit is not None or publication_query):
+                global_path = _collection_checkpoint_path(
+                    state_root,
+                    collection,
+                    None,
+                    None,
+                )
+                global_checkpoint = _load_collection_checkpoint(
+                    global_path,
+                    collection,
+                    None,
+                    None,
+                )
+                if global_checkpoint is not None:
+                    checkpoint = _derive_scoped_checkpoint(
+                        global_checkpoint,
+                        collection,
+                        limit,
+                        publication_query,
+                    )
+                    if checkpoint is not None:
+                        _save_collection_checkpoint(checkpoint_path, checkpoint)
+                        print(
+                            f"COLLECTION_CHECKPOINT_DERIVED collection={collection_id} "
+                            f"source={global_path.name} target={checkpoint_path.name}"
+                        )
+            if checkpoint is None:
+                offline_pending[collection_id] = "checkpoint local ausente"
+            elif not checkpoint.get("discovery_complete"):
+                offline_pending[collection_id] = "descoberta local incompleta"
+            else:
+                offline_inventory[collection_id] = checkpoint
     if needs_browser:
         if worker_count != 1:
             raise ContractError(
@@ -3438,29 +3688,38 @@ def run(
         browser_manager = BrowserSessionManager(runtime, config["download"], paths)
     try:
         global_progress = None
-        inventory_failures: dict[str, Exception] = {}
+        inventory_failures: dict[str, Exception] = dict(offline_failures)
         if global_mode:
-            if browser_manager is None:
-                raise ContractError("inventário global exige navegador")
             inventory_total = 0
             inventory_confirmed = 0
-            for collection in collections:
-                checkpoint_path = _collection_checkpoint_path(
-                    state_root, collection, None, None
-                )
-                checkpoint = _load_collection_checkpoint(
-                    checkpoint_path, collection, None, None
-                )
-                try:
-                    active = browser_manager.discover_catalog_entries(
-                        collection,
-                        shared_limiter,
-                        checkpoint_path=checkpoint_path,
-                        checkpoint=checkpoint,
+            if materialize_only:
+                active_inventory = offline_inventory
+            else:
+                if browser_manager is None:
+                    raise ContractError("inventário global exige navegador")
+                active_inventory = {}
+                for collection in collections:
+                    checkpoint_path = _collection_checkpoint_path(
+                        state_root, collection, None, None
                     )
-                except Exception as error:
-                    inventory_failures[str(collection["id"])] = error
-                    reporter.error(f"Inventário {collection['id']}", error)
+                    checkpoint = _load_collection_checkpoint(
+                        checkpoint_path, collection, None, None
+                    )
+                    try:
+                        active_inventory[str(collection["id"])] = (
+                            browser_manager.discover_catalog_entries(
+                                collection,
+                                shared_limiter,
+                                checkpoint_path=checkpoint_path,
+                                checkpoint=checkpoint,
+                            )
+                        )
+                    except Exception as error:
+                        inventory_failures[str(collection["id"])] = error
+                        reporter.error(f"Inventário {collection['id']}", error)
+            for collection in collections:
+                active = active_inventory.get(str(collection["id"]))
+                if active is None:
                     continue
                 collection_total = len(active["catalog_entries"])
                 inventory_total += collection_total
@@ -3477,7 +3736,8 @@ def run(
             reporter.progress("Global", global_progress.snapshot())
         if worker_count == 1:
             for collection_position, collection in enumerate(collections):
-                inventory_error = inventory_failures.get(str(collection["id"]))
+                collection_id = str(collection["id"])
+                inventory_error = inventory_failures.get(collection_id)
                 if inventory_error is not None:
                     results.append(
                         {
@@ -3487,9 +3747,29 @@ def run(
                             "skipped": 0,
                             "extracted": 0,
                             "converted": 0,
+                            "pending": 0,
                             "review_required": 0,
                             "failures": 1,
                             "blocked": isinstance(inventory_error, OriginBlocked),
+                            "resumed": 0,
+                        }
+                    )
+                    continue
+                pending_reason = offline_pending.get(collection_id)
+                if pending_reason is not None:
+                    reporter.notice(f"Materialização {collection_id}", pending_reason)
+                    results.append(
+                        {
+                            "collection": collection["id"],
+                            "discovered": 0,
+                            "downloaded": 0,
+                            "skipped": 0,
+                            "extracted": 0,
+                            "converted": 0,
+                            "pending": 1,
+                            "review_required": 0,
+                            "failures": 0,
+                            "blocked": False,
                             "resumed": 0,
                         }
                     )
@@ -3506,7 +3786,7 @@ def run(
                         state_root,
                         runtime,
                         limit=limit,
-                        no_network=no_network,
+                        no_network=no_network or materialize_only,
                         fixture_payload=(
                             _fixture_for_collection(fixture, collection["id"])
                             if fixture is not None
@@ -3530,6 +3810,7 @@ def run(
                     global_journal is not None
                     and not result["failures"]
                     and not result["blocked"]
+                    and not result["pending"]
                 ):
                     global_journal.confirm(collection_position, collection["id"])
         else:
@@ -3543,7 +3824,7 @@ def run(
                         state_root,
                         runtime,
                         limit=limit,
-                        no_network=no_network,
+                        no_network=no_network or materialize_only,
                         fixture_payload=(
                             _fixture_for_collection(fixture, collection["id"])
                             if fixture is not None
@@ -3568,12 +3849,26 @@ def run(
     results.sort(key=lambda item: item["collection"])
     totals = {
         key: sum(int(item.get(key) or 0) for item in results)
-        for key in ("discovered", "downloaded", "skipped", "converted", "failures")
+        for key in (
+            "discovered",
+            "downloaded",
+            "skipped",
+            "converted",
+            "pending",
+            "failures",
+        )
     }
     reporter.result("Resumo", totals)
     if not reporter.terminal:
         print(json.dumps({"collections": results}, ensure_ascii=False, sort_keys=True))
-    return 1 if any(item["failures"] or item["blocked"] for item in results) else 0
+    return (
+        1
+        if any(
+            item["failures"] or item["blocked"] or item.get("pending")
+            for item in results
+        )
+        else 0
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -3614,6 +3909,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Descarta checkpoints do escopo selecionado e inicia nova execução.",
     )
     parser.add_argument(
+        "--materialize",
+        action="store_true",
+        help=(
+            "Materializa somente checkpoints e arquivos locais; proíbe HTTP, "
+            "DNS e navegador."
+        ),
+    )
+    parser.add_argument(
         "--force-recalculate",
         action="store_true",
         help="Ignora análises concluídas há menos de 24 horas e recalcula.",
@@ -3633,19 +3936,24 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     arguments = build_parser().parse_args(argv)
     try:
-        return run(
-            Path(arguments.config).resolve(),
-            set(arguments.collections) if arguments.collections else None,
-            arguments.workers,
-            limit=arguments.limit,
-            fixture_path=arguments.fixture.resolve() if arguments.fixture else None,
-            output_root=arguments.output_root.resolve() if arguments.output_root else None,
-            no_network=arguments.no_network,
-            revalidate=arguments.revalidate,
-            restart=arguments.restart,
-            force_recalculate=arguments.force_recalculate,
-            publication_query=arguments.publication,
-        )
+        config_path = Path(arguments.config).resolve()
+        configuration = load_config(config_path)
+        paths = runtime_paths(configuration, REPOSITORY_ROOT)
+        with exclusive_process_lock(paths["locks"] / "baixar.process.lock"):
+            return run(
+                config_path,
+                set(arguments.collections) if arguments.collections else None,
+                arguments.workers,
+                limit=arguments.limit,
+                fixture_path=arguments.fixture.resolve() if arguments.fixture else None,
+                output_root=arguments.output_root.resolve() if arguments.output_root else None,
+                no_network=arguments.no_network,
+                materialize_only=arguments.materialize,
+                revalidate=arguments.revalidate,
+                restart=arguments.restart,
+                force_recalculate=arguments.force_recalculate,
+                publication_query=arguments.publication,
+            )
     except ContractError as error:
         print(f"ERRO_CONTRATO: {error}", file=sys.stderr)
         return 3

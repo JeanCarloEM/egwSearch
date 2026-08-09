@@ -206,6 +206,8 @@ class CatalogItem:
     local_complete: bool = False
     content_model: str = "publication"
     content_options: dict = field(default_factory=dict)
+    route_slug: str = ""
+    acronym: str = ""
 
     def __post_init__(self) -> None:
         """Canonicaliza a projeção editorial sem alterar a evidência original."""
@@ -235,6 +237,8 @@ class CatalogItem:
             self.publication_type,
             self.title_normalized,
             category=self.category_path,
+            route_slug=self.route_slug or None,
+            acronym=self.acronym or None,
         )
 
     def stable_key(self) -> str:
@@ -251,6 +255,8 @@ class CatalogItem:
                 self.cover_url,
                 self.content_model,
                 json.dumps(self.content_options, ensure_ascii=False, sort_keys=True),
+                self.route_slug,
+                self.acronym,
             )
         )
         return hashlib.sha256(material.encode("utf-8")).hexdigest()

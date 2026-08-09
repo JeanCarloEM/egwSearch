@@ -731,7 +731,7 @@ class DownloaderTests(unittest.TestCase):
             self.assertTrue(process.call_args.args[0].local_complete)
             browser._enrich_book.assert_not_called()
 
-    def test_invalid_checkpoint_blocks_until_explicit_restart(self) -> None:
+    def test_invalid_checkpoint_is_quarantined_and_rebuilt_automatically(self) -> None:
         collection = self._checkpoint_collection()
         item = self._checkpoint_item("1", "Primeiro")
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
@@ -743,16 +743,6 @@ class DownloaderTests(unittest.TestCase):
             )
             checkpoint_path.parent.mkdir(parents=True)
             checkpoint_path.write_text("{invalido", encoding="utf-8")
-            with self.assertRaisesRegex(baixar.ContractError, "use --restart"):
-                baixar._process_collection(
-                    collection,
-                    self._checkpoint_config(),
-                    source_root,
-                    state_root,
-                    None,
-                    no_network=True,
-                    fixture_payload={"publications": []},
-                )
             completed = {
                 "state": "completed",
                 "downloaded": 1,
@@ -773,11 +763,107 @@ class DownloaderTests(unittest.TestCase):
                     None,
                     no_network=True,
                     fixture_payload={"publications": []},
-                    restart=True,
                 )
             self.assertEqual(summary["failures"], 0)
             self.assertFalse(checkpoint_path.exists())
-            self.assertTrue(baixar.build_parser().parse_args(["--restart"]).restart)
+            recovery = list(checkpoint_path.parent.glob("recovery/*.json"))
+            self.assertEqual(len(recovery), 2)
+            self.assertTrue(any(path.name.endswith(".recovery.json") for path in recovery))
+
+    def test_scoped_checkpoint_is_derived_from_partial_global_inventory(self) -> None:
+        collection = self._checkpoint_collection()
+        first = self._checkpoint_item("1", "Primeiro")
+        selected = self._checkpoint_item("1333", "Mesmo título")
+        checkpoint = baixar._new_collection_checkpoint(collection, None, None)
+        checkpoint["catalog_entries"] = [
+            {
+                "title": item.title_original,
+                "url": item.public_url,
+                "author": item.author_name,
+            }
+            for item in (first, selected)
+        ]
+        checkpoint["catalog_entries"].append(
+            {
+                "title": "Ainda não enriquecido",
+                "url": "https://text.egwwritings.org/book/b9999",
+                "author": "Author",
+            }
+        )
+        checkpoint["items"] = [
+            baixar._catalog_item_record(item) for item in (first, selected)
+        ]
+        checkpoint["_items"] = [first, selected]
+        checkpoint["confirmed_remote_ids"] = [first.remote_id]
+        checkpoint["discovery_complete"] = False
+
+        derived = baixar._derive_scoped_checkpoint(
+            checkpoint,
+            collection,
+            None,
+            selected.remote_id,
+        )
+
+        self.assertIsNotNone(derived)
+        self.assertEqual([item.remote_id for item in derived["_items"]], ["1333"])
+        self.assertEqual(derived["confirmed_remote_ids"], [])
+
+    def test_offline_materialization_reuses_checkpoint_without_dns(self) -> None:
+        collection = self._checkpoint_collection()
+        item = self._checkpoint_item("77", "Materialização local")
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary)
+            state_root = root / "state"
+            source_root = root / "publications"
+            checkpoint_path = baixar._collection_checkpoint_path(
+                state_root, collection, None, None
+            )
+            checkpoint = baixar._new_collection_checkpoint(collection, None, None)
+            checkpoint["catalog_entries"] = [
+                {
+                    "title": item.title_original,
+                    "url": item.public_url,
+                    "author": item.author_name,
+                }
+            ]
+            checkpoint["items"] = [baixar._catalog_item_record(item)]
+            checkpoint["discovery_complete"] = True
+            baixar._save_collection_checkpoint(checkpoint_path, checkpoint)
+            pending = {
+                "state": "pending",
+                "downloaded": 0,
+                "skipped": 0,
+                "extracted": 0,
+                "converted": 0,
+            }
+
+            with patch.object(
+                baixar.socket,
+                "getaddrinfo",
+                side_effect=AssertionError("materialização offline consultou DNS"),
+            ), patch.object(
+                baixar, "_process_catalog_item", return_value=pending
+            ) as process:
+                summary = baixar._process_collection(
+                    collection,
+                    self._checkpoint_config(),
+                    source_root,
+                    state_root,
+                    None,
+                    no_network=True,
+                )
+
+            self.assertEqual(summary["pending"], 1)
+            self.assertEqual(summary["failures"], 0)
+            self.assertTrue(checkpoint_path.exists())
+            resumed = baixar._load_collection_checkpoint(
+                checkpoint_path, collection, None, None
+            )
+            self.assertEqual(resumed["confirmed_remote_ids"], [])
+            process.assert_called_once()
+            self.assertTrue(
+                baixar.build_parser().parse_args(["--materialize"]).materialize
+            )
 
     def test_intelligence_failure_preserves_unconfirmed_checkpoint(self) -> None:
         collection = self._checkpoint_collection()
@@ -925,7 +1011,7 @@ class DownloaderTests(unittest.TestCase):
             self.assertEqual(summary["failures"], 1)
             self.assertEqual(ledger.get(item.stable_key())["git_state"], "commit_pending")
 
-    def test_invalid_text_checkpoint_is_preserved_and_blocks(self) -> None:
+    def test_invalid_text_checkpoint_is_quarantined_before_rediscovery(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             checkpoint = root / "acquisition" / "text" / "14623.json"
@@ -936,12 +1022,17 @@ class DownloaderTests(unittest.TestCase):
                 {"delay_seconds": 2, "browser_visible": True},
                 self._runtime_paths(root),
             )
-            with self.assertRaisesRegex(baixar.ContractError, "use --restart"):
+            with patch.object(
+                manager,
+                "_usable_driver",
+                side_effect=AssertionError("rediscovery-started"),
+            ), self.assertRaisesRegex(AssertionError, "rediscovery-started"):
                 manager._discover_text_segments(
                     "https://text.egwwritings.org/read/14623.2",
                     Mock(before_request=Mock()),
                 )
-            self.assertTrue(checkpoint.is_file())
+            self.assertFalse(checkpoint.is_file())
+            self.assertEqual(len(list(checkpoint.parent.glob("recovery/*.json"))), 2)
             self.assertIsNone(manager._driver)
 
     def test_detail_page_discovers_every_enabled_native_asset(self) -> None:
@@ -1141,6 +1232,63 @@ class DownloaderTests(unittest.TestCase):
                 derivation["hashes"]["sha256"],
                 second_derivation["hashes"]["sha256"],
             )
+
+    def test_offline_cover_reuses_validated_transaction_recovery(self) -> None:
+        item = CatalogItem(
+            remote_id="1333",
+            collection_id="en-pioneers",
+            collection_name="Pioneers",
+            author_name="Uriah Smith",
+            author_key="uriah-smith",
+            language_original="en",
+            language="en",
+            language_path="en",
+            publication_type="books",
+            title_original="Same Work",
+            title_normalized="Same Work",
+            public_url="https://text.egwwritings.org/book/b1333",
+            cover_url="https://a.egwwritings.org/covers/1333?type=large",
+            route_slug="same-work-1333",
+            acronym="sw",
+        )
+        config = {"cover_max_dimension": 240, "cover_max_pixels": 1_000_000}
+        missing = baixar.OfficialCoverMissing(
+            item.cover_url,
+            "Cover not found",
+            "application/problem+json",
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            recovery_root = root / "recovery"
+            backup_root = recovery_root / "transactions" / "proof" / "tree"
+            cover, source_record, derivation = baixar.generate_technical_cover(
+                item,
+                backup_root,
+                config,
+                missing,
+            )
+            identity = item.publication_identity()
+            write_json_atomic(
+                cover.parent / identity.metadata_name(),
+                build_source_v3(
+                    item,
+                    "completed",
+                    [source_record],
+                    derivations=[derivation],
+                ),
+            )
+            destination_root = root / "publications"
+
+            recovered = baixar.recover_cover_from_runtime(
+                item,
+                destination_root,
+                {**config, "_recovery_root": str(recovery_root)},
+            )
+
+            self.assertIsNotNone(recovered)
+            self.assertEqual(recovered[0].read_bytes(), cover.read_bytes())
+            self.assertEqual(recovered[1]["method"], "official-cover-unavailable")
+            self.assertEqual(recovered[2]["method"], "deterministic-technical-cover")
 
     def test_unstructured_404_does_not_generate_technical_cover(self) -> None:
         response = Mock(status_code=404, headers={"content-type": "text/html"})
