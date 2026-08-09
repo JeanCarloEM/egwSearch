@@ -8,7 +8,7 @@
     "schema": "publication-chunking-method-catalog/v1",
     "sha256": "f1ca35473b0d568393aa43aaee5725716fff4714a39b5d6b0cb94fd3e89f5221"
   },
-  "manifests": 1228,
+  "manifests": 1229,
   "profiles": [
     {
       "id": "0011131e503c00dd48943469d0cda7ffce7b081ddbd8a75d3d8bb95153778738",
@@ -7290,6 +7290,42 @@
           "minimum": 521,
           "median": 521,
           "maximum": 521
+        }
+      }
+    },
+    {
+      "id": "176fdd13d589818d4e57947adbf07ca241e7d8c925814346f3de3a6070cb398f",
+      "profile": "6462a03405840287011befd9b782fde9081401feca621124b584350f0d805347",
+      "method": "fixed-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "tokens": 220,
+        "overlap": 0
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 674,
+          "median": 674,
+          "maximum": 674
+        },
+        "tokens_per_chunk": {
+          "minimum": 152,
+          "median": 152,
+          "maximum": 152
         }
       }
     },
@@ -17776,6 +17812,41 @@
           "minimum": 729,
           "median": 729,
           "maximum": 729
+        }
+      }
+    },
+    {
+      "id": "3e0f47c2fb5e9887f18cd3bf3c90c62ce076693d3e308a381d3ade70a5ca31ca",
+      "profile": "6462a03405840287011befd9b782fde9081401feca621124b584350f0d805347",
+      "method": "paragraph",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "parsed-block"
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 192,
+          "median": 192,
+          "maximum": 192
+        },
+        "tokens_per_chunk": {
+          "minimum": 43,
+          "median": 43,
+          "maximum": 43
         }
       }
     },
@@ -29336,6 +29407,43 @@
           "minimum": 20,
           "median": 20,
           "maximum": 20
+        }
+      }
+    },
+    {
+      "id": "6ca050ee887a04c8d5ea15cde42eef6a67a14f474583fe2345db5e1f83551ebf",
+      "profile": "6462a03405840287011befd9b782fde9081401feca621124b584350f0d805347",
+      "method": "sentence-window",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "sentences": 6,
+        "overlap": 0,
+        "boundary": "punctuation-regex-v1"
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 674,
+          "median": 674,
+          "maximum": 674
+        },
+        "tokens_per_chunk": {
+          "minimum": 152,
+          "median": 152,
+          "maximum": 152
         }
       }
     },
@@ -52616,6 +52724,46 @@
       }
     },
     {
+      "id": "bd57dbe0d27dab4cda333f6889f1ad221094ac5095df2290ea031910790da3dd",
+      "profile": "6462a03405840287011befd9b782fde9081401feca621124b584350f0d805347",
+      "method": "recursive-separator",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "maximum_words": 450,
+        "separators": [
+          "paragraph",
+          "sentence",
+          "token"
+        ]
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 1347,
+          "median": 1347,
+          "maximum": 1347
+        },
+        "tokens_per_chunk": {
+          "minimum": 304,
+          "median": 304,
+          "maximum": 304
+        }
+      }
+    },
+    {
       "id": "bd68a893f3da94de2364849d0589c086bc3ec6a8f18da5fd804588a64bd923be",
       "profile": "f7c508ba3e3a2b680c9cc05676db6b2b65ee65ddcf1458205f0b504567d75b08",
       "method": "regex-structural",
@@ -55775,6 +55923,41 @@
       }
     },
     {
+      "id": "c8e7a8f91c33c561707527ae3ef53c78ffa1f87803bbce9dbcc374f27a00bb83",
+      "profile": "6462a03405840287011befd9b782fde9081401feca621124b584350f0d805347",
+      "method": "sentence",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "punctuation-regex-v1"
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 122,
+          "median": 122,
+          "maximum": 122
+        },
+        "tokens_per_chunk": {
+          "minimum": 28,
+          "median": 28,
+          "maximum": 28
+        }
+      }
+    },
+    {
       "id": "c91df621d1e0fd95da5d5aaae2a83ac19f21d6d7c6ae868b585d60012329f49d",
       "profile": "297238223de0e386c78b574167509c76efee98d4861fd035655dc4f7a89fb0c1",
       "method": "regex-structural",
@@ -55809,6 +55992,41 @@
           "minimum": 531,
           "median": 531,
           "maximum": 531
+        }
+      }
+    },
+    {
+      "id": "c91eadc4ce8e15810f17ddac4ec70e37d250d329c7552bde38ea333ba8bc225a",
+      "profile": "6462a03405840287011befd9b782fde9081401feca621124b584350f0d805347",
+      "method": "whole-document",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "parameters": {
+        "boundary": "none"
+      },
+      "assets": 1,
+      "status_counts": {
+        "passed": 1
+      },
+      "metrics": {
+        "accuracy_ppm": {
+          "minimum": 1000000,
+          "median": 1000000,
+          "maximum": 1000000
+        },
+        "error_ppm": {
+          "minimum": 0,
+          "median": 0,
+          "maximum": 0
+        },
+        "characters_per_chunk": {
+          "minimum": 1347,
+          "median": 1347,
+          "maximum": 1347
+        },
+        "tokens_per_chunk": {
+          "minimum": 304,
+          "median": 304,
+          "maximum": 304
         }
       }
     },
@@ -71839,5 +72057,5 @@
       }
     }
   ],
-  "integrity": "6f4803556d1e9dd258dee65880e9638f79968f0926e5656bf1880554760e76ed"
+  "integrity": "52116539faecc98a69b361e7fca17d5a995176d512fc8a9fc8d422fe86589aed"
 }
