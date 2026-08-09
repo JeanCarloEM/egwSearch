@@ -639,3 +639,18 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - restricao_persistente: fontes/corpora e tradução externa sem licença, termos
   e adaptador comprovados permanecem desabilitados.
 - proximo_ponto: nenhuma pendência da FT-022.
+
+## FT-023 - Migração compatível do diário global v1
+
+- tipo: `correção de regressão e migração compatível`.
+- origem: `.ia.rules/state/requests/FT-023/source.md`.
+- status: autorizada; implementação pendente.
+- causa: conversão estrutural v1→v2 ocorre, mas o fingerprint v4 conhecido é
+  rejeitado pelo gate v5 antes de a ordem append-only ser conciliada.
+- solução: aceitar somente fingerprints legados explicitamente declarados pelo
+  consumidor, mantendo ferramenta, escopo e ordem compatíveis e preservando
+  reset explícito para toda divergência não reconhecida.
+- contexto_mestre: `.ia.rules/state/contexts/FT-023/master.md`.
+- preservacao: não versionar nem apagar o diário operacional; migração local
+  somente após teste equivalente sem rede.
+- proximo_ponto: normatizar, implementar e validar a migração finita.

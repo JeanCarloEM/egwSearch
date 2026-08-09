@@ -2082,3 +2082,11 @@ sentenças sincronizadas; 109 testes Python, 8 testes Node,
 `publications:check`, `agent:rcf`, compilação e diff-check aprovados. Fontes sem
 licença/termos comprovados permanecem desabilitadas e nenhum corpus foi
 baixado ou versionado.
+
+## FT-023 - Migração compatível do diário global v1
+
+- [x] Capturar o erro e comprovar fingerprint/ordem do diário operacional.
+- [x] Definir migração finita sem ampliar a aceitação de estado incompatível.
+- [ ] Normatizar a exceção versionada no RCF.
+- [ ] Implementar fingerprint legado declarado e testes de preservação/bloqueio.
+- [ ] Migrar a cópia operacional sem rede, validar e sincronizar a FT.
