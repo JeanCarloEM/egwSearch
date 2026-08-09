@@ -596,6 +596,8 @@ Nova invocação global compatível DEVE retomar automaticamente do limite confi
 
 Cursor ausente DEVE iniciar o escopo, enquanto cursor corrompido, ambíguo, futuro ou incompatível com configuração, corpus, catálogo ou versão do algoritmo DEVE bloquear com diagnóstico e exigir reset explícito, sem reinício silencioso; o diário permanece fora de Git, publicação, índice, build e Pages. [f8db96d]
 
+Migração de diário anterior somente PODE adotar o fingerprint vigente quando o schema legado, o fingerprint de origem e a transformação forem enumerados explicitamente pelo consumidor, ferramenta e escopo forem idênticos, e a ordem anterior for subsequência preservada da ordem atual; a migração DEVE conservar confirmações e unidade corrente, acrescentar somente identidades novas como pendentes e manter reset explícito para qualquer divergência não declarada. [PENDENTE-CODIGO]
+
 ### 43.2.1 Catálogo global de hipóteses experimentais
 
 O catálogo fechado desta versão DEVE manter como hipóteses separadas, nunca como soluções presumidas: janela fixa por caractere/token; separadores recursivos; regex estrutural inferida ou declarada; sentença e janela de sentenças; parágrafo; página/layout; seção hierárquica, capítulo e tópico; unidade editorial específica, incluindo dia de meditação e artigo de periódico; coesão semântica ou lexical; mudança de tópico; meta-chunking por perplexidade/lógica; proposição ou unidade atômica; segmentação variável assistida por LLM; múltiplas granularidades/mixture of chunkers; late chunking; recuperação sem chunking; e documento inteiro como controle. [62596f1]
