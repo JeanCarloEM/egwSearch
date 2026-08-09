@@ -2063,3 +2063,16 @@ do commit.
 Conclusão: commits materiais `6b0bc6d` e `8bc5ab7`; 1.103 recursos analisados,
 índice global com 564 publicações e validações finais aprovadas. O diagnóstico
 `RCF_SENTENCA_NAO_MAPEADA:RCF.md:9` permanece como débito preexistente.
+
+## FT-022 - Corpora bíblicos, referências e léxicos universais
+
+- [x] Capturar integralmente a solicitação e a evidência observada.
+- [x] Decompor a arquitetura universal e vincular a dependência material da
+  FT-021.
+- [ ] Normatizar UTF-8, coleções, classificação semântica, JSON bíblico,
+  léxico, concordância, contraprovas, licenças e integridade.
+- [ ] Implementar a FT-021 já autorizada como pré-condição de cobertura global.
+- [ ] Implementar catálogo ampliado, parsers universais, JSON/EPUB e integração
+  com metadado, índice, análise e transação.
+- [ ] Validar fixtures críticas, gates documentais e sincronizar
+  rastreabilidade sem versionar corpus, cache ou runtime.
