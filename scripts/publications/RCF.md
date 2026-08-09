@@ -477,13 +477,25 @@ Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o 
 
 Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos; na retomada, o preflight editorial válido DEVE permitir reparar análise/índice somente com arquivos locais, mantendo `network=skipped`. [1fd53ef]
 
+`GitPublicationPublisher.preflight()` NÃO DEVE converter alteração independente em falha da unidade corrente nem absorvê-la no commit; mudança parcial da própria unidade DEVE receber snapshot UTF-8/rastreável em runtime e seguir para retomada/revalidação idempotente, e globais derivados divergentes DEVEM ser reconstruídos pelo fechamento canônico. [PENDENTE-CODIGO]
+
+`npm run publications:materialize` DEVE invocar o downloader em modo canônico estritamente offline, reutilizar checkpoint integralmente descoberto ou derivar escopo explícito cuja identidade esteja inequivocamente no prefixo enriquecido de checkpoint parcial, além de arquivos e provas locais; NÃO DEVE carregar dependências de rede/navegador nem declarar completa a coleção parcial. Item sem insumo suficiente permanece pendente, sem interromper coleções posteriores nem autorizar confirmação global ou código de sucesso integral. [PENDENTE-CODIGO]
+
+`baixar.py` e `publication_index.py` DEVEM manter o mesmo lock consultivo de processo durante toda execução canônica, compartilhado por coleta, materialização e indexação; aquisição concorrente DEVE retornar conflito antes de carregar inventário ou alterar diário, publicação, análise ou índice, e o lock do sistema operacional DEVE tornar inofensivo o arquivo persistente após encerramento normal ou anormal. [PENDENTE-CODIGO]
+
+`CatalogItem` DEVE separar identidade editorial de rota física opcional: quando IDs remotos distintos colidirem em autor, idioma, categoria, tipo e slug, o destino ocupado/commitado permanece autoritativo, a nova rota recebe sufixo estável do ID remoto e título/autoria NÃO são alterados. Substituição comprovada de ID em unidade rastreada DEVE copiar a árvore divergente para `runtime/recovery`, restaurar bytes de `HEAD`, revalidar e processar a identidade colidente somente na rota desambiguada. [PENDENTE-CODIGO]
+
+`publication_index.py` DEVE rejeitar a via incremental quando quantidade, paths ou IDs do índice existente forem duplicados/divergentes, reconstruir integralmente o índice nesses casos e, diante de falha de entrada reparável, recalcular somente a análise da publicação e tentar novamente. Metadado rastreado cujo ID corrente regrida em relação a `HEAD` DEVE acionar recuperação transacional da unidade; índice anterior permanece válido até escrita atômica do sucessor validado. [PENDENTE-CODIGO]
+
+Nenhum desses fluxos PODE limitar-se a recomendar ação manual para estado solucionável localmente; falha terminal humana exige ausência comprovada de snapshot/base/insumo seguro ou não convergência determinística depois de preservação, reparo cirúrgico e revalidação. [PENDENTE-CODIGO]
+
 Metadado legado aceito pelo preflight e integralmente comprovado DEVE ser promovido local e deterministicamente a `publication-source/v3` antes do fechamento obrigatório, preservando bytes e proveniência; o schema legado isoladamente NÃO DEVE emitir rede nem `PublicationTransactionError`. [13976cf]
 
 Nos modos globais, downloader e analisador DEVEM persistir atomicamente em runtime um diário versionado com escopo, ordem, fingerprint, publicação, ativo, fase e último limite confirmado e DEVEM retomá-lo automaticamente sem reiterar unidades concluídas. [f8db96d]
 
 `GlobalProgressJournal` somente DEVE aceitar mudança de fingerprint durante upgrade de schema quando o chamador fornecer allowlist finita de fingerprints legados calculáveis e o diário comprovar ferramenta, escopo e ordem append-only compatíveis; a conversão v1→v2 do downloader DEVE reconhecer o fingerprint da configuração v4 preservada, atualizar atomicamente ao fingerprint v5 e rejeitar qualquer valor não enumerado. [5a61f80]
 
-`--restart` no downloader e `--reset` no analisador DEVEM descartar somente o cursor do escopo explícito e ser propagados sem perda pelo indexador e wrappers; cursor incompatível ou corrompido DEVE bloquear em vez de reiniciar silenciosamente. [f8db96d]
+`--restart` no downloader e `--reset` no analisador DEVEM descartar somente o cursor do escopo explícito e ser propagados sem perda pelo indexador e wrappers; sem essas opções, cursor incompatível ou corrompido DEVE ser movido para quarentena auditável e reconstruído automaticamente quando houver base local determinística, bloqueando apenas se a reparação segura for materialmente impossível. [PENDENTE-CODIGO]
 
 A FT-005 não executa download, altera código ou move acervo. Implementação
 pertence à FT-006 e exige nova autorização humana explícita após a conclusão
