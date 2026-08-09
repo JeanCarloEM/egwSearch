@@ -5,7 +5,7 @@
 - FT: `FT-022`.
 - tipo: `evolucao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-022/source.md`.
-- estado: RCF concluído; implementação autorizada e em andamento.
+- estado: concluída e sincronizada.
 - prioridade: crítica para integridade do corpus.
 
 ## Dependências
@@ -98,3 +98,17 @@ UTF-8, com JSON obrigatório nos domínios estruturados e EPUB quando adequado.
 - 36 sentenças materiais foram registradas como pendências causais da FT-022;
 - `agent:rcf` validou o mapa com 1.018 entradas e 887 sentenças materiais,
   preservando apenas o estado global `RCF_DEGRADED` já conhecido da raiz.
+
+## Fechamento material
+
+- `912ff996f41605800effa1c74cf055c5d13976cf` implementou as folhas observadas
+  de Reference/Bible, os três schemas universais, UTF-8 estrito, JSON/EPUB,
+  metadado, índice, completude, inventário e progresso compartilhado;
+- 109 testes Python e 8 testes Node foram aprovados, além de
+  `publications:check`, `agent:rcf`, compilação e `git diff --check`;
+- as 49 sentenças pendentes das FTs 021/022 foram sincronizadas com o commit;
+- não houve coleta em massa, tradução externa nem habilitação de corpus cuja
+  licença/termos permaneçam sem prova; `tanach.us` ficou declarada e desabilitada
+  até essa verificação;
+- os dois manifestos de chunking preexistentes e alheios à FT foram preservados
+  fora dos commits.

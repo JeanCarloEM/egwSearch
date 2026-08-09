@@ -2071,8 +2071,14 @@ Conclusão: commits materiais `6b0bc6d` e `8bc5ab7`; 1.103 recursos analisados,
   FT-021.
 - [x] Normatizar UTF-8, coleções, classificação semântica, JSON bíblico,
   léxico, concordância, contraprovas, licenças e integridade.
-- [ ] Implementar a FT-021 já autorizada como pré-condição de cobertura global.
-- [ ] Implementar catálogo ampliado, parsers universais, JSON/EPUB e integração
+- [x] Implementar a FT-021 já autorizada como pré-condição de cobertura global.
+- [x] Implementar catálogo ampliado, parsers universais, JSON/EPUB e integração
   com metadado, índice, análise e transação.
-- [ ] Validar fixtures críticas, gates documentais e sincronizar
+- [x] Validar fixtures críticas, gates documentais e sincronizar
   rastreabilidade sem versionar corpus, cache ou runtime.
+
+Conclusão: FT-021 e FT-022 implementadas no commit material `912ff99`; 49
+sentenças sincronizadas; 109 testes Python, 8 testes Node,
+`publications:check`, `agent:rcf`, compilação e diff-check aprovados. Fontes sem
+licença/termos comprovados permanecem desabilitadas e nenhum corpus foi
+baixado ou versionado.

@@ -166,9 +166,9 @@ Item enriquecido e completo DEVE ser entregue ao processamento logo após seu ch
 Checkpoint inválido NÃO DEVE ser renomeado, apagado ou ignorado automaticamente; a CLI DEVE bloquear e orientar `--restart`. [8b60a50]
 `--restart` DEVE ser explícito, apagar somente checkpoints de runtime do escopo solicitado e preservar publicações, ledger e ativos canônicos. [8b60a50]
 
-Falha ou bloqueio de item deve permanecer no checkpoint e no resumo, mas `baixar.py` NÃO DEVE executar `break` do laço global por esse motivo: todas as coleções independentes posteriores DEVEM ser visitadas, e o diário global DEVE aceitar confirmações e pendências por ID não contíguas para retomar somente o trabalho não concluído. [PENDENTE-CODIGO]
+Falha ou bloqueio de item deve permanecer no checkpoint e no resumo, mas `baixar.py` NÃO DEVE executar `break` do laço global por esse motivo: todas as coleções independentes posteriores DEVEM ser visitadas, e o diário global DEVE aceitar confirmações e pendências por ID não contíguas para retomar somente o trabalho não concluído. [13976cf]
 
-Antes de processar a primeira publicação no modo global, o downloader DEVE materializar em runtime um inventário normalizado de todas as coleções habilitadas, reutilizando catálogo persistido válido e descobrindo apenas o que ainda não estiver conhecido; essa fase NÃO DEVE abrir páginas ou ativos individuais somente para obter a contagem total. [PENDENTE-CODIGO]
+Antes de processar a primeira publicação no modo global, o downloader DEVE materializar em runtime um inventário normalizado de todas as coleções habilitadas, reutilizando catálogo persistido válido e descobrindo apenas o que ainda não estiver conhecido; essa fase NÃO DEVE abrir páginas ou ativos individuais somente para obter a contagem total. [13976cf]
 
 Título obtido da interface DEVE permanecer candidato editorial integral e NÃO DEVE constituir prova autossuficiente; somente sua projeção de path DEVE aplicar o slug comum, sem remover artigo, parêntese, tag, pontuação ou qualificador do título preservado. [62596f1]
 
@@ -196,7 +196,7 @@ base mínimo de dois segundos e jitter positivo configurável. Concorrência `2`
 é o máximo e exige opt-in e evidência; qualquer valor superior DEVE ser [ef2f0c4]
 rejeitado.
 
-`RateLimiter.before_request()` somente DEVE ser chamado na fronteira imediata de um `session.get`, `driver.get` ou request equivalente efetivamente emitido; preflight, skip local, cache, checkpoint, análise, índice e transação Git NÃO DEVEM marcar request nem dormir. Testes-sentinela DEVEM correlacionar contagem de chamadas remotas e esperas. [PENDENTE-CODIGO]
+`RateLimiter.before_request()` somente DEVE ser chamado na fronteira imediata de um `session.get`, `driver.get` ou request equivalente efetivamente emitido; preflight, skip local, cache, checkpoint, análise, índice e transação Git NÃO DEVEM marcar request nem dormir. Testes-sentinela DEVEM correlacionar contagem de chamadas remotas e esperas. [13976cf]
 
 Sessão reutilizável, `User-Agent` identificável, timeout, limite de bytes,
 streaming, cache, deduplicação, cancelamento, no máximo três tentativas e
@@ -374,33 +374,33 @@ Metadado de segmentos DEVE referenciar paths internos do EPUB e a validação in
 
 ### 8.1 Conteúdo estruturado universal
 
-Coleção configurada DEVE declarar `content_model` entre `publication`, `scripture`, `lexical`, `concordance`, `commentary`, `reading-plan` e `scripture-index`; agrupadores declaram somente `children` e NÃO entram na lista material de obras. [PENDENTE-CODIGO]
+Coleção configurada DEVE declarar `content_model` entre `publication`, `scripture`, `lexical`, `concordance`, `commentary`, `reading-plan` e `scripture-index`; agrupadores declaram somente `children` e NÃO entram na lista material de obras. [13976cf]
 
-`structured_content.py` DEVE ser a capacidade única, sem rede e baseada na biblioteca padrão, para classificar HTML editorial, materializar/validar `scripture-corpus/v1`, `lexical-corpus/v1` e `concordance-corpus/v1`, serializar UTF-8 e devolver artefatos/hashes ao downloader. [PENDENTE-CODIGO]
+`structured_content.py` DEVE ser a capacidade única, sem rede e baseada na biblioteca padrão, para classificar HTML editorial, materializar/validar `scripture-corpus/v1`, `lexical-corpus/v1` e `concordance-corpus/v1`, serializar UTF-8 e devolver artefatos/hashes ao downloader. [13976cf]
 
-O `CatalogItem` DEVE transportar o `content_model` declarado pela folha e o parser DEVE confirmá-lo por estrutura antes da escrita; mismatch entre declarado e observado DEVE falhar fechado. [PENDENTE-CODIGO]
+O `CatalogItem` DEVE transportar o `content_model` declarado pela folha e o parser DEVE confirmá-lo por estrutura antes da escrita; mismatch entre declarado e observado DEVE falhar fechado. [13976cf]
 
-Para `scripture`, o extrator DEVE reconhecer referências somente a partir de atributos/IDs editoriais ou cabeçalhos inequívocos, decompor livro/capítulo/versículo e rejeitar intervalo, lista ou múltiplos números associados ao mesmo bloco de conteúdo. [PENDENTE-CODIGO]
+Para `scripture`, o extrator DEVE reconhecer referências somente a partir de atributos/IDs editoriais ou cabeçalhos inequívocos, decompor livro/capítulo/versículo e rejeitar intervalo, lista ou múltiplos números associados ao mesmo bloco de conteúdo. [13976cf]
 
-Cada versículo DEVE ser consumido exatamente uma vez, preservar em `content` todos os nós de texto e marcas semânticas em ordem, e deixar zero texto editorial residual fora de elemento classificado; contador por capítulo e sequência declarada DEVEM detectar lacuna e duplicação. [PENDENTE-CODIGO]
+Cada versículo DEVE ser consumido exatamente uma vez, preservar em `content` todos os nós de texto e marcas semânticas em ordem, e deixar zero texto editorial residual fora de elemento classificado; contador por capítulo e sequência declarada DEVEM detectar lacuna e duplicação. [13976cf]
 
-Para `lexical`, o extrator DEVE delimitar uma entrada por heading/ID editorial, separar lema/escrita/romanização/identificadores/definição/referências/relações e impedir que a próxima entrada seja concatenada à anterior. [PENDENTE-CODIGO]
+Para `lexical`, o extrator DEVE delimitar uma entrada por heading/ID editorial, separar lema/escrita/romanização/identificadores/definição/referências/relações e impedir que a próxima entrada seja concatenada à anterior. [13976cf]
 
-Para `concordance`, o extrator DEVE separar entrada, formas e cada referência escriturística, preservando a associação forma→referências quando observada e rejeitando texto sem destino semântico. [PENDENTE-CODIGO]
+Para `concordance`, o extrator DEVE separar entrada, formas e cada referência escriturística, preservando a associação forma→referências quando observada e rejeitando texto sem destino semântico. [13976cf]
 
-O escritor estruturado DEVE produzir `<acronimo>.structured.json` por replace atômico, validar UTF-8 sem BOM, raiz/chaves/tipos/domínios, reconstrução de texto, ordem, unicidade, contagens e SHA-256 interno antes de devolver sucesso. [PENDENTE-CODIGO]
+O escritor estruturado DEVE produzir `<acronimo>.structured.json` por replace atômico, validar UTF-8 sem BOM, raiz/chaves/tipos/domínios, reconstrução de texto, ordem, unicidade, contagens e SHA-256 interno antes de devolver sucesso. [13976cf]
 
-Quando o modelo for `scripture`, `lexical` ou `concordance`, a ausência de PDF NÃO é falha; JSON é obrigatório e o EPUB derivado continua pelo pipeline textual existente quando `derive_epub=true`, sem duplicar aquisição, capa, Markdown ou transação. [PENDENTE-CODIGO]
+Quando o modelo for `scripture`, `lexical` ou `concordance`, a ausência de PDF NÃO é falha; JSON é obrigatório e o EPUB derivado continua pelo pipeline textual existente quando `derive_epub=true`, sem duplicar aquisição, capa, Markdown ou transação. [13976cf]
 
-Metadado `publication-source/v3` DEVE registrar JSON como derivação `structured-json`, com schema, path, gerador, encoding, tamanho e três hashes, e manter separadas as fontes HTML/textuais que o originaram. [PENDENTE-CODIGO]
+Metadado `publication-source/v3` DEVE registrar JSON como derivação `structured-json`, com schema, path, gerador, encoding, tamanho e três hashes, e manter separadas as fontes HTML/textuais que o originaram. [13976cf]
 
-`publication_index.py`, `publication_analysis.py` e `validate_complete_publication` DEVEM aceitar e validar a derivação JSON; análise de chunking NÃO DEVE tratar JSON bíblico como prosa nem recombinar versículos, e o índice DEVE expor schema/modelo/path/hash sem copiar o corpus. [PENDENTE-CODIGO]
+`publication_index.py`, `publication_analysis.py` e `validate_complete_publication` DEVEM aceitar e validar a derivação JSON; análise de chunking NÃO DEVE tratar JSON bíblico como prosa nem recombinar versículos, e o índice DEVE expor schema/modelo/path/hash sem copiar o corpus. [13976cf]
 
-Configuração DEVE registrar fontes de validação separadamente das coleções de ingestão, com `id`, `role`, URL, escopo, licença/termos, rate limit e estado habilitado; fonte sem autorização comprovada permanece desabilitada e diagnosticável. [PENDENTE-CODIGO]
+Configuração DEVE registrar fontes de validação separadamente das coleções de ingestão, com `id`, `role`, URL, escopo, licença/termos, rate limit e estado habilitado; fonte sem autorização comprovada permanece desabilitada e diagnosticável. [13976cf]
 
-Nenhuma rotina DEVE chamar tradutor externo implicitamente; tradução `pt-BR` exige adaptador explicitamente configurado e autorizado, preserva o original `en` e registra resultado como tradução, nunca como `definition.en`. [PENDENTE-CODIGO]
+Nenhuma rotina DEVE chamar tradutor externo implicitamente; tradução `pt-BR` exige adaptador explicitamente configurado e autorizado, preserva o original `en` e registra resultado como tradução, nunca como `definition.en`. [13976cf]
 
-Testes direcionados DEVEM usar fixtures HTML reduzidas representativas de variações reais e sentinelas para omissão, concatenação, contaminação, classe errada, encoding, escrita parcial, hash, reexecução e integração JSON/EPUB/metadado/índice. [PENDENTE-CODIGO]
+Testes direcionados DEVEM usar fixtures HTML reduzidas representativas de variações reais e sentinelas para omissão, concatenação, contaminação, classe errada, encoding, escrita parcial, hash, reexecução e integração JSON/EPUB/metadado/índice. [13976cf]
 
 ## 9. Segurança, validação e fronteira
 
@@ -457,9 +457,9 @@ Integração opcional com IA DEVE receber somente representação previamente no
 
 `publication_console.py` DEVE ser a camada visual compartilhada de `baixar.py`, `publication_analysis.py` e `publication_index.py`; modo isolado possui cabeçalho/resumo próprios e modo embutido reutiliza o contexto pai sem duplicá-los. [25d99c4]
 
-A camada compartilhada DEVE possuir um progresso determinístico que receba total fixado, unidade corrente e resultados visitados e apresente percentual, processadas, restantes, média monotônica observada e ETA calculada por `restantes × média`; sem amostra, os campos temporais DEVEM ser `—`. [PENDENTE-CODIGO]
+A camada compartilhada DEVE possuir um progresso determinístico que receba total fixado, unidade corrente e resultados visitados e apresente percentual, processadas, restantes, média monotônica observada e ETA calculada por `restantes × média`; sem amostra, os campos temporais DEVEM ser `—`. [13976cf]
 
-Downloader é proprietário do progresso principal quando compõe análise e indexação; analisador ou indexador embutido NÃO DEVE criar progresso, cabeçalho ou resumo concorrente. Executados isoladamente em modo global, analisador e indexador DEVEM possuir o mesmo conjunto essencial de indicadores. [PENDENTE-CODIGO]
+Downloader é proprietário do progresso principal quando compõe análise e indexação; analisador ou indexador embutido NÃO DEVE criar progresso, cabeçalho ou resumo concorrente. Executados isoladamente em modo global, analisador e indexador DEVEM possuir o mesmo conjunto essencial de indicadores. [13976cf]
 
 Rich DEVE renderizar tabelas sem wrap acidental, com largura limitada e truncamento previsível de paths/títulos; ambiente não TTY, `NO_COLOR` ou indisponibilidade controlada DEVE usar fallback textual sem ANSI e com os mesmos dados essenciais. [25d99c4]
 
@@ -477,7 +477,7 @@ Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o 
 
 Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos; na retomada, o preflight editorial válido DEVE permitir reparar análise/índice somente com arquivos locais, mantendo `network=skipped`. [1fd53ef]
 
-Metadado legado aceito pelo preflight e integralmente comprovado DEVE ser promovido local e deterministicamente a `publication-source/v3` antes do fechamento obrigatório, preservando bytes e proveniência; o schema legado isoladamente NÃO DEVE emitir rede nem `PublicationTransactionError`. [PENDENTE-CODIGO]
+Metadado legado aceito pelo preflight e integralmente comprovado DEVE ser promovido local e deterministicamente a `publication-source/v3` antes do fechamento obrigatório, preservando bytes e proveniência; o schema legado isoladamente NÃO DEVE emitir rede nem `PublicationTransactionError`. [13976cf]
 
 Nos modos globais, downloader e analisador DEVEM persistir atomicamente em runtime um diário versionado com escopo, ordem, fingerprint, publicação, ativo, fase e último limite confirmado e DEVEM retomá-lo automaticamente sem reiterar unidades concluídas. [f8db96d]
 

@@ -5,7 +5,7 @@
 - FT: `FT-021`.
 - tipo: `correcao normativa e implementacao de codigo`.
 - fonte: `.ia.rules/state/requests/FT-021/source.md`.
-- estado: fase RCF concluída; implementação pendente de autorização.
+- estado: concluída e sincronizada.
 - prioridade: alta.
 
 ## Causas comprovadas
@@ -78,7 +78,7 @@ analisador.
 4. implementar em capacidades compartilhadas e testes direcionados;
 5. validar, criar commit material e sincronizar rastreabilidade.
 
-## Fechamento normativo
+## Fechamento
 
 - causas foram confirmadas diretamente no laço global, no contrato
   transacional e na camada de apresentação;
@@ -90,4 +90,9 @@ analisador.
   processadas, restantes, percentual, média observada e ETA, com propriedade
   única do processo raiz na composição;
 - 13 sentenças materiais foram vinculadas aos artefatos e testes causais;
-- a implementação permanece pendente de autorização humana explícita.
+- a autorização material foi concedida no prompt da FT-022;
+- o commit `912ff996f41605800effa1c74cf055c5d13976cf` implementou diário não
+  contíguo, promoção legada local, inventário prévio, continuidade entre
+  coleções e progresso/ETA compartilhado no downloader, analisador e indexador;
+- 13 sentenças materiais foram sincronizadas com o commit e os testes finais
+  integram a validação conjunta da FT-022.

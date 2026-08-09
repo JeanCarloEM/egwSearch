@@ -192,9 +192,9 @@ Reinício somente PODE ocorrer por opção explícita `--restart`, limitada ao e
 `--revalidate` NÃO equivale a reinício e DEVE preservar a posição retomável, alterando somente a política de validação remota dos itens ainda pendentes. [62596f1]
 Checkpoint de coleção concluída sem falha DEVE ser removido atomicamente, pois a próxima invocação constitui nova execução e precisa observar novamente o catálogo vigente. [62596f1]
 
-Falha ou bloqueio de item DEVE permanecer pendente e diagnosticável, mas NÃO DEVE encerrar a varredura global nem impedir a descoberta e o processamento de coleções independentes posteriores; somente falha global que invalide a segurança ou a autoridade de toda a execução PODE interromper o laço. [PENDENTE-CODIGO]
+Falha ou bloqueio de item DEVE permanecer pendente e diagnosticável, mas NÃO DEVE encerrar a varredura global nem impedir a descoberta e o processamento de coleções independentes posteriores; somente falha global que invalide a segurança ou a autoridade de toda a execução PODE interromper o laço. [13976cf]
 
-O diário global DEVE registrar confirmações e pendências por identidade estável, inclusive quando não contíguas, e retomar somente as pendências sem exigir um prefixo integralmente bem-sucedido; uma coleção visitada com falhas NÃO PODE ser tratada como conclusão, nem provocar `break` ou ocultar coleções futuras. [PENDENTE-CODIGO]
+O diário global DEVE registrar confirmações e pendências por identidade estável, inclusive quando não contíguas, e retomar somente as pendências sem exigir um prefixo integralmente bem-sucedido; uma coleção visitada com falhas NÃO PODE ser tratada como conclusão, nem provocar `break` ou ocultar coleções futuras. [13976cf]
 
 ### 42.5 Acesso responsável e contenção
 
@@ -203,7 +203,7 @@ configurável de no mínimo dois segundos entre requests e jitter moderado
 positivo. Aumento até concorrência `2` somente PODE ocorrer por configuração [62596f1]
 explícita e evidência de que a origem o tolera; valor superior é proibido. [62596f1]
 
-Esse atraso regula exclusivamente requests realmente emitidos: sua marcação e eventual espera DEVEM ocorrer na mesma fronteira causal imediatamente anterior ao HTTP ou à navegação remota. Preflight local, skip, checkpoint, cache, hash, análise, indexação, commit ou qualquer caminho sem request DEVEM produzir zero espera de rate limit. [PENDENTE-CODIGO]
+Esse atraso regula exclusivamente requests realmente emitidos: sua marcação e eventual espera DEVEM ocorrer na mesma fronteira causal imediatamente anterior ao HTTP ou à navegação remota. Preflight local, skip, checkpoint, cache, hash, análise, indexação, commit ou qualquer caminho sem request DEVEM produzir zero espera de rate limit. [13976cf]
 
 Timeout, limite de bytes, sessão reutilizável, cache, deduplicação de request,
 `User-Agent` identificável, número máximo de três tentativas e backoff
@@ -430,7 +430,7 @@ O catálogo da coleção PODE ser acessado uma vez para conhecer o conjunto vige
 
 Metadado legado sem `remote_id` DEVE participar desse preflight por identidade composta exclusivamente de dados já presentes na listagem da coleção — ID/URL pública, título normalizado, autor, categoria, idioma e tipo — e do path canônico ou alias local oficialmente admitido. Havendo PDF e EPUB registrados, íntegros e inequivocamente pareados, a ausência de schema v3 NÃO autoriza abrir a página individual. [62596f1]
 
-Quando o fechamento transacional exigir schema posterior, publicação legada localmente completa DEVE ser promovida de forma determinística e estritamente local antes da validação final, preservando bytes, proveniência, identidade, hashes e referências comprovados; a versão antiga isoladamente NÃO PODE causar request, falha em massa ou encerramento da coleção. [PENDENTE-CODIGO]
+Quando o fechamento transacional exigir schema posterior, publicação legada localmente completa DEVE ser promovida de forma determinística e estritamente local antes da validação final, preservando bytes, proveniência, identidade, hashes e referências comprovados; a versão antiga isoladamente NÃO PODE causar request, falha em massa ou encerramento da coleção. [13976cf]
 
 Request HTTP específico da publicação somente PODE ser emitido depois de o gate local registrar causa objetiva que a torne necessária: prova ausente ou inconclusiva, divergência, ambiguidade, corrupção, ativo obrigatório ausente ou `--revalidate` explícito. Caminho feliz local completo DEVE possuir teste que falha diante de qualquer chamada de rede. [62596f1]
 
@@ -480,49 +480,49 @@ Depois da proveniência e do sumário, cada seção de conteúdo DEVE declarar c
 
 ### 42.13 Corpora bíblicos, lexicais e concordâncias
 
-`Reference` (`en/6`) e `Bible` (`en/22`) são agrupadores heterogêneos e NÃO DEVEM ser materializados como obra: configuração e descoberta DEVEM percorrer suas folhas, preservar a autoria comprovada de cada item e classificar por estrutura observada entre versão bíblica, léxico/dicionário, concordância/índice, comentário, plano de leitura e obra geral. [PENDENTE-CODIGO]
+`Reference` (`en/6`) e `Bible` (`en/22`) são agrupadores heterogêneos e NÃO DEVEM ser materializados como obra: configuração e descoberta DEVEM percorrer suas folhas, preservar a autoria comprovada de cada item e classificar por estrutura observada entre versão bíblica, léxico/dicionário, concordância/índice, comentário, plano de leitura e obra geral. [13976cf]
 
-As folhas obrigatórias inicialmente observadas são versões `en/1368`, concordâncias `en/1369`, dicionários/léxicos `en/1370`, comentários `en/1371`, planos `en/1476`, índice escriturístico `en/1414` e Bíblia portuguesa `pt/68`; equivalente português adicional somente DEVE ser habilitado depois de descoberto e comprovado, nunca por trocar idioma ou ID na URL. [PENDENTE-CODIGO]
+As folhas obrigatórias inicialmente observadas são versões `en/1368`, concordâncias `en/1369`, dicionários/léxicos `en/1370`, comentários `en/1371`, planos `en/1476`, índice escriturístico `en/1414` e Bíblia portuguesa `pt/68`; equivalente português adicional somente DEVE ser habilitado depois de descoberto e comprovado, nunca por trocar idioma ou ID na URL. [13976cf]
 
-Título, ícone, breadcrumb, extensão, MIME ou classificação remota isolados NÃO DEVEM decidir o modelo: o parser DEVE confirmar o tipo pela estrutura e pelo conteúdo, e divergência material DEVE produzir `review_required` sem promover artefato. [PENDENTE-CODIGO]
+Título, ícone, breadcrumb, extensão, MIME ou classificação remota isolados NÃO DEVEM decidir o modelo: o parser DEVE confirmar o tipo pela estrutura e pelo conteúdo, e divergência material DEVE produzir `review_required` sem promover artefato. [13976cf]
 
-Versão bíblica ou corpus textual equivalente DEVE produzir JSON `scripture-corpus/v1` em UTF-8 sem BOM; PDF é dispensável e EPUB somente DEVE ser gerado quando a fonte e a licença permitirem representação editorial adequada. [PENDENTE-CODIGO]
+Versão bíblica ou corpus textual equivalente DEVE produzir JSON `scripture-corpus/v1` em UTF-8 sem BOM; PDF é dispensável e EPUB somente DEVE ser gerado quando a fonte e a licença permitirem representação editorial adequada. [13976cf]
 
-O envelope bíblico DEVE conter exatamente `schema`, `meta`, `text` e `proof`; `text` DEVE ser navegável por `text.<version>.<collection>.<book>.<chapter>.<verse>` e suportar Bíblia completa ou parcial, Tanakh/Torá, LXX, somente AT/NT, cânones distintos, deuterocanônicos/apócrifos e ordens editoriais diferentes sem alterar o schema. [PENDENTE-CODIGO]
+O envelope bíblico DEVE conter exatamente `schema`, `meta`, `text` e `proof`; `text` DEVE ser navegável por `text.<version>.<collection>.<book>.<chapter>.<verse>` e suportar Bíblia completa ou parcial, Tanakh/Torá, LXX, somente AT/NT, cânones distintos, deuterocanônicos/apócrifos e ordens editoriais diferentes sem alterar o schema. [13976cf]
 
-`meta` DEVE mapear versões, coleções e livros por códigos canônicos estáveis, preservando nome, abreviações, idioma, escrita, cânon, versificação e ordem observada; coleção/testamento e ordem são dados declarados, não enumeração fixa do código. [PENDENTE-CODIGO]
+`meta` DEVE mapear versões, coleções e livros por códigos canônicos estáveis, preservando nome, abreviações, idioma, escrita, cânon, versificação e ordem observada; coleção/testamento e ordem são dados declarados, não enumeração fixa do código. [13976cf]
 
-Cada chave final de versículo DEVE apontar para exatamente um item isolado com `content`, formado por fragmentos textuais ordenados e opcionais `marks`; múltiplos números/intervalos no mesmo item, versículo vazio, duplicado, ausente, fora de ordem ou texto residual não atribuído DEVEM bloquear a obra. [PENDENTE-CODIGO]
+Cada chave final de versículo DEVE apontar para exatamente um item isolado com `content`, formado por fragmentos textuais ordenados e opcionais `marks`; múltiplos números/intervalos no mesmo item, versículo vazio, duplicado, ausente, fora de ordem ou texto residual não atribuído DEVEM bloquear a obra. [13976cf]
 
-`marks` somente PODE conter semântica observada e validada, inclusive itálico, negrito, sobrescrito, subscrito, small caps, citação, nota, quebra e alinhamento; reconstruir a concatenação de todos os fragmentos DEVE reproduzir integralmente o texto do versículo, sem normalização editorial além de Unicode NFC e controles proibidos. [PENDENTE-CODIGO]
+`marks` somente PODE conter semântica observada e validada, inclusive itálico, negrito, sobrescrito, subscrito, small caps, citação, nota, quebra e alinhamento; reconstruir a concatenação de todos os fragmentos DEVE reproduzir integralmente o texto do versículo, sem normalização editorial além de Unicode NFC e controles proibidos. [13976cf]
 
-Cabeçalho, número de página, controle do leitor, referência duplicada, nota de interface, comentário ou conteúdo de outra obra NÃO DEVEM integrar o versículo; material editorial legítimo não classificável como versículo DEVE ocupar estrutura própria declarada ou bloquear, nunca ser anexado ao versículo adjacente. [PENDENTE-CODIGO]
+Cabeçalho, número de página, controle do leitor, referência duplicada, nota de interface, comentário ou conteúdo de outra obra NÃO DEVEM integrar o versículo; material editorial legítimo não classificável como versículo DEVE ocupar estrutura própria declarada ou bloquear, nunca ser anexado ao versículo adjacente. [13976cf]
 
-`proof` DEVE registrar origem primária, acesso, hash do JSON, contagens por versão/coleção/livro/capítulo, primeira/última referência, lacunas/duplicatas e contraprovas independentes com fonte, licença/termos, método, amostra e resultado. [PENDENTE-CODIGO]
+`proof` DEVE registrar origem primária, acesso, hash do JSON, contagens por versão/coleção/livro/capítulo, primeira/última referência, lacunas/duplicatas e contraprovas independentes com fonte, licença/termos, método, amostra e resultado. [13976cf]
 
-Completude bíblica DEVE ser avaliada contra o cânon e a versificação declarados da própria edição, com totais e limites por livro/capítulo; diferença legítima entre tradições NÃO é omissão, mas divergência sem explicação ou incorporação de conteúdo estranho impede `completed`. [PENDENTE-CODIGO]
+Completude bíblica DEVE ser avaliada contra o cânon e a versificação declarados da própria edição, com totais e limites por livro/capítulo; diferença legítima entre tradições NÃO é omissão, mas divergência sem explicação ou incorporação de conteúdo estranho impede `completed`. [13976cf]
 
-Amostras críticas DEVEM ser comparadas com ao menos duas fontes independentes confiáveis quando juridicamente e tecnicamente disponíveis; APIs públicas somente PODEM ser usadas conforme autorização, termos e rate limits, sem evasão, e contraprova nunca substitui silenciosamente a fonte primária. [PENDENTE-CODIGO]
+Amostras críticas DEVEM ser comparadas com ao menos duas fontes independentes confiáveis quando juridicamente e tecnicamente disponíveis; APIs públicas somente PODEM ser usadas conforme autorização, termos e rate limits, sem evasão, e contraprova nunca substitui silenciosamente a fonte primária. [13976cf]
 
-LXX, Textus Receptus, Tanakh, Texto Massorético, Qumran, Codex Sinaiticus, Codex Vaticanus e Texto Majoritário/Bizantino somente PODEM ser habilitados por entrada declarativa com identidade da tradição/edição, fonte legítima, licença/termos compatíveis, escopo real e parser validado; nome da tradição não autoriza presumir completude nem domínio público da edição digital. [PENDENTE-CODIGO]
+LXX, Textus Receptus, Tanakh, Texto Massorético, Qumran, Codex Sinaiticus, Codex Vaticanus e Texto Majoritário/Bizantino somente PODEM ser habilitados por entrada declarativa com identidade da tradição/edição, fonte legítima, licença/termos compatíveis, escopo real e parser validado; nome da tradição não autoriza presumir completude nem domínio público da edição digital. [13976cf]
 
-`tanach.us` PODE servir como fonte ou contraprova do Tanakh somente após registrar edição, formato, termos e limites aplicáveis; indisponibilidade ou impedimento jurídico DEVE ser explícito e não autoriza espelho ou contorno. [PENDENTE-CODIGO]
+`tanach.us` PODE servir como fonte ou contraprova do Tanakh somente após registrar edição, formato, termos e limites aplicáveis; indisponibilidade ou impedimento jurídico DEVE ser explícito e não autoriza espelho ou contorno. [13976cf]
 
-Dicionário, léxico ou conteúdo indexado por palavra/expressão DEVE produzir JSON `lexical-corpus/v1` e EPUB adequado; PDF é dispensável, e cada entrada DEVE preservar chave estável, lema original, idioma, escrita ISO 15924 quando conhecida, romanização, pronúncia/identificadores, definição original `en`, traduções, referências, índices e relações existentes. [PENDENTE-CODIGO]
+Dicionário, léxico ou conteúdo indexado por palavra/expressão DEVE produzir JSON `lexical-corpus/v1` e EPUB adequado; PDF é dispensável, e cada entrada DEVE preservar chave estável, lema original, idioma, escrita ISO 15924 quando conhecida, romanização, pronúncia/identificadores, definição original `en`, traduções, referências, índices e relações existentes. [13976cf]
 
-O envelope lexical DEVE conter exatamente `schema`, `meta`, `entries` e `proof`; `entries` DEVE ser objeto ordenado por ID canônico, e cada entrada DEVE conter `lemma`, `language`, `script`, `romanization`, `pronunciation`, `ids`, `definitions`, `translations`, `references` e `relations`, usando valor vazio tipado quando a fonte não oferecer o dado. [PENDENTE-CODIGO]
+O envelope lexical DEVE conter exatamente `schema`, `meta`, `entries` e `proof`; `entries` DEVE ser objeto ordenado por ID canônico, e cada entrada DEVE conter `lemma`, `language`, `script`, `romanization`, `pronunciation`, `ids`, `definitions`, `translations`, `references` e `relations`, usando valor vazio tipado quando a fonte não oferecer o dado. [13976cf]
 
-`definitions.en` é autoridade preservada e NÃO PODE ser substituída pela tradução; `translations.pt-BR` DEVE registrar texto, estado, método, mecanismo/provedor, versão e data, distinguir tradução automática de fonte e permanecer ausente quando não houver mecanismo local ou serviço autorizado com qualidade suficiente. [PENDENTE-CODIGO]
+`definitions.en` é autoridade preservada e NÃO PODE ser substituída pela tradução; `translations.pt-BR` DEVE registrar texto, estado, método, mecanismo/provedor, versão e data, distinguir tradução automática de fonte e permanecer ausente quando não houver mecanismo local ou serviço autorizado com qualidade suficiente. [13976cf]
 
-Tradução DEVE preservar lema, referências, identificadores, marcações e sentido, usar entrada inteira como unidade mínima e bloquear publicação quando validação detectar truncamento, adição, troca de idioma ou perda material; segredo, payload externo ou resposta bruta NÃO integram o acervo. [PENDENTE-CODIGO]
+Tradução DEVE preservar lema, referências, identificadores, marcações e sentido, usar entrada inteira como unidade mínima e bloquear publicação quando validação detectar truncamento, adição, troca de idioma ou perda material; segredo, payload externo ou resposta bruta NÃO integram o acervo. [13976cf]
 
-Concordância bíblica DEVE produzir JSON `concordance-corpus/v1` e EPUB adequado, preservando termo/lema, formas observadas, referências individualizadas, índices e relações; referência DEVE declarar versão quando conhecida, livro, capítulo e versículo separadamente, sem convertê-la em definição lexical inexistente. [PENDENTE-CODIGO]
+Concordância bíblica DEVE produzir JSON `concordance-corpus/v1` e EPUB adequado, preservando termo/lema, formas observadas, referências individualizadas, índices e relações; referência DEVE declarar versão quando conhecida, livro, capítulo e versículo separadamente, sem convertê-la em definição lexical inexistente. [13976cf]
 
-Todo artefato textual próprio — JSON, Markdown, XHTML, CSV/TSV, manifesto e log persistente — DEVE usar UTF-8 sem BOM e LF; outra codificação somente PODE ser lida diante de impedimento técnico comprovado, registrando bytes/hashes originais, encoding detectado, confiança, transcoding e prova de ausência de perda, enquanto a saída canônica permanece UTF-8. [PENDENTE-CODIGO]
+Todo artefato textual próprio — JSON, Markdown, XHTML, CSV/TSV, manifesto e log persistente — DEVE usar UTF-8 sem BOM e LF; outra codificação somente PODE ser lida diante de impedimento técnico comprovado, registrando bytes/hashes originais, encoding detectado, confiança, transcoding e prova de ausência de perda, enquanto a saída canônica permanece UTF-8. [13976cf]
 
-JSON estruturado DEVE ser determinístico, relido e validado após escrita atômica, receber SHA-1/SHA-256/SHA-512 sobre seus bytes UTF-8 e integrar metadado, índice, completude, análise e commit da mesma publicação sem ser apresentado como fonte nativa quando derivado localmente. [PENDENTE-CODIGO]
+JSON estruturado DEVE ser determinístico, relido e validado após escrita atômica, receber SHA-1/SHA-256/SHA-512 sobre seus bytes UTF-8 e integrar metadado, índice, completude, análise e commit da mesma publicação sem ser apresentado como fonte nativa quando derivado localmente. [13976cf]
 
-Testes sem rede DEVEM cobrir livros históricos, poéticos, proféticos e cartas com estruturas distintas; cânones/ordens distintos; versículo único, duplicado, concatenado, ausente e contaminado; marcação semântica; léxico, tradução identificada, concordância, divergência de classe, UTF-8 e determinismo byte a byte. [PENDENTE-CODIGO]
+Testes sem rede DEVEM cobrir livros históricos, poéticos, proféticos e cartas com estruturas distintas; cânones/ordens distintos; versículo único, duplicado, concatenado, ausente e contaminado; marcação semântica; léxico, tradução identificada, concordância, divergência de classe, UTF-8 e determinismo byte a byte. [13976cf]
 
 ## 43. Índice global
 
@@ -632,11 +632,11 @@ Cada publicação iterada DEVE possuir identidade visual inequívoca e ser separ
 
 Execução isolada DEVE emitir título de etapa, corpo e resumo suficientes; composição pelo downloader DEVE compartilhar o mesmo contexto visual, manter limites explícitos de análise e indexação e suprimir cabeçalhos, separadores e resumos equivalentes já apresentados pelo pai. [62596f1]
 
-Antes da varredura material global, o downloader DEVE formar um inventário normalizado de todas as coleções habilitadas e seus itens, reutilizando checkpoints válidos e consultando somente catálogos ainda desconhecidos. Esse inventário DEVE fixar o total global observado sem abrir página ou ativo de publicação apenas para calcular progresso. [PENDENTE-CODIGO]
+Antes da varredura material global, o downloader DEVE formar um inventário normalizado de todas as coleções habilitadas e seus itens, reutilizando checkpoints válidos e consultando somente catálogos ainda desconhecidos. Esse inventário DEVE fixar o total global observado sem abrir página ou ativo de publicação apenas para calcular progresso. [13976cf]
 
-Downloader global e analisador global isolado DEVEM apresentar, de forma sucinta e atualizada a cada unidade visitada, escopo corrente, percentual, total, processadas, restantes, média observada por unidade e ETA derivada dessa média; antes da primeira amostra, média e ETA DEVEM aparecer como indeterminadas, nunca como estimativa inventada. [PENDENTE-CODIGO]
+Downloader global e analisador global isolado DEVEM apresentar, de forma sucinta e atualizada a cada unidade visitada, escopo corrente, percentual, total, processadas, restantes, média observada por unidade e ETA derivada dessa média; antes da primeira amostra, média e ETA DEVEM aparecer como indeterminadas, nunca como estimativa inventada. [13976cf]
 
-Sucesso, reutilização e falha contam como unidade visitada na execução corrente para percentual e ETA, enquanto somente conclusão válida avança o diário de retomada. Em composição, o invocador raiz DEVE ser o único proprietário do progresso principal e filhos DEVEM suprimir indicador equivalente, preservando apenas resultados e diagnósticos próprios não redundantes. [PENDENTE-CODIGO]
+Sucesso, reutilização e falha contam como unidade visitada na execução corrente para percentual e ETA, enquanto somente conclusão válida avança o diário de retomada. Em composição, o invocador raiz DEVE ser o único proprietário do progresso principal e filhos DEVEM suprimir indicador equivalente, preservando apenas resultados e diagnósticos próprios não redundantes. [13976cf]
 
 [^chunk-rag-best-practices]: Wang et al. *Searching for Best Practices in Retrieval-Augmented Generation*. EMNLP 2024. DOI: [10.18653/v1/2024.emnlp-main.981](https://doi.org/10.18653/v1/2024.emnlp-main.981).
 [^chunk-mc-indexing]: Dong et al. *MC-indexing: Effective Long Document Retrieval via Multi-view Content-aware Indexing*. Findings of EMNLP 2024. DOI: [10.18653/v1/2024.findings-emnlp.150](https://doi.org/10.18653/v1/2024.findings-emnlp.150).
