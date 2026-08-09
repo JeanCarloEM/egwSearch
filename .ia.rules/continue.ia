@@ -644,7 +644,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 - tipo: `correção de regressão e migração compatível`.
 - origem: `.ia.rules/state/requests/FT-023/source.md`.
-- status: autorizada; implementação pendente.
+- status: concluída e sincronizada.
 - causa: conversão estrutural v1→v2 ocorre, mas o fingerprint v4 conhecido é
   rejeitado pelo gate v5 antes de a ordem append-only ser conciliada.
 - solução: aceitar somente fingerprints legados explicitamente declarados pelo
@@ -653,4 +653,9 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - contexto_mestre: `.ia.rules/state/contexts/FT-023/master.md`.
 - preservacao: não versionar nem apagar o diário operacional; migração local
   somente após teste equivalente sem rede.
-- proximo_ponto: normatizar, implementar e validar a migração finita.
+- implementacao: `d4d6ec069fb6180d196189902d7f2dbdc5a61f80`;
+  allowlist finita v4, 111 testes Python e duas sentenças sincronizadas.
+- migracao_operacional: diário v2, fingerprint v5, 27 coleções, zero
+  confirmações e unidade `publication:1740:processing` preservada.
+- proximo_ponto: repetir `npm run publications:baixar`; a migração já foi
+  aplicada sem rede e não exige `--restart`.

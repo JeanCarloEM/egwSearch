@@ -596,7 +596,7 @@ Nova invocação global compatível DEVE retomar automaticamente do limite confi
 
 Cursor ausente DEVE iniciar o escopo, enquanto cursor corrompido, ambíguo, futuro ou incompatível com configuração, corpus, catálogo ou versão do algoritmo DEVE bloquear com diagnóstico e exigir reset explícito, sem reinício silencioso; o diário permanece fora de Git, publicação, índice, build e Pages. [f8db96d]
 
-Migração de diário anterior somente PODE adotar o fingerprint vigente quando o schema legado, o fingerprint de origem e a transformação forem enumerados explicitamente pelo consumidor, ferramenta e escopo forem idênticos, e a ordem anterior for subsequência preservada da ordem atual; a migração DEVE conservar confirmações e unidade corrente, acrescentar somente identidades novas como pendentes e manter reset explícito para qualquer divergência não declarada. [PENDENTE-CODIGO]
+Migração de diário anterior somente PODE adotar o fingerprint vigente quando o schema legado, o fingerprint de origem e a transformação forem enumerados explicitamente pelo consumidor, ferramenta e escopo forem idênticos, e a ordem anterior for subsequência preservada da ordem atual; a migração DEVE conservar confirmações e unidade corrente, acrescentar somente identidades novas como pendentes e manter reset explícito para qualquer divergência não declarada. [5a61f80]
 
 ### 43.2.1 Catálogo global de hipóteses experimentais
 

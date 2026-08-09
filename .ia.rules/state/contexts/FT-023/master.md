@@ -5,7 +5,7 @@
 - FT: `FT-023`.
 - tipo: `correção de regressão e migração compatível`.
 - fonte: `.ia.rules/state/requests/FT-023/source.md`.
-- estado: autorizada; implementação pendente.
+- estado: concluída e sincronizada.
 
 ## Causa comprovada
 
@@ -32,3 +32,13 @@ concluir a migração e bloqueia toda execução antes do inventário.
    continuam bloqueados;
 4. o diário operacional real é migrável sem abrir catálogo ou obra;
 5. testes e rastreabilidade são sincronizados sem versionar runtime.
+
+## Fechamento
+
+- implementação: `d4d6ec069fb6180d196189902d7f2dbdc5a61f80`;
+- o fingerprint v4 conhecido é calculado a partir das dez coleções preservadas,
+  não aceito por constante opaca ou wildcard;
+- 111 testes Python foram aprovados;
+- as duas sentenças materiais foram sincronizadas;
+- o diário operacional foi migrado atomicamente, sem rede, para v2/27 coleções,
+  preservando `publication:1740:processing` e zero confirmações.

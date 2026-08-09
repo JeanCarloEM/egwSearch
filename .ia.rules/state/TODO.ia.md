@@ -2087,6 +2087,9 @@ baixado ou versionado.
 
 - [x] Capturar o erro e comprovar fingerprint/ordem do diário operacional.
 - [x] Definir migração finita sem ampliar a aceitação de estado incompatível.
-- [ ] Normatizar a exceção versionada no RCF.
-- [ ] Implementar fingerprint legado declarado e testes de preservação/bloqueio.
-- [ ] Migrar a cópia operacional sem rede, validar e sincronizar a FT.
+- [x] Normatizar a exceção versionada no RCF.
+- [x] Implementar fingerprint legado declarado e testes de preservação/bloqueio.
+- [x] Migrar a cópia operacional sem rede, validar e sincronizar a FT.
+
+Conclusão: `d4d6ec0` corrige a regressão; 111 testes Python aprovados; duas
+sentenças sincronizadas; diário real migrado para v2 sem rede e sem perda.
