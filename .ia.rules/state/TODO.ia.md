@@ -2115,4 +2115,5 @@ materializada offline em rota desambiguada e commitada em `f87bafa`; reexecuçã
 idempotente levou 10.4 segundos, sem HTTP, pendência, falha ou novo commit. Foram
 aprovados 119 testes Python, 8 testes Node, compilação, bootstrap, diff-check e
 900 cláusulas rastreadas. Os dois manifestos independentes de
-`a-ciencia-do-bom-viver` permaneceram intocados e fora dos commits.
+`a-ciencia-do-bom-viver` permaneceram intocados e fora dos commits. Estado,
+norma e implementação foram faseados em `d7bbf71`, `ab188e1` e `2e7e0a4`.

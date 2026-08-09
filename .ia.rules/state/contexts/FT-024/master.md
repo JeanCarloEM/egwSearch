@@ -5,7 +5,7 @@
 - FT: `FT-024`.
 - tipo: `correção fail-safe e materialização offline`.
 - fonte: `.ia.rules/state/requests/FT-024/source.md`.
-- estado: implementação validada; sincronização de commits em fechamento.
+- estado: concluída e sincronizada.
 
 ## Causa comprovada
 
@@ -81,3 +81,7 @@ necessários para retomar materialização local.
   e preservou o diagnóstico raiz conhecido `RCF_DEGRADED`;
 - os dois manifestos independentes de `a-ciencia-do-bom-viver` permanecem
   visíveis, byte a byte fora do staging e dos commits da FT.
+- commits faseados: estado `d7bbf7151d89a116108745b9dac803ad7fb47664`,
+  norma `ab188e17c7e59574a15a4115b7ea67d9fdca44c7`, implementação
+  `2e7e0a476bed065ebf5643926163d13f2d042907` e publicação recuperada
+  `f87bafa8f88b707818b8b06edef0eccf71311ec2`.
