@@ -659,3 +659,41 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   confirmações e unidade `publication:1740:processing` preservada.
 - proximo_ponto: repetir `npm run publications:baixar`; a migração já foi
   aplicada sem rede e não exige `--restart`.
+
+## FT-024 - Isolamento, materialização e autorresolução
+
+- tipo: `correção fail-safe e materialização offline`.
+- origem: `.ia.rules/state/requests/FT-024/source.md`.
+- status: implementação validada; sincronização de commits em fechamento.
+- causa: preflight global confunde alterações preservadas de outra publicação
+  com conflito da unidade corrente; `--no-network` aceita somente fixture.
+- objetivo: isolar commits por publicação e materializar exclusivamente de
+  checkpoints/arquivos locais, sem HTTP, navegador ou reinício.
+- contexto_mestre: `.ia.rules/state/contexts/FT-024/master.md`.
+- preservacao: não interromper o downloader corrente, não alterar bytes dos
+  dois manifestos de `a-ciencia-do-bom-viver` e não absorver saídas concorrentes.
+- implementação: `publications:materialize`, preflight por unidade, quarentena
+  autorrecuperável, rota física discriminada e lock de SO compartilhado por
+  downloader/indexador concluídos localmente.
+- recuperação: tentativa concorrente foi encerrada sem tocar os PIDs originais;
+  a promoção v3 válida da publicação `1808` foi fechada pelo commit exclusivo
+  `66dcc77`, após reconstrução local eliminar duplicidade do índice.
+- execução_offline: terminou com código `1` em `761.005` segundos, 580 itens
+  descobertos, 389 falhas e 18 coleções pendentes; não criou commit automático
+  por exceder cinco minutos.
+- regressao_comprovada: IDs `1034` e `1333` possuíam mesmo destino editorial; a
+  segunda unidade substituiu metadado, capa, EPUB, texto e análise da primeira.
+- reparo_operacional: o indexador preservou a árvore divergente em runtime,
+  restaurou `1034` por `HEAD` e reconstruiu o índice com 741 entradas; `1333`
+  foi materializada offline em rota desambiguada e commitada exclusivamente em
+  `f87bafa8f88b707818b8b06edef0eccf71311ec2`.
+- prova_idempotente: segunda materialização offline de `1333` concluiu em 10.4
+  segundos, `network=skipped`, zero pendência/falha e nenhum novo commit.
+- validacao: 119 testes Python, 8 testes Node, compilação, bootstrap, diff-check
+  e mapa RCF com 1.042 entradas/900 cláusulas aprovados; `agent:rcf` retornou 0
+  com o estado raiz conhecido `RCF_DEGRADED`.
+- preservacao: os dois manifestos de `a-ciencia-do-bom-viver` continuam fora de
+  staging/commit e não podem ser alterados pela recuperação da colisão.
+- proximo_ponto: criar os commits faseados da FT-024 e finalizar suas assinaturas
+  de rastreabilidade, preservando os dois manifestos independentes fora do
+  staging e dos commits.

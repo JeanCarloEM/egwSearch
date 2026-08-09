@@ -2093,3 +2093,26 @@ baixado ou versionado.
 
 Conclusão: `d4d6ec0` corrige a regressão; 111 testes Python aprovados; duas
 sentenças sincronizadas; diário real migrado para v2 sem rede e sem perda.
+
+## FT-024 - Isolamento fail-safe e materialização offline
+
+- [x] Capturar a falha repetida e comprovar que os paths pertencem a outra
+  publicação e diferem somente em timestamp concluído.
+- [x] Normatizar isolamento de worktree e retomada estritamente offline.
+- [x] Corrigir o preflight sem absorver ou ocultar mudanças alheias em commits.
+- [x] Criar comando canônico que consuma somente checkpoints/arquivos locais.
+- [x] Cobrir pendência local, continuidade entre coleções, ausência de rede e
+  exclusão mútua de processo sem stale lock.
+- [x] Invocar após a execução corrente, validar e sincronizar rastreabilidade.
+- [x] Auditar o resultado offline e identificar a colisão física `1034`/`1333`.
+- [x] Normatizar autorresolução do downloader e do indexador.
+- [x] Preservar/restaurar a unidade corrompida e materializar a colidente em
+  rota desambiguada, sem tocar mudanças independentes.
+- [x] Validar reparo cirúrgico, suíte integral e commits faseados.
+
+Conclusão: a unidade `1034` foi restaurada transacionalmente, `1333` foi
+materializada offline em rota desambiguada e commitada em `f87bafa`; reexecução
+idempotente levou 10.4 segundos, sem HTTP, pendência, falha ou novo commit. Foram
+aprovados 119 testes Python, 8 testes Node, compilação, bootstrap, diff-check e
+900 cláusulas rastreadas. Os dois manifestos independentes de
+`a-ciencia-do-bom-viver` permaneceram intocados e fora dos commits.
