@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:49:44.436140Z"
+    "completed_at": "2026-08-10T00:12:25.710193Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/pt-br/devocionais/e-recebereis-poder/erp.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "1919",
+    "author_key": "egw",
+    "language": "pt-BR",
+    "category": "egw",
+    "type": "devocionais",
     "generated_epub": false
   },
   "parser": {
@@ -120,6 +120,45 @@
         "reference_tokens_sha256": "f8699818bf1231d8bf53c23a07ba9dcf407c69e75ec8bf1b2c8b8d5e9fdd1a0a",
         "output_tokens_sha256": "f8699818bf1231d8bf53c23a07ba9dcf407c69e75ec8bf1b2c8b8d5e9fdd1a0a",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 386,
+      "efficiency": {
+        "characters_per_chunk": 2082,
+        "tokens_per_chunk": 425,
+        "boundary_checks": 385
+      },
+      "chunk_words": {
+        "minimum": 3,
+        "median": 377,
+        "maximum": 543
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "f8699818bf1231d8bf53c23a07ba9dcf407c69e75ec8bf1b2c8b8d5e9fdd1a0a",
+        "output_tokens_sha256": "f8699818bf1231d8bf53c23a07ba9dcf407c69e75ec8bf1b2c8b8d5e9fdd1a0a",
+        "boundaries_sha256": "a2dcfd9ca9c7b4904b383d74883f714b49ab008d276bed6d96f291f6cd097e88"
       },
       "diagnostics": []
     },
@@ -404,7 +443,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "f8699818bf1231d8bf53c23a07ba9dcf407c69e75ec8bf1b2c8b8d5e9fdd1a0a",
       "output_tokens_sha256": "f8699818bf1231d8bf53c23a07ba9dcf407c69e75ec8bf1b2c8b8d5e9fdd1a0a",
@@ -414,9 +453,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "5975779e89979d5044134000d3df5897cd2a27849ee051204ef2dd4642acfa8a"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "578c2379ea641d92b847f0134acc8117cb82bb588c16eab6a18fd677c2c0a967"
+  "integrity": "fee4ab16c1de2d3ab86ff35efd6e44029ccc7e8c1fef78c8241afa8dbde19995"
 }
