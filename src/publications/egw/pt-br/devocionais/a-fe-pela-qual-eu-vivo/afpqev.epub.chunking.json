@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:48:45.587111Z"
+    "completed_at": "2026-08-10T00:05:16.510745Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/pt-br/devocionais/a-fe-pela-qual-eu-vivo/afpqev.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "1916",
+    "author_key": "egw",
+    "language": "pt-BR",
+    "category": "egw",
+    "type": "devocionais",
     "generated_epub": false
   },
   "parser": {
@@ -120,6 +120,45 @@
         "reference_tokens_sha256": "2427fcc7ca709835e3ba8dac57c1a6e407f22180b92a7b3a96d6e0e001ca7959",
         "output_tokens_sha256": "2427fcc7ca709835e3ba8dac57c1a6e407f22180b92a7b3a96d6e0e001ca7959",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 385,
+      "efficiency": {
+        "characters_per_chunk": 2050,
+        "tokens_per_chunk": 435,
+        "boundary_checks": 384
+      },
+      "chunk_words": {
+        "minimum": 4,
+        "median": 374,
+        "maximum": 433
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "2427fcc7ca709835e3ba8dac57c1a6e407f22180b92a7b3a96d6e0e001ca7959",
+        "output_tokens_sha256": "2427fcc7ca709835e3ba8dac57c1a6e407f22180b92a7b3a96d6e0e001ca7959",
+        "boundaries_sha256": "6ac169ac47f9832721499fcbb2b0e43b6ae0bd75dcb6363e336cbdd9ae90843b"
       },
       "diagnostics": []
     },
@@ -404,7 +443,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "2427fcc7ca709835e3ba8dac57c1a6e407f22180b92a7b3a96d6e0e001ca7959",
       "output_tokens_sha256": "2427fcc7ca709835e3ba8dac57c1a6e407f22180b92a7b3a96d6e0e001ca7959",
@@ -414,9 +453,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "5975779e89979d5044134000d3df5897cd2a27849ee051204ef2dd4642acfa8a"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "0d57705a5395412a2e513f0c1a8915f551789d5b503d8f4baf6af3213dc5f36a"
+  "integrity": "6ca1a49e0ac4fe090c523f11169b5884a3061fe7ce2ebe5f1dcc950ae693defd"
 }
