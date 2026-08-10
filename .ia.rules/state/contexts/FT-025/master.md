@@ -5,7 +5,7 @@
 - FT: `FT-025`.
 - tipo: `evolução normativa e implementação de código`.
 - fonte: `.ia.rules/state/requests/FT-025/source.md`.
-- estado: autorizada e em execução.
+- estado: concluída e sincronizada.
 
 ## Objetivo
 
@@ -46,3 +46,16 @@ por domínio.
 6. suítes legadas de EPUB/PDF continuam aprovadas, e benchmarks comparam
    cardinalidade, fidelidade, fronteiras e tempo por domínio.
 
+## Resultado
+
+- adaptador comum de unidades semânticas e adaptadores dos três schemas
+  implementados em `publication_analysis.py`;
+- estratégias `scripture-verse`, `scripture-chapter`, `scripture-book`,
+  `lexical-entry` e `concordance-entry` executadas e aferidas;
+- índice v1 ampliado de modo compatível e manifesto estrutural elevado a v2;
+- transação aceita publicação somente-JSON e exige análise semântica íntegra;
+- fingerprint v4 preserva explicitamente o analisador histórico v2;
+- 123 testes Python, 12 testes Node, compilação TypeScript, `git diff --check`
+  e mapa RCF com 924 cláusulas materiais aprovados;
+- commits faseados: estado `4ffad98`, norma `68a0d9e`, implementação
+  `71f0569` e sincronização pendente do presente fechamento.

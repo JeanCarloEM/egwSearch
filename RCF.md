@@ -52,7 +52,8 @@ parciais.
 No estado validado desta versão:
 
 - **disponíveis:** aquisição responsável de publicações elegíveis; preparação e
-  validação de EPUB/PDF; estrutura canônica; capas; metadados; índice global e
+  validação de EPUB/PDF e JSON estruturado; estrutura canônica; capas;
+  metadados; índice global e
   seu manifesto estrutural; laboratório experimental de chunking por recurso;
   build estático; e publicação do artefato pelo GitHub Pages;
 - **parciais:** cobertura do corpus prioritário e preparação de estratégias para
@@ -100,10 +101,10 @@ permanecer distinguíveis e rastreáveis. Metadado, citação, referência,
 localização, tradução, relação ou autoridade NÃO DEVEM ser inventados. [62596f1]
 Inferência e interpretação DEVEM ser identificadas como tais. [62596f1]
 
-Indexação e chunking DEVEM preservar as unidades naturais e a hierarquia [PENDENTE-CODIGO]
+Indexação e chunking DEVEM preservar as unidades naturais e a hierarquia [c569033]
 declarada do domínio. [PENDENTE-CODIGO]
-JSON estruturado NÃO DEVE ser degradado a texto plano; [PENDENTE-CODIGO]
-versículo, entrada lexical/dicionarística ou entrada de concordância não pode [PENDENTE-CODIGO]
+JSON estruturado NÃO DEVE ser degradado a texto plano; [c569033]
+versículo, entrada lexical/dicionarística ou entrada de concordância não pode [c569033]
 ser fragmentado, fundido, omitido, duplicado ou reordenado. [PENDENTE-CODIGO]
 
 Toda escrita material DEVE ser incremental, determinística, validada, [62596f1]

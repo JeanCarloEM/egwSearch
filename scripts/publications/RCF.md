@@ -397,45 +397,45 @@ Metadado `publication-source/v3` DEVE registrar JSON como derivação `structure
 `publication_index.py`, `publication_analysis.py` e `validate_complete_publication` DEVEM aceitar e validar a derivação JSON; análise de chunking NÃO DEVE tratar JSON bíblico como prosa nem recombinar versículos, e o índice DEVE expor schema/modelo/path/hash sem copiar o corpus. [13976cf]
 
 Somente derivação `structured-json` declarada no metadado e validada por
-`structured_content.py` PODE entrar na inteligência documental. [PENDENTE-CODIGO]
+`structured_content.py` PODE entrar na inteligência documental. [c569033]
 Metadados,
 índices, manifestos, configurações e qualquer `.json` sem um dos três schemas
-universais DEVEM permanecer fora da descoberta de ativos analisáveis e NÃO [PENDENTE-CODIGO]
-PODEM cair em parser textual genérico. [PENDENTE-CODIGO]
+universais DEVEM permanecer fora da descoberta de ativos analisáveis e NÃO [c569033]
+PODEM cair em parser textual genérico. [c569033]
 
-`publication_analysis.py` DEVE possuir um adaptador comum de unidade semântica, [PENDENTE-CODIGO]
+`publication_analysis.py` DEVE possuir um adaptador comum de unidade semântica, [c569033]
 usado por todos os formatos para prova de identidade, ordem, cobertura e
 fronteiras, e adaptadores especializados somente para a estrutura dependente do
 schema. [PENDENTE-CODIGO]
-O adaptador estruturado DEVE validar primeiro o documento integral e [PENDENTE-CODIGO]
+O adaptador estruturado DEVE validar primeiro o documento integral e [c569033]
 construir sua referência efêmera diretamente dos objetos tipados, sem
 re-serializar JSON como prosa. [PENDENTE-CODIGO]
 
-Em `scripture-corpus/v1`, cada versículo DEVE ser uma unidade atômica com [PENDENTE-CODIGO]
+Em `scripture-corpus/v1`, cada versículo DEVE ser uma unidade atômica com [c569033]
 identidade `versão/coleção/livro/capítulo/versículo`; projeções de capítulo e
-livro somente PODEM agrupar unidades completas na ordem hierárquica declarada e [PENDENTE-CODIGO]
-DEVEM manter identificáveis todos os filhos. [PENDENTE-CODIGO]
+livro somente PODEM agrupar unidades completas na ordem hierárquica declarada e [c569033]
+DEVEM manter identificáveis todos os filhos. [c569033]
 Em `lexical-corpus/v1`, cada
 entrada completa — lema, escrita, romanização, IDs, definições, traduções,
-referências e relações — DEVE constituir uma unidade. [PENDENTE-CODIGO]
+referências e relações — DEVE constituir uma unidade. [c569033]
 Em
 `concordance-corpus/v1`, termo, formas, referências, índices e relações da mesma
-entrada DEVEM permanecer juntos. [PENDENTE-CODIGO]
+entrada DEVEM permanecer juntos. [c569033]
 
-Experimento estruturado DEVE executar somente estratégias compatíveis com seu [PENDENTE-CODIGO]
+Experimento estruturado DEVE executar somente estratégias compatíveis com seu [c569033]
 domínio: `scripture-verse`, `scripture-chapter` e `scripture-book` para Bíblia;
 `lexical-entry` para léxico/dicionário; `concordance-entry` para concordância.
 [PENDENTE-CODIGO]
-Janelas fixas, sentenças, parágrafos, regex de prosa e documento inteiro DEVEM [PENDENTE-CODIGO]
-ser marcados inaplicáveis e NÃO PODEM ser recomendados para JSON estruturado. [PENDENTE-CODIGO]
+Janelas fixas, sentenças, parágrafos, regex de prosa e documento inteiro DEVEM [c569033]
+ser marcados inaplicáveis e NÃO PODEM ser recomendados para JSON estruturado. [c569033]
 [PENDENTE-CODIGO]
 
-A prova experimental estruturada DEVE comparar cardinalidade e sequência de [PENDENTE-CODIGO]
+A prova experimental estruturada DEVE comparar cardinalidade e sequência de [c569033]
 IDs naturais, hash do conteúdo tipado de cada unidade e fronteiras
 hierárquicas, rejeitando perda, duplicação, reordenação, fragmentação ou fusão,
 mesmo quando a sequência de tokens coincidir. [PENDENTE-CODIGO]
 Manifesto e aprendizado agregado
-DEVEM persistir somente contagens, perfis, métricas e hashes, nunca versículos, [PENDENTE-CODIGO]
+DEVEM persistir somente contagens, perfis, métricas e hashes, nunca versículos, [c569033]
 definições ou listas integrais de referências. [PENDENTE-CODIGO]
 
 Configuração DEVE registrar fontes de validação separadamente das coleções de ingestão, com `id`, `role`, URL, escopo, licença/termos, rate limit e estado habilitado; fonte sem autorização comprovada permanece desabilitada e diagnosticável. [13976cf]
@@ -479,7 +479,7 @@ O gate também DEVE cobrir manifesto Markdown interno, restauração byte a byte
 
 ## 10. Inteligência estrutural e índice global
 
-`publication_analysis.py` DEVE ser a capacidade única de análise de EPUB, PDF e [PENDENTE-CODIGO]
+`publication_analysis.py` DEVE ser a capacidade única de análise de EPUB, PDF e [c569033]
 JSON estruturado, e `publication_index.py` a capacidade única do índice global;
 seus `main()` são invocadores finos das mesmas funções usadas pelo downloader,
 sem reimplementação de schema ou regra de negócio. [PENDENTE-CODIGO]
@@ -512,12 +512,12 @@ Tabela experimental por ativo DEVE sintetizar método, estado, chunks, duração
 
 O índice `publication-global-index/v1` DEVE conter envelope de geração e lista ordenada de publicações; cada item DEVE expor identidade, autoria, localização, rotas públicas, ativos, capa, manifestos de análise, hashes e estado/dados formativos elegíveis. [1fd53ef]
 
-Para derivação estruturada, o índice DEVE expor adicionalmente o path do [PENDENTE-CODIGO]
+Para derivação estruturada, o índice DEVE expor adicionalmente o path do [c569033]
 manifesto de chunking e síntese sem texto contendo modelo, schema, níveis
 hierárquicos, quantidade de unidades naturais e primeira/última identidade.
 [PENDENTE-CODIGO]
 A
-síntese DEVE ser derivada do manifesto validado e não pode copiar conteúdo, [PENDENTE-CODIGO]
+síntese DEVE ser derivada do manifesto validado e não pode copiar conteúdo, [c569033]
 definições, relações ou referências do corpus. [PENDENTE-CODIGO]
 
 Atualização `--publication` DEVE substituir somente a identidade alvo quando o índice existente cobrir integralmente os metadados válidos do corpus; índice ausente, incompatível ou incompleto DEVE acionar reconstrução integral local. `--scope` analisa/regenera somente a subárvore solicitada, e `--all` cobre o corpus, sempre com resolução a partir da raiz configurada. [1fd53ef]
@@ -527,18 +527,18 @@ Toda invocação direta ou indireta da análise DEVE reutilizar sem reexecução
 `--force-recalculate` DEVE ser o único override da janela e ser propagado pelo downloader, pelo modo de análise do indexador, pelo wrapper TypeScript e pelos comandos npm; prova ausente, falha, expirada, futura, inválida ou materialmente divergente DEVE recalcular. [f0c7638]
 
 Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o
-orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB, [PENDENTE-CODIGO]
+orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB, [c569033]
 PDF e JSON estruturados declarados, valida os manifestos, atualiza
-índice/aprendizado e cria o commit exclusivo; somente então PODE marcar o [PENDENTE-CODIGO]
+índice/aprendizado e cria o commit exclusivo; somente então PODE marcar o [c569033]
 remote ID como confirmado. [PENDENTE-CODIGO]
 
-`validate_complete_publication` DEVE exigir manifesto de análise coerente para [PENDENTE-CODIGO]
+`validate_complete_publication` DEVE exigir manifesto de análise coerente para [c569033]
 cada ativo editorial binário e para cada derivação estruturada. [PENDENTE-CODIGO]
 Publicação cujo
-contrato seja exclusivamente estruturado PODE concluir sem EPUB/PDF, desde que [PENDENTE-CODIGO]
+contrato seja exclusivamente estruturado PODE concluir sem EPUB/PDF, desde que [c569033]
 JSON, metadado, análise, índice e provas estejam íntegros. [PENDENTE-CODIGO]
 
-Benchmarks e testes DEVEM cobrir os três schemas, cardinalidades distintas, [PENDENTE-CODIGO]
+Benchmarks e testes DEVEM cobrir os três schemas, cardinalidades distintas, [c569033]
 hierarquia bíblica multilivro/multicapítulo, entradas lexicais com relações e
 traduções, concordâncias com associação forma→referências, além de contraprovas
 de schema genérico, perda, duplicação, reordenação, fragmentação, fusão e
