@@ -6,7 +6,7 @@
 - tipo: `implementação de código`.
 - criado_em: `2026-08-09T23:26:17-03:00`.
 - fonte: `.ia.rules/state/requests/FT-027/source.md`.
-- estado: pendente da FT-027.
+- estado: em execução.
 - dependência: FT-027 concluída.
 
 ## Escopo

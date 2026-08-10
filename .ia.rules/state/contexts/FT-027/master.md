@@ -6,7 +6,7 @@
 - tipo: `implementação normativa`.
 - criado_em: `2026-08-09T23:26:16-03:00`.
 - fonte: `.ia.rules/state/requests/FT-027/source.md`.
-- estado: em execução.
+- estado: concluída.
 - dependência posterior: FT-028.
 
 ## Auditoria real
@@ -28,3 +28,11 @@
 Substituir cirurgicamente a janela temporal pela fórmula hash+`mtime`, manter
 as demais provas de validade e declarar escrita atômica somente após conclusão.
 A FT conclui com RCF centralizado, rastreável e sem duplicação.
+
+## Resultado
+
+- a janela de 24 horas foi removida do contrato;
+- a fórmula única combina force, existência, hash e `mtime` antes do custo;
+- validade estrutural e editorial existente foi preservada;
+- propagação e persistência atômica após sucesso foram explicitadas;
+- implementação material permanece na FT-028.
