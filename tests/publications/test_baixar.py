@@ -178,12 +178,15 @@ def _runtime(driver_factory):
 
 
 class DownloaderTests(unittest.TestCase):
-    def test_known_v4_global_fingerprint_matches_operational_journal(self) -> None:
+    def test_known_global_fingerprints_match_operational_migrations(self) -> None:
         config = baixar.load_config(REPOSITORY_ROOT / "config" / "publications.json")
         collections = baixar._selected_collections(config, None)
         self.assertEqual(
             baixar._known_legacy_downloader_fingerprints(config, collections),
-            {"e8f2c8cd0d85a8eceb2a1714a099dbf7dd8dbbeb8ce0eb9d92e07ade9e8dc2bc"},
+            {
+                "e8f2c8cd0d85a8eceb2a1714a099dbf7dd8dbbeb8ce0eb9d92e07ade9e8dc2bc",
+                "94952aeea831ae6aabad3befe9f4c951ae0d8b6ab2f222c073084a13623f6b31",
+            },
         )
 
     @staticmethod

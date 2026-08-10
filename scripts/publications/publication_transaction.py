@@ -165,7 +165,7 @@ class GlobalProgressJournal:
             raise PublicationTransactionError(
                 f"diário global incompatível; use reset explícito: {self.path}"
             )
-        legacy_migration = False
+        schema_migration = False
         if (
             set(document) == legacy_required
             and document.get("schema_version") == LEGACY_PROGRESS_SCHEMA
@@ -178,7 +178,11 @@ class GlobalProgressJournal:
             if 0 <= legacy_next <= len(legacy_order):
                 document["schema_version"] = PROGRESS_SCHEMA
                 document["confirmed"] = legacy_order[:legacy_next]
-                legacy_migration = True
+                schema_migration = True
+
+        fingerprint_migration = (
+            document.get("fingerprint") in self.legacy_fingerprints
+        )
 
         stored_order = document.get("order")
         next_index = document.get("next_index")
@@ -196,7 +200,7 @@ class GlobalProgressJournal:
             or document.get("scope") != self.scope
             or (
                 document.get("fingerprint") != self.fingerprint
-                and not legacy_migration
+                and not fingerprint_migration
             )
             or not isinstance(stored_order, list)
             or not all(isinstance(value, str) and value for value in stored_order)
@@ -213,7 +217,7 @@ class GlobalProgressJournal:
             )
         appended = [value for value in self.order if value not in set(stored_order)]
         self.order = [*stored_order, *appended]
-        if legacy_migration:
+        if fingerprint_migration:
             document["fingerprint"] = self.fingerprint
         if appended:
             document["order"] = self.order

@@ -429,6 +429,73 @@ class PublicationTransactionTests(unittest.TestCase):
                     order=["a", "b", "c"],
                 )
 
+    def test_global_journal_migrates_allowlisted_v2_fingerprint_preserving_cursor(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "baixar.global.json"
+            previous = progress_fingerprint({"analyzer": 2})
+            current = progress_fingerprint({"analyzer": 3})
+            document = {
+                "schema_version": "publication-global-progress/v2",
+                "tool": "baixar.py",
+                "scope": "all",
+                "fingerprint": previous,
+                "order": ["a", "b"],
+                "confirmed": ["a"],
+                "next_index": 1,
+                "current": {"position": 1, "identity": "b", "phase": "processing"},
+                "last_confirmed": {"position": 0, "identity": "a", "commit": "a" * 40},
+                "status": "running",
+            }
+            write_json_atomic(path, document)
+
+            migrated = GlobalProgressJournal(
+                path,
+                tool="baixar.py",
+                scope="all",
+                fingerprint=current,
+                legacy_fingerprints={previous},
+                order=["a", "b", "c"],
+            )
+
+            self.assertEqual(migrated.document["fingerprint"], current)
+            self.assertEqual(migrated.document["confirmed"], ["a"])
+            self.assertEqual(migrated.document["next_index"], 1)
+            self.assertEqual(migrated.document["current"], document["current"])
+            self.assertEqual(
+                migrated.document["last_confirmed"], document["last_confirmed"]
+            )
+            self.assertEqual(migrated.document["order"], ["a", "b", "c"])
+
+    def test_global_journal_rejects_allowlisted_v2_fingerprint_with_divergent_order(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "baixar.global.json"
+            previous = progress_fingerprint({"analyzer": 2})
+            current = progress_fingerprint({"analyzer": 3})
+            write_json_atomic(
+                path,
+                {
+                    "schema_version": "publication-global-progress/v2",
+                    "tool": "baixar.py",
+                    "scope": "all",
+                    "fingerprint": previous,
+                    "order": ["x", "b"],
+                    "confirmed": [],
+                    "next_index": 0,
+                    "current": None,
+                    "last_confirmed": None,
+                    "status": "running",
+                },
+            )
+            with self.assertRaisesRegex(PublicationTransactionError, "reset explícito"):
+                GlobalProgressJournal(
+                    path,
+                    tool="baixar.py",
+                    scope="all",
+                    fingerprint=current,
+                    legacy_fingerprints={previous},
+                    order=["a", "b"],
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

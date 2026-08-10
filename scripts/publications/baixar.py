@@ -106,6 +106,27 @@ V4_GLOBAL_COLLECTION_IDS = (
     "en-pioneers",
 )
 
+V5_GLOBAL_COLLECTION_IDS = (
+    *V4_GLOBAL_COLLECTION_IDS,
+    "en-reference-beliefs",
+    "en-reference-biography",
+    "en-reference-youth",
+    "en-reference-dictionaries",
+    "en-reference-egw-works",
+    "en-reference-children",
+    "en-reference-research",
+    "en-reference-study-guides",
+    "en-reference-topical-index",
+    "en-reference-historical",
+    "en-bible-versions",
+    "pt-br-bible-versions",
+    "en-bible-dictionaries",
+    "en-bible-concordances",
+    "en-bible-commentaries",
+    "en-bible-reading-plans",
+    "en-bible-scripture-index",
+)
+
 
 def _downloader_progress_fingerprint(
     config: dict,
@@ -137,17 +158,23 @@ def _known_legacy_downloader_fingerprints(
     collections: list[dict],
 ) -> set[str]:
     by_id = {str(collection["id"]): collection for collection in collections}
-    if not all(identity in by_id for identity in V4_GLOBAL_COLLECTION_IDS):
-        return set()
-    legacy = [by_id[identity] for identity in V4_GLOBAL_COLLECTION_IDS]
-    return {
-        _downloader_progress_fingerprint(
-            config,
-            legacy,
-            schema=4,
-            analyzer_version="2",
+    known: set[str] = set()
+    for schema, identities in (
+        (4, V4_GLOBAL_COLLECTION_IDS),
+        (5, V5_GLOBAL_COLLECTION_IDS),
+    ):
+        if not all(identity in by_id for identity in identities):
+            continue
+        legacy = [by_id[identity] for identity in identities]
+        known.add(
+            _downloader_progress_fingerprint(
+                config,
+                legacy,
+                schema=schema,
+                analyzer_version="2",
+            )
         )
-    }
+    return known
 
 
 class OfficialCoverMissing(DownloadError):
