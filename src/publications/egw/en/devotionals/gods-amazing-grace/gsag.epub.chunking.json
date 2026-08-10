@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:53:32.471470Z"
+    "completed_at": "2026-08-10T00:34:42.047079Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/en/devotionals/gods-amazing-grace/gsag.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "33",
+    "author_key": "egw",
+    "language": "en",
+    "category": "egw",
+    "type": "devotionals",
     "generated_epub": false
   },
   "parser": {
@@ -119,6 +119,45 @@
         "reference_tokens_sha256": "28336309a00afb69bc299de87d3992f38afb5fa1a97c6d5daadfd09a26cd214f",
         "output_tokens_sha256": "28336309a00afb69bc299de87d3992f38afb5fa1a97c6d5daadfd09a26cd214f",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 386,
+      "efficiency": {
+        "characters_per_chunk": 2068,
+        "tokens_per_chunk": 442,
+        "boundary_checks": 385
+      },
+      "chunk_words": {
+        "minimum": 1,
+        "median": 394,
+        "maximum": 486
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "28336309a00afb69bc299de87d3992f38afb5fa1a97c6d5daadfd09a26cd214f",
+        "output_tokens_sha256": "28336309a00afb69bc299de87d3992f38afb5fa1a97c6d5daadfd09a26cd214f",
+        "boundaries_sha256": "1aad01faf59c740a4ded8078f20f6f6267fdd0b75805ba00fc9ba2777557b6ae"
       },
       "diagnostics": []
     },
@@ -403,7 +442,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "28336309a00afb69bc299de87d3992f38afb5fa1a97c6d5daadfd09a26cd214f",
       "output_tokens_sha256": "28336309a00afb69bc299de87d3992f38afb5fa1a97c6d5daadfd09a26cd214f",
@@ -413,9 +452,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "36f28ae729eed64ba26f661ffce93cb42f4d6d3cd8e1a67826394f57fe88b766"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "81e4a5a0f8261b69f34eea62f17c423b5205b31819af3b9dea67af60d3617fb0"
+  "integrity": "5fb72a3fef3c9d2cd64c8a15772c75b4847c838196e773872566b63572a33da0"
 }
