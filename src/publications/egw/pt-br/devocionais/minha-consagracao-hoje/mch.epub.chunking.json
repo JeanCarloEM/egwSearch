@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:51:12.845312Z"
+    "completed_at": "2026-08-10T00:21:44.815413Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/pt-br/devocionais/minha-consagracao-hoje/mch.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "1924",
+    "author_key": "egw",
+    "language": "pt-BR",
+    "category": "egw",
+    "type": "devocionais",
     "generated_epub": false
   },
   "parser": {
@@ -120,6 +120,45 @@
         "reference_tokens_sha256": "a8d5cfaa42b8478c4044b28e2a5fcb902c7f7e7fb567548c0fdd47f37a5958a1",
         "output_tokens_sha256": "a8d5cfaa42b8478c4044b28e2a5fcb902c7f7e7fb567548c0fdd47f37a5958a1",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 385,
+      "efficiency": {
+        "characters_per_chunk": 1879,
+        "tokens_per_chunk": 389,
+        "boundary_checks": 384
+      },
+      "chunk_words": {
+        "minimum": 3,
+        "median": 337,
+        "maximum": 412
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "a8d5cfaa42b8478c4044b28e2a5fcb902c7f7e7fb567548c0fdd47f37a5958a1",
+        "output_tokens_sha256": "a8d5cfaa42b8478c4044b28e2a5fcb902c7f7e7fb567548c0fdd47f37a5958a1",
+        "boundaries_sha256": "fcf4bdd0b149fa71aec8ead0659fec4753777509beca4ed2e00c1487c7e72b7c"
       },
       "diagnostics": []
     },
@@ -404,7 +443,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "a8d5cfaa42b8478c4044b28e2a5fcb902c7f7e7fb567548c0fdd47f37a5958a1",
       "output_tokens_sha256": "a8d5cfaa42b8478c4044b28e2a5fcb902c7f7e7fb567548c0fdd47f37a5958a1",
@@ -414,9 +453,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "5975779e89979d5044134000d3df5897cd2a27849ee051204ef2dd4642acfa8a"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "2a6f5ee466e2108ca1f493ea70aacb98411c80360dca1fb613d8d91e4c4d8724"
+  "integrity": "e6a13e6c46a3879a082c4317dd51ee824fe32871f64b49e73dab22b8dc07b29a"
 }
