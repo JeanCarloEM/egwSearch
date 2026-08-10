@@ -59,7 +59,6 @@
 
   - Concluir somente quando a comunicação pública representar corretamente o **egwSearch** como ferramenta de investigação probatória, documental e hermenêutica centrada na Bíblia, no Espírito de Profecia, nos pioneiros adventistas e na literatura correlata, sem confundir sua finalidade com os meios instrumentais empregados para realizá-la.
 
-````markdown
 - [ ] Impedir escrita e commits espúrios quando `baixar.py`, indexador ou calculador de chunks não produzirem alteração material
   - Inspecione integralmente `baixar.py`, indexador, calculador de chunks, chamadas em cadeia, lógica de cache/hash/`mtime`, geração de manifestos/índices e fluxo de commit antes de alterar qualquer artefato.
   - Trate este requisito como correção estrutural de idempotência e não como exceção pontual para uma publicação específica.
@@ -179,4 +178,3 @@
     - Nenhum commit é criado sem diff material.
     - Alterações reais continuam sendo persistidas e commitadas normalmente.
     - A inundação de commits causada por falsos positivos é eliminada na origem, sem mascaramento posterior.
-````
