@@ -58,3 +58,125 @@
   - O modus operandi das LLMs nos domínios cuja epistemologia envolva hermenêutica, exegese, interpretação e disciplinas correlatas DEVE ser definido por `.RCFs/RCF.epistemologia.md` e pelos documentos a ele associados, respeitando sua subordinação, precedência e escopo normativo.
 
   - Concluir somente quando a comunicação pública representar corretamente o **egwSearch** como ferramenta de investigação probatória, documental e hermenêutica centrada na Bíblia, no Espírito de Profecia, nos pioneiros adventistas e na literatura correlata, sem confundir sua finalidade com os meios instrumentais empregados para realizá-la.
+
+````markdown
+- [ ] Impedir escrita e commits espúrios quando `baixar.py`, indexador ou calculador de chunks não produzirem alteração material
+  - Inspecione integralmente `baixar.py`, indexador, calculador de chunks, chamadas em cadeia, lógica de cache/hash/`mtime`, geração de manifestos/índices e fluxo de commit antes de alterar qualquer artefato.
+  - Trate este requisito como correção estrutural de idempotência e não como exceção pontual para uma publicação específica.
+
+  - **Regra nuclear**
+    - Se hash, `mtime` e demais invariantes relevantes comprovarem que os dados já estão atuais e nenhuma saída material precisar mudar, o processo DEVE:
+      - reutilizar o estado existente;
+      - NÃO reescrever arquivos;
+      - NÃO alterar metadata desnecessariamente;
+      - NÃO tocar no filesystem sem necessidade;
+      - NÃO produzir diferença na árvore Git;
+      - NÃO gerar commit.
+    - Somente alterações que modifiquem efetivamente o conteúdo/estado versionado DEVEM produzir efeitos persistentes e, consequentemente, commit.
+
+  - **No-op real**
+    - "Nada mudou" DEVE significar **no-op efetivo**, não apenas conteúdo final equivalente após reescrita.
+    - É PROIBIDO abrir/salvar novamente, regenerar, truncar/regravar ou substituir atomicamente um arquivo cujo conteúdo final seria idêntico, salvo necessidade técnica comprovada.
+    - Antes de qualquer escrita, compare o resultado candidato com o estado existente usando mecanismo confiável, preferencialmente hash/conteúdo já disponível.
+    - Se forem idênticos, preserve o arquivo original intacto, inclusive seu `mtime`, quando possível.
+
+  - **Hash e `mtime`**
+    - Quando hash e `mtime` atuais já comprovarem reutilização válida, NÃO executar etapas de escrita apenas para "confirmar" o mesmo estado.
+    - `mtime` NÃO DEVE ser alterado artificialmente por leitura, reserialização ou substituição sem mudança material.
+    - Hashes/metadata auxiliares somente DEVEM ser atualizados quando o dado que representam realmente mudar ou quando houver inconsistência comprovada que exija reconciliação.
+
+  - **Execução em cadeia**
+    - A regra vale igualmente quando:
+      - `baixar.py` for executado diretamente;
+      - indexador for executado diretamente;
+      - calculador de chunks for executado diretamente;
+      - forem invocados em cadeia;
+      - uma etapa chamar outra internamente.
+    - Cada etapa DEVE propagar corretamente a informação de `changed/no-op`, evitando que uma etapa posterior gere escrita ou commit apenas porque foi executada.
+
+  - **Indexação e chunks**
+    - Recalcular em memória PODE ocorrer quando necessário para validação, mas persistência somente DEVE ocorrer se o resultado diferir materialmente.
+    - `index.json`, manifestos, chunks e arquivos derivados NÃO DEVEM ser regravados quando o conteúdo calculado for idêntico ao existente.
+    - Ordem de serialização, whitespace, timestamps internos, campos voláteis ou qualquer outro detalhe NÃO DEVE provocar alteração espúria.
+    - Saídas determinísticas DEVEM ser byte-a-byte estáveis para o mesmo estado de entrada, quando tecnicamente aplicável.
+
+  - **Commits**
+    - A criação de commit DEVE depender de alteração real na árvore versionada, não de:
+      - execução bem-sucedida;
+      - publicação processada;
+      - etapa de indexação concluída;
+      - arquivo aberto/regravado;
+      - alteração somente de `mtime`;
+      - status interno `PUBLICATION_COMMITTED` presumido.
+    - Antes de commitar, verifique objetivamente se há diff versionado material relativo ao escopo processado.
+    - Se não houver diff real, NÃO criar commit vazio, sintético ou equivalente.
+    - O log DEVE distinguir claramente:
+      - processamento reutilizado;
+      - processamento com alteração material;
+      - commit efetivamente criado;
+      - no-op sem commit.
+
+  - **Caso exemplificativo**
+    - Fluxos como:
+      ```text
+      Análise reutilizada ... · hash e mtime atuais
+      Análise reutilizada ... · hash e mtime atuais
+      Indexação
+      ...
+      PUBLICATION_COMMITTED ...
+      ```
+      são incorretos quando nenhuma saída versionada mudou.
+    - Nesse cenário, o comportamento esperado é reutilização integral e finalização sem tocar em arquivos e sem commit.
+
+  - **Prevenção de falsos positivos Git**
+    - Audite todas as operações capazes de gerar falso `modified`, incluindo:
+      - reserialização idêntica;
+      - normalização de EOL;
+      - encoding/BOM;
+      - ordenação não determinística;
+      - timestamps embutidos;
+      - chmod/mode;
+      - rename temporário;
+      - escrita atômica sobre conteúdo idêntico;
+      - formatação variável;
+      - metadata gerada a cada execução.
+    - Elimine qualquer variação não semântica que provoque divergência da árvore atual.
+    - NÃO use `git checkout`, reset ou limpeza destrutiva para mascarar o problema; corrija a causa da escrita espúria.
+
+  - **Eficiência**
+    - Evitar escrita desnecessária é requisito funcional e de desempenho.
+    - Use cache/hash/metadata já existentes para interromper cedo etapas comprovadamente desnecessárias.
+    - NÃO recalcular ou regravar grandes índices/chunks quando os inputs relevantes permanecem invariáveis, salvo validação necessária e proporcional.
+    - Preserve correção antes de otimização: nenhuma etapa PODE ser ignorada apenas por inferência não comprovada.
+
+  - **Validação obrigatória**
+    - Teste, no mínimo:
+      - execução totalmente atualizada;
+      - hash e `mtime` atuais;
+      - apenas um arquivo realmente alterado;
+      - índice sem alteração;
+      - índice com alteração;
+      - chunks sem alteração;
+      - chunks com alteração;
+      - execução direta de cada script;
+      - execução completa em cadeia;
+      - múltiplas publicações consecutivas sem mudança;
+      - alteração somente de timestamp não semântico;
+      - serialização repetida determinística;
+      - working tree limpa antes/depois de no-op.
+    - Para cenários sem alteração, valide simultaneamente:
+      - zero arquivos regravados quando evitável;
+      - `mtime` preservado;
+      - `git diff` vazio;
+      - nenhum commit novo.
+    - Para cenários com alteração real, valide que somente os arquivos efetivamente modificados entram no commit.
+
+  - **Critérios de aceite**
+    - Execução sobre estado já atual converge para no-op real.
+    - Arquivo sem mudança material NÃO é tocado.
+    - Hash/`mtime` atuais impedem reprocessamento/escrita desnecessária conforme o contrato existente.
+    - Índices, manifestos e chunks idênticos permanecem byte-a-byte intactos.
+    - Nenhum commit é criado sem diff material.
+    - Alterações reais continuam sendo persistidas e commitadas normalmente.
+    - A inundação de commits causada por falsos positivos é eliminada na origem, sem mascaramento posterior.
+````
