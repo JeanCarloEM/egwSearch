@@ -562,7 +562,7 @@ Metadado legado aceito pelo preflight e integralmente comprovado DEVE ser promov
 
 Nos modos globais, downloader e analisador DEVEM persistir atomicamente em runtime um diário versionado com escopo, ordem, fingerprint, publicação, ativo, fase e último limite confirmado e DEVEM retomá-lo automaticamente sem reiterar unidades concluídas. [f8db96d]
 
-`GlobalProgressJournal` somente DEVE aceitar mudança de fingerprint durante upgrade de schema quando o chamador fornecer allowlist finita de fingerprints legados calculáveis e o diário comprovar ferramenta, escopo e ordem append-only compatíveis; a conversão v1→v2 do downloader DEVE reconhecer o fingerprint da configuração v4 preservada, atualizar atomicamente ao fingerprint v5 e rejeitar qualquer valor não enumerado. [5a61f80]
+`GlobalProgressJournal` somente DEVE aceitar mudança de fingerprint quando o chamador fornecer allowlist finita de fingerprints anteriores calculáveis e o diário comprovar schema atual ou migração estrutural conhecida, ferramenta, escopo e ordem append-only compatíveis; a conversão v1→v2 DEVE reconhecer o fingerprint da configuração v4 preservada, e a evolução v2 causada pelo analisador v2→v3 DEVE reconhecer o fingerprint v5 anterior, atualizar atomicamente ao fingerprint corrente e rejeitar qualquer valor não enumerado. [PENDENTE-CODIGO]
 
 `--restart` no downloader e `--reset` no analisador DEVEM descartar somente o cursor do escopo explícito e ser propagados sem perda pelo indexador e wrappers; sem essas opções, cursor incompatível ou corrompido DEVE ser movido para quarentena auditável e reconstruído automaticamente quando houver base local determinística, bloqueando apenas se a reparação segura for materialmente impossível. [d042907]
 
