@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:49:15.289300Z"
+    "completed_at": "2026-08-10T00:07:38.947244Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/pt-br/devocionais/cristo-triunfante/ct.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "1918",
+    "author_key": "egw",
+    "language": "pt-BR",
+    "category": "egw",
+    "type": "devocionais",
     "generated_epub": false
   },
   "parser": {
@@ -120,6 +120,45 @@
         "reference_tokens_sha256": "7ee611fed05ae0fe3a9a7f1cc6b760087b87c4def45d282b1d47b3be081cbfa6",
         "output_tokens_sha256": "7ee611fed05ae0fe3a9a7f1cc6b760087b87c4def45d282b1d47b3be081cbfa6",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 386,
+      "efficiency": {
+        "characters_per_chunk": 2415,
+        "tokens_per_chunk": 496,
+        "boundary_checks": 385
+      },
+      "chunk_words": {
+        "minimum": 2,
+        "median": 434,
+        "maximum": 512
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "7ee611fed05ae0fe3a9a7f1cc6b760087b87c4def45d282b1d47b3be081cbfa6",
+        "output_tokens_sha256": "7ee611fed05ae0fe3a9a7f1cc6b760087b87c4def45d282b1d47b3be081cbfa6",
+        "boundaries_sha256": "50bd4f9a819f7eb6bcea551f4288595b9b685e16b7c38cb87e1b721e7e71052d"
       },
       "diagnostics": []
     },
@@ -404,7 +443,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "7ee611fed05ae0fe3a9a7f1cc6b760087b87c4def45d282b1d47b3be081cbfa6",
       "output_tokens_sha256": "7ee611fed05ae0fe3a9a7f1cc6b760087b87c4def45d282b1d47b3be081cbfa6",
@@ -414,9 +453,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "5975779e89979d5044134000d3df5897cd2a27849ee051204ef2dd4642acfa8a"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "c4ff5a3b704ca01c666ba28b377d1e0e32bc14563a7af6fe3a9e9b0b041aafb1"
+  "integrity": "61890ec7621041b976c35150da4193e440054f63f5ee8ad08f1c1329e0a177dd"
 }
