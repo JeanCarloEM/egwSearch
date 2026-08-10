@@ -724,3 +724,19 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - commits: estado `4ffad98`, norma `68a0d9e`, implementação `71f0569` e
   sincronização pendente do presente fechamento.
 - proximo_ponto: nenhuma pendência da FT-025; aguardar solicitação humana.
+
+## FT-026 - Migração v2 do fingerprint do downloader
+
+- tipo: `correção de regressão e migração compatível`.
+- criado_em: `2026-08-09T22:46:01-03:00`.
+- origem: `.ia.rules/state/requests/FT-026/source.md`.
+- status: em execução.
+- causa: a FT-025 elevou o analisador de v2 para v3, mas o diário global v2
+  preservado só admite troca de fingerprint durante migração estrutural v1→v2.
+- objetivo: retomar o diário v2 íntegro sem reset, aceitando somente o
+  fingerprint v5/analisador v2 calculável e preservando todo o cursor.
+- contexto_mestre: `.ia.rules/state/contexts/FT-026/master.md`.
+- preservacao: não versionar, apagar ou reiniciar diário, publicações,
+  manifestos operacionais, caches, logs ou saídas concorrentes.
+- proximo_ponto: normatizar a migração enumerada no mesmo schema e implementar
+  testes fail-safe antes de migrar o diário real sem rede.
