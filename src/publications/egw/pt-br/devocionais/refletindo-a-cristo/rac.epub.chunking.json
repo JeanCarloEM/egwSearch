@@ -2,18 +2,18 @@
   "schema_version": "publication-chunking-analysis/v2",
   "generator": {
     "id": "egwSearch/publication_analysis.py",
-    "version": "2"
+    "version": "3"
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:52:21.400326Z"
+    "completed_at": "2026-08-10T03:00:13.561262Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
     "schema": "publication-chunking-method-catalog/v1",
-    "version": 1,
+    "version": 2,
     "path": "config/publication-chunking-methods.json",
-    "sha256": "f1ca35473b0d568393aa43aaee5725716fff4714a39b5d6b0cb94fd3e89f5221"
+    "sha256": "7cc1a4273f458434d3e67fc137f73f443a75b42ac6b0822258fb5c66c6a624d5"
   },
   "asset": {
     "path": "egw/pt-br/devocionais/refletindo-a-cristo/rac.epub",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/pt-br/devocionais/refletindo-a-cristo/rac.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "11166",
+    "author_key": "egw",
+    "language": "pt-BR",
+    "category": "egw",
+    "type": "devocionais",
     "generated_epub": false
   },
   "parser": {
@@ -87,7 +87,7 @@
   "experiments": [
     {
       "method": "whole-document",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "none"
@@ -124,8 +124,47 @@
       "diagnostics": []
     },
     {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@3",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 385,
+      "efficiency": {
+        "characters_per_chunk": 2573,
+        "tokens_per_chunk": 529,
+        "boundary_checks": 384
+      },
+      "chunk_words": {
+        "minimum": 1,
+        "median": 465,
+        "maximum": 576
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "186fa29c9945814f0a59de17033ddd6fe91f017382f514e97953f460aba87aa1",
+        "output_tokens_sha256": "186fa29c9945814f0a59de17033ddd6fe91f017382f514e97953f460aba87aa1",
+        "boundaries_sha256": "19d4d440ade9616f2a26ad6c2533f0e31149955beb541eb9bc677a96477e4384"
+      },
+      "diagnostics": []
+    },
+    {
       "method": "hierarchical-structure",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "parsed-heading",
@@ -164,7 +203,7 @@
     },
     {
       "method": "paragraph",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "parsed-block"
@@ -202,7 +241,7 @@
     },
     {
       "method": "sentence",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "punctuation-regex-v1"
@@ -240,7 +279,7 @@
     },
     {
       "method": "sentence-window",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "sentences": 6,
@@ -280,7 +319,7 @@
     },
     {
       "method": "regex-structural",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "pattern_sha256": "250aaf0e03ce672389eb3412fb4bd2d65f4a8c2608c5e6e4a6e34a29cd73a847",
@@ -321,7 +360,7 @@
     },
     {
       "method": "recursive-separator",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "maximum_words": 450,
@@ -364,7 +403,7 @@
     },
     {
       "method": "fixed-window",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "tokens": 220,
@@ -404,7 +443,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "186fa29c9945814f0a59de17033ddd6fe91f017382f514e97953f460aba87aa1",
       "output_tokens_sha256": "186fa29c9945814f0a59de17033ddd6fe91f017382f514e97953f460aba87aa1",
@@ -414,9 +453,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "fe7098197d9a7850144bae432759406fec6dd5d884513449cab081ae4b1748ba"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "4e6f1c88fb1cfc85bc893dc35237d36103fa65e946a6414550272be71b758ddd"
+  "integrity": "136b239b88499059f0b2ea654378bc9c8939173caad1003f7e5581c2c45e7265"
 }
