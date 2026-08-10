@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:55:01.402303Z"
+    "completed_at": "2026-08-10T00:43:42.939548Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/en/devotionals/our-father-cares/ofc.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "80",
+    "author_key": "egw",
+    "language": "en",
+    "category": "egw",
+    "type": "devotionals",
     "generated_epub": false
   },
   "parser": {
@@ -119,6 +119,45 @@
         "reference_tokens_sha256": "1f4cb3df4e6eecc7d9c8e40040e7adb7a3671eae6cfe84dd01510b41d8aad6b8",
         "output_tokens_sha256": "1f4cb3df4e6eecc7d9c8e40040e7adb7a3671eae6cfe84dd01510b41d8aad6b8",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 395,
+      "efficiency": {
+        "characters_per_chunk": 2064,
+        "tokens_per_chunk": 442,
+        "boundary_checks": 394
+      },
+      "chunk_words": {
+        "minimum": 2,
+        "median": 389,
+        "maximum": 542
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "1f4cb3df4e6eecc7d9c8e40040e7adb7a3671eae6cfe84dd01510b41d8aad6b8",
+        "output_tokens_sha256": "1f4cb3df4e6eecc7d9c8e40040e7adb7a3671eae6cfe84dd01510b41d8aad6b8",
+        "boundaries_sha256": "fabf4077e37fdf191b362e3897d6efb16d7dec52b41ca1b96c00f7ca57384c0b"
       },
       "diagnostics": []
     },
@@ -403,7 +442,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "1f4cb3df4e6eecc7d9c8e40040e7adb7a3671eae6cfe84dd01510b41d8aad6b8",
       "output_tokens_sha256": "1f4cb3df4e6eecc7d9c8e40040e7adb7a3671eae6cfe84dd01510b41d8aad6b8",
@@ -413,9 +452,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "36f28ae729eed64ba26f661ffce93cb42f4d6d3cd8e1a67826394f57fe88b766"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "e39bab99b58ffd52467b5180651f9d163183908ed4c8933b4f961b7eab2956e5"
+  "integrity": "f61110f37fc56ae28d18ff7bfd8e95abc1bc58560b88b23424991f29a1394dc0"
 }
