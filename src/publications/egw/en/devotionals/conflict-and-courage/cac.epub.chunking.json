@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:53:07.791159Z"
+    "completed_at": "2026-08-10T00:31:21.691963Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/en/devotionals/conflict-and-courage/cac.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "17",
+    "author_key": "egw",
+    "language": "en",
+    "category": "egw",
+    "type": "devotionals",
     "generated_epub": false
   },
   "parser": {
@@ -119,6 +119,45 @@
         "reference_tokens_sha256": "5c9478b6c925d78a068f6a9fd3bc49529d5d0be13f61e341a810dd2fa8e4719c",
         "output_tokens_sha256": "5c9478b6c925d78a068f6a9fd3bc49529d5d0be13f61e341a810dd2fa8e4719c",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 387,
+      "efficiency": {
+        "characters_per_chunk": 2092,
+        "tokens_per_chunk": 446,
+        "boundary_checks": 386
+      },
+      "chunk_words": {
+        "minimum": 1,
+        "median": 388,
+        "maximum": 3127
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "5c9478b6c925d78a068f6a9fd3bc49529d5d0be13f61e341a810dd2fa8e4719c",
+        "output_tokens_sha256": "5c9478b6c925d78a068f6a9fd3bc49529d5d0be13f61e341a810dd2fa8e4719c",
+        "boundaries_sha256": "8f7a03e5b495965a2a295b3d796188a176eda42ebfd97560987fd724f09a9a47"
       },
       "diagnostics": []
     },
@@ -403,7 +442,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "5c9478b6c925d78a068f6a9fd3bc49529d5d0be13f61e341a810dd2fa8e4719c",
       "output_tokens_sha256": "5c9478b6c925d78a068f6a9fd3bc49529d5d0be13f61e341a810dd2fa8e4719c",
@@ -413,9 +452,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "36f28ae729eed64ba26f661ffce93cb42f4d6d3cd8e1a67826394f57fe88b766"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "ef1ee765a8ec947adbbd04abbbe1adaf733eb9cb03ccc1c850e028a4bc4f5abc"
+  "integrity": "10f7810fff7a7548e0143a2d0e4df4e94cddfcf0a4440628ea15414ac6216b2f"
 }
