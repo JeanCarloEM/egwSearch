@@ -6,7 +6,7 @@
 - tipo: `correção de regressão e migração compatível`.
 - criado_em: `2026-08-09T22:46:01-03:00`.
 - fonte: `.ia.rules/state/requests/FT-026/source.md`.
-- estado: em execução.
+- estado: concluída e sincronizada.
 
 ## Causa comprovada
 
@@ -44,3 +44,17 @@ o diário v2 íntegro e com a ordem corrente é recusado antes do inventário.
 3. fingerprint não allowlisted e ordem divergente continuam bloqueados;
 4. o diário real pode ser migrado sem abrir catálogo, publicação ou rede;
 5. nenhuma alteração concorrente do acervo integra os commits.
+
+## Resultado
+
+- `GlobalProgressJournal` aceita evolução de fingerprint no schema v2 somente
+  quando o valor anterior pertence à allowlist finita do consumidor e todas as
+  demais provas estruturais permanecem válidas;
+- o downloader calcula os fingerprints históricos v4 e v5/analisador v2 a
+  partir das identidades de coleção enumeradas;
+- 125 testes Python, 12 testes Node e compilação Python foram aprovados;
+- o diário operacional foi migrado sob lock e sem rede, alterando somente
+  `fingerprint`; `current`, `confirmed`, `last_confirmed`, `next_index` e
+  `order` permaneceram iguais;
+- commits faseados: estado `cc5fdfb`, norma `a646ef1`, implementação
+  `05a8970` e sincronização pendente do presente fechamento.

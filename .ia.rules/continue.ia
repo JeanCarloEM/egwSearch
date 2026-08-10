@@ -730,7 +730,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - tipo: `correção de regressão e migração compatível`.
 - criado_em: `2026-08-09T22:46:01-03:00`.
 - origem: `.ia.rules/state/requests/FT-026/source.md`.
-- status: em execução.
+- status: concluída e sincronizada.
 - causa: a FT-025 elevou o analisador de v2 para v3, mas o diário global v2
   preservado só admite troca de fingerprint durante migração estrutural v1→v2.
 - objetivo: retomar o diário v2 íntegro sem reset, aceitando somente o
@@ -738,5 +738,12 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - contexto_mestre: `.ia.rules/state/contexts/FT-026/master.md`.
 - preservacao: não versionar, apagar ou reiniciar diário, publicações,
   manifestos operacionais, caches, logs ou saídas concorrentes.
-- proximo_ponto: normatizar a migração enumerada no mesmo schema e implementar
-  testes fail-safe antes de migrar o diário real sem rede.
+- implementação: allowlist calculável v4/v5 e migração fail-safe do fingerprint
+  v2 concluídas em `05a8970`.
+- validação: 125 testes Python, 12 testes Node, `py_compile`, migração real sob
+  lock sem rede e rastreabilidade aprovados; somente o fingerprint operacional
+  mudou, preservando integralmente o cursor.
+- commits: estado `cc5fdfb`, norma `a646ef1`, implementação `05a8970` e
+  sincronização pendente do presente fechamento.
+- proximo_ponto: repetir `node scripts/publications/run-baixar.ts`; o diário já
+  está compatível e não exige `--restart`.
