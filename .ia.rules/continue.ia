@@ -747,3 +747,31 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   sincronização pendente do presente fechamento.
 - proximo_ponto: repetir `node scripts/publications/run-baixar.ts`; o diário já
   está compatível e não exige `--restart`.
+
+## FT-027 - Norma incremental de recálculo de chunks
+
+- tipo: `implementação normativa`.
+- criado_em: `2026-08-09T23:26:16-03:00`.
+- origem: `.ia.rules/state/requests/FT-027/source.md`.
+- status: em execução.
+- auditoria: hashes persistidos, gate pré-parsing, escrita atômica e propagação
+  de force já existem; faltam invalidar por `mtime` da fonte e remover a janela
+  redundante de 24 horas.
+- objetivo: normatizar uma única regra determinística baseada em force,
+  existência, hash e ordem temporal fonte→resultado.
+- contexto_mestre: `.ia.rules/state/contexts/FT-027/master.md`.
+- proximo_ponto: substituir cirurgicamente as duas cláusulas temporais do RCF.
+
+## FT-028 - Gate incremental de recálculo de chunks
+
+- tipo: `implementação de código`.
+- criado_em: `2026-08-09T23:26:17-03:00`.
+- origem: `.ia.rules/state/requests/FT-027/source.md`.
+- status: pendente da FT-027.
+- dependência: FT-027 concluída.
+- objetivo: implementar e provar o gate antes do parsing, preservando schemas,
+  formatos, execução individual/global, retomada e propagação de force.
+- contexto_mestre: `.ia.rules/state/contexts/FT-028/master.md`.
+- preservacao: não incorporar publicações, manifestos operacionais,
+  checkpoints, caches, logs ou alterações concorrentes do downloader.
+- proximo_ponto: aguardar conclusão normativa da FT-027.
