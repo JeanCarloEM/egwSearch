@@ -2,18 +2,18 @@
   "schema_version": "publication-chunking-analysis/v2",
   "generator": {
     "id": "egwSearch/publication_analysis.py",
-    "version": "2"
+    "version": "3"
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:56:54.179165Z"
+    "completed_at": "2026-08-10T03:20:04.012748Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
     "schema": "publication-chunking-method-catalog/v1",
-    "version": 1,
+    "version": 2,
     "path": "config/publication-chunking-methods.json",
-    "sha256": "f1ca35473b0d568393aa43aaee5725716fff4714a39b5d6b0cb94fd3e89f5221"
+    "sha256": "7cc1a4273f458434d3e67fc137f73f443a75b42ac6b0822258fb5c66c6a624d5"
   },
   "asset": {
     "path": "egw/en/devotionals/to-be-like-jesus/tblj.pdf",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/en/devotionals/to-be-like-jesus/tblj.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "151",
+    "author_key": "egw",
+    "language": "en",
+    "category": "egw",
+    "type": "devotionals",
     "generated_epub": false
   },
   "parser": {
@@ -79,7 +79,7 @@
   "experiments": [
     {
       "method": "whole-document",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "none"
@@ -116,8 +116,47 @@
       "diagnostics": []
     },
     {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@3",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 87,
+      "efficiency": {
+        "characters_per_chunk": 10501,
+        "tokens_per_chunk": 2251,
+        "boundary_checks": 86
+      },
+      "chunk_words": {
+        "minimum": 7,
+        "median": 1425,
+        "maximum": 11178
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 6,
+        "cross_page_reconstructed": 6,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "8da1ca8315a7dee16b32979a46e2ecc789e2b6fdd615683898c82824c7bb52d1",
+        "output_tokens_sha256": "8da1ca8315a7dee16b32979a46e2ecc789e2b6fdd615683898c82824c7bb52d1",
+        "boundaries_sha256": "e3b49e4078de084e0c6081df226a9f9cc08d2fcce774070dcfdf70a42cdc5475"
+      },
+      "diagnostics": []
+    },
+    {
       "method": "hierarchical-structure",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "parsed-heading",
@@ -156,7 +195,7 @@
     },
     {
       "method": "paragraph",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "parsed-block"
@@ -194,7 +233,7 @@
     },
     {
       "method": "sentence",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "boundary": "punctuation-regex-v1"
@@ -232,7 +271,7 @@
     },
     {
       "method": "regex-structural",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "pattern_sha256": "b9ff9db8c5634ca23691bb55ee9af13e497db980abe3e49529aa28f5b71333b9",
@@ -273,7 +312,7 @@
     },
     {
       "method": "recursive-separator",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "maximum_words": 450,
@@ -316,7 +355,7 @@
     },
     {
       "method": "sentence-window",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "sentences": 6,
@@ -356,7 +395,7 @@
     },
     {
       "method": "fixed-window",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "passed",
       "tested_parameters": {
         "tokens": 220,
@@ -395,7 +434,7 @@
     },
     {
       "method": "page-layout",
-      "implementation": "egwSearch/publication_analysis.py@2",
+      "implementation": "egwSearch/publication_analysis.py@3",
       "status": "rejected",
       "tested_parameters": {
         "boundary": "physical-page"
@@ -436,7 +475,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "8da1ca8315a7dee16b32979a46e2ecc789e2b6fdd615683898c82824c7bb52d1",
       "output_tokens_sha256": "8da1ca8315a7dee16b32979a46e2ecc789e2b6fdd615683898c82824c7bb52d1",
@@ -446,9 +485,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "3f9b6525c25585998f1ca724ce257f4a07adc4914eea0b411665cfca861bff0a"
+    "profile": "26d516f24880f0296fcec35c692b5b8c14998975be97172677f82b79b9c080e5"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "99ba7834966a4399b44dbd58ffba68f48a75d7a54eaaab983f80e54c5e2b4c8d"
+  "integrity": "8a49c2bd9e5e05a6fd58c3fdbabd340615ae933bd4ecb89e51f7a123d035995d"
 }
