@@ -34,8 +34,9 @@ algoritmos, métodos de chunking e estratégias de RAG, são meios instrumentais
 Eles não constituem a finalidade pública do produto.
 
 A ferramenta DEVE suportar livros, compilações, devocionais, revistas, jornais, [62596f1]
-periódicos, edições, traduções e títulos simultaneamente disponíveis em PDF e
-EPUB, em árvores recursivas de profundidade ilimitada.
+periódicos, edições, traduções, Bíblias, léxicos, dicionários, concordâncias e
+equivalentes, em PDF, EPUB ou JSON estruturado conforme a semântica documental,
+em árvores recursivas de profundidade ilimitada. [PENDENTE-CODIGO]
 
 Precisão, rastreabilidade, reutilização de tecnologia existente, resiliência,
 processamento incremental, abstinência diante de prova insuficiente e revisão
@@ -98,6 +99,12 @@ Texto original, estrutura, normalização, tokens, derivados e evidências DEVEM
 permanecer distinguíveis e rastreáveis. Metadado, citação, referência,
 localização, tradução, relação ou autoridade NÃO DEVEM ser inventados. [62596f1]
 Inferência e interpretação DEVEM ser identificadas como tais. [62596f1]
+
+Indexação e chunking DEVEM preservar as unidades naturais e a hierarquia [PENDENTE-CODIGO]
+declarada do domínio. [PENDENTE-CODIGO]
+JSON estruturado NÃO DEVE ser degradado a texto plano; [PENDENTE-CODIGO]
+versículo, entrada lexical/dicionarística ou entrada de concordância não pode [PENDENTE-CODIGO]
+ser fragmentado, fundido, omitido, duplicado ou reordenado. [PENDENTE-CODIGO]
 
 Toda escrita material DEVE ser incremental, determinística, validada, [62596f1]
 retomável e segura contra perda, duplicação, sobrescrita e estado parcial.
