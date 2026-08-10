@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:54:39.750425Z"
+    "completed_at": "2026-08-10T00:41:05.944274Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/en/devotionals/maranatha/maranatha.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "74",
+    "author_key": "egw",
+    "language": "en",
+    "category": "egw",
+    "type": "devotionals",
     "generated_epub": false
   },
   "parser": {
@@ -119,6 +119,45 @@
         "reference_tokens_sha256": "c988408702184976c8c2ea21cda29b47dfa0d6bfd5d0b2388d03fef1795bebe6",
         "output_tokens_sha256": "c988408702184976c8c2ea21cda29b47dfa0d6bfd5d0b2388d03fef1795bebe6",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 386,
+      "efficiency": {
+        "characters_per_chunk": 2072,
+        "tokens_per_chunk": 441,
+        "boundary_checks": 385
+      },
+      "chunk_words": {
+        "minimum": 1,
+        "median": 395,
+        "maximum": 522
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "c988408702184976c8c2ea21cda29b47dfa0d6bfd5d0b2388d03fef1795bebe6",
+        "output_tokens_sha256": "c988408702184976c8c2ea21cda29b47dfa0d6bfd5d0b2388d03fef1795bebe6",
+        "boundaries_sha256": "46194f4ca68fa7bf6bfcdd7693774b348afb741c335c29211b43e3f8b5931a58"
       },
       "diagnostics": []
     },
@@ -403,7 +442,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "c988408702184976c8c2ea21cda29b47dfa0d6bfd5d0b2388d03fef1795bebe6",
       "output_tokens_sha256": "c988408702184976c8c2ea21cda29b47dfa0d6bfd5d0b2388d03fef1795bebe6",
@@ -413,9 +452,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "36f28ae729eed64ba26f661ffce93cb42f4d6d3cd8e1a67826394f57fe88b766"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "a2e0224216d77368b32700d3c78a37fde19ade0f60dec0502118b7357d4834f7"
+  "integrity": "a90a1b2801e3ed223891afcc7cfd71006b7dc52d1ecf30f9d7220989ba07833d"
 }
