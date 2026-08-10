@@ -753,7 +753,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - tipo: `implementação normativa`.
 - criado_em: `2026-08-09T23:26:16-03:00`.
 - origem: `.ia.rules/state/requests/FT-027/source.md`.
-- status: concluída.
+- status: concluída e sincronizada.
 - auditoria: hashes persistidos, gate pré-parsing, escrita atômica e propagação
   de force já existem; faltam invalidar por `mtime` da fonte e remover a janela
   redundante de 24 horas.
@@ -762,18 +762,27 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - contexto_mestre: `.ia.rules/state/contexts/FT-027/master.md`.
 - resultado: regra central de recálculo por force, existência, hash e `mtime`,
   com persistência exclusivamente após sucesso, concluída no RCF específico.
-- proximo_ponto: FT-028 autorizada pela solicitação humana e em execução.
+- commits: estado `eaa8f3d`, norma `c1a6351`, implementação causal `2973124`
+  e sincronização pendente do presente fechamento.
+- proximo_ponto: nenhuma pendência normativa.
 
 ## FT-028 - Gate incremental de recálculo de chunks
 
 - tipo: `implementação de código`.
 - criado_em: `2026-08-09T23:26:17-03:00`.
 - origem: `.ia.rules/state/requests/FT-027/source.md`.
-- status: em execução.
+- status: concluída e sincronizada.
 - dependência: FT-027 concluída.
 - objetivo: implementar e provar o gate antes do parsing, preservando schemas,
   formatos, execução individual/global, retomada e propagação de force.
 - contexto_mestre: `.ia.rules/state/contexts/FT-028/master.md`.
 - preservacao: não incorporar publicações, manifestos operacionais,
   checkpoints, caches, logs ou alterações concorrentes do downloader.
-- proximo_ponto: implementar o gate central e os oito cenários de validação.
+- implementação: gate pré-parsing por hash/mtime, escrita atômica pós-sucesso e
+  ajuda das CLIs concluídos em `2973124` sem schema ou cache paralelo.
+- validação: oito cenários mínimos, 127 testes Python, 12 testes Node,
+  compilação TypeScript/Python, diff-check e rastreabilidade aprovados.
+- commits: estado `eaa8f3d`, norma `c1a6351`, implementação `2973124` e
+  sincronização pendente do presente fechamento.
+- proximo_ponto: nenhuma pendência da FT-028; manter o downloader concorrente
+  como proprietário exclusivo de suas publicações e saídas operacionais.

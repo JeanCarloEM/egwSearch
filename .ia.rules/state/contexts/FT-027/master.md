@@ -6,7 +6,7 @@
 - tipo: `implementação normativa`.
 - criado_em: `2026-08-09T23:26:16-03:00`.
 - fonte: `.ia.rules/state/requests/FT-027/source.md`.
-- estado: concluída.
+- estado: concluída e sincronizada.
 - dependência posterior: FT-028.
 
 ## Auditoria real
@@ -36,3 +36,5 @@ A FT conclui com RCF centralizado, rastreável e sem duplicação.
 - validade estrutural e editorial existente foi preservada;
 - propagação e persistência atômica após sucesso foram explicitadas;
 - implementação material permanece na FT-028.
+- commits: estado `eaa8f3d`, norma `c1a6351`, implementação causal `2973124`
+  e sincronização pendente do presente fechamento.
