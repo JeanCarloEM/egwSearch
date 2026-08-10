@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
+import hashlib
 import json
 from pathlib import Path
 import sys
@@ -21,14 +22,22 @@ REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 MODULE_ROOT = REPOSITORY_ROOT / "scripts" / "publications"
 sys.path.insert(0, str(MODULE_ROOT))
 
-from acquisition import CatalogAsset, CatalogItem, build_source_v3, generate_epub  # noqa: E402
+from acquisition import (  # noqa: E402
+    CatalogAsset,
+    CatalogItem,
+    CatalogSegment,
+    build_source_v3,
+    generate_epub,
+)
 from publication_analysis import (  # noqa: E402
     AnalysisError,
     CATALOG_SCHEMA,
     LEARNING_SCHEMA,
     MANIFEST_SCHEMA,
     _measure_experiment,
+    _measure_semantic_experiment,
     _reference_model,
+    _semantic_groups,
     _safe_zip_entries,
     analyze_publication,
     analyze_and_commit_scope,
@@ -37,7 +46,9 @@ from publication_analysis import (  # noqa: E402
     learning_path_for,
     manifest_path_for,
 )
-from publication_contract import hash_file, write_json_atomic  # noqa: E402
+from publication_contract import ContractError, hash_file, write_json_atomic  # noqa: E402
+from publication_transaction import validate_complete_publication  # noqa: E402
+from structured_content import write_structured_artifact  # noqa: E402
 import publication_index  # noqa: E402
 import baixar  # noqa: E402
 
@@ -175,7 +186,200 @@ def _materialize(root: Path, item: CatalogItem) -> tuple[Path, Path, Path]:
     return directory, epub, pdf
 
 
+def _structured_item(model: str, remote_id: str) -> CatalogItem:
+    segments_by_model = {
+        "scripture": [
+            '<p data-book="Genesis" data-chapter="1" data-verse="1">In the beginning.</p>',
+            '<p data-book="Genesis" data-chapter="1" data-verse="2">The earth was without form.</p>',
+            '<p data-book="Genesis" data-chapter="2" data-verse="1">Thus the heavens were finished.</p>',
+            '<p data-book="Psalms" data-chapter="1" data-verse="1">Blessed is the man.</p>',
+        ],
+        "lexical": [
+            '<h4>(1) α, alpha</h4><p>First letter and lexical definition.</p><p>Genesis 1:1</p>',
+            '<h4>(2) β, beta</h4><p>Second letter and lexical definition.</p><p>Romans 1:1</p>',
+        ],
+        "concordance": [
+            '<h4>(1) α, alpha</h4><p>α Genesis 1:1</p><p>α Romans 1:1</p>',
+            '<h4>(2) β, beta</h4><p>β Psalms 1:1</p>',
+        ],
+    }
+    title = f"{model.title()} Fixture"
+    return CatalogItem(
+        remote_id=remote_id,
+        collection_id=f"fixture-{model}",
+        collection_name="Structured Fixture",
+        author_name="Source tradition",
+        author_key="source-tradition",
+        language_original="en",
+        language="en",
+        language_path="en",
+        publication_type="bible" if model == "scripture" else model,
+        title_original=title,
+        title_normalized=title,
+        public_url=f"https://example.test/book/b{remote_id}",
+        category_name="Reference",
+        category_path="reference",
+        segments=tuple(
+            CatalogSegment(
+                remote_id=str(index),
+                url=f"https://example.test/read/{remote_id}.{index}",
+                order=index,
+                title=f"Unit {index}",
+                html=html,
+            )
+            for index, html in enumerate(segments_by_model[model], 1)
+        ),
+        content_model=model,
+        content_options={"collection": "BODY", "script": "Latn"},
+    )
+
+
+def _materialize_structured(root: Path, model: str, remote_id: str = "420") -> tuple[Path, Path, CatalogItem]:
+    item = _structured_item(model, remote_id)
+    identity = item.publication_identity()
+    directory = root / identity.relative_directory()
+    directory.mkdir(parents=True)
+    structured, derivation = write_structured_artifact(directory, item)
+    if model == "lexical":
+        document = json.loads(structured.read_text(encoding="utf-8"))
+        first = document["entries"][sorted(document["entries"])[0]]
+        first["translations"] = {"pt-BR": ["alfa"]}
+        first["relations"] = [{"type": "next", "target": "2"}]
+        payload = {"meta": document["meta"], "entries": document["entries"]}
+        document["proof"]["content_sha256"] = hashlib.sha256(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest()
+        write_json_atomic(structured, document)
+        evidence = hash_file(structured)
+        derivation["size"] = evidence.size
+        derivation["hashes"] = evidence.as_dict()
+    metadata = build_source_v3(
+        item,
+        "completed",
+        [
+            {
+                "format": "text",
+                "url": f"https://example.test/read/{remote_id}",
+                "method": "fixture",
+                "size": 1,
+                "hashes": {"sha256": "a" * 64},
+            }
+        ],
+        derivations=[derivation],
+    )
+    write_json_atomic(directory / identity.metadata_name(), metadata)
+    return directory, structured, item
+
+
 class PublicationIntelligenceTests(unittest.TestCase):
+    def test_structured_domains_use_only_natural_semantic_units(self) -> None:
+        expected = {
+            "scripture": (["scripture-verse", "scripture-chapter", "scripture-book"], 4),
+            "lexical": (["lexical-entry"], 2),
+            "concordance": (["concordance-entry"], 2),
+        }
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            for position, (model, (methods, units)) in enumerate(expected.items(), 1):
+                with self.subTest(model=model):
+                    directory, structured, _item_value = _materialize_structured(
+                        root, model, str(420 + position)
+                    )
+                    manifests = analyze_publication(directory, root)
+                    self.assertEqual(manifests, [manifest_path_for(structured)])
+                    manifest = json.loads(manifests[0].read_text(encoding="utf-8"))
+                    self.assertEqual(manifest["asset"]["format"], "json")
+                    self.assertEqual(manifest["reference"]["semantic_model"], model)
+                    self.assertEqual(manifest["reference"]["natural_units"], units)
+                    self.assertEqual(
+                        [experiment["method"] for experiment in manifest["experiments"]],
+                        methods,
+                    )
+                    self.assertEqual(manifest["recommendation"]["method"], methods[0])
+                    if model == "lexical":
+                        self.assertGreater(manifest["structure"]["references"], 0)
+                        self.assertGreater(manifest["structure"]["relations"], 0)
+                    self.assertNotRegex(
+                        json.dumps(manifest, ensure_ascii=False),
+                        r"In the beginning|lexical definition|Blessed is the man",
+                    )
+                    for experiment in manifest["experiments"]:
+                        self.assertEqual(experiment["status"], "passed")
+                        self.assertEqual(experiment["metrics"]["lost_units"], 0)
+                        self.assertEqual(experiment["metrics"]["fragmented_units"], 0)
+                        self.assertGreater(experiment["efficiency"]["characters_per_chunk"], 0)
+
+    def test_semantic_proof_rejects_loss_reorder_fragmentation_and_fusion(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, structured, _item_value = _materialize_structured(root, "lexical")
+            report = inspect_asset(structured)
+            model = report["_model"]
+            units = model["semantic"]["units"]
+            cases = {
+                "loss": [[units[0]]],
+                "reorder": [[units[1]], [units[0]]],
+                "fragmentation": [[{**units[0], "payload_sha256": "0" * 64}], [units[1]]],
+                "fusion": [[units[0], units[1]]],
+            }
+            for diagnostic, groups in cases.items():
+                with self.subTest(diagnostic=diagnostic):
+                    result = _measure_semantic_experiment("lexical-entry", groups, model)
+                    self.assertEqual(result["status"], "rejected")
+            self.assertIn(
+                "semantic-unit-fragmentation",
+                _measure_semantic_experiment(
+                    "lexical-entry", cases["fragmentation"], model
+                )["diagnostics"],
+            )
+            self.assertIn(
+                "semantic-unit-fusion",
+                _measure_semantic_experiment("lexical-entry", cases["fusion"], model)[
+                    "diagnostics"
+                ],
+            )
+
+    def test_structured_only_publication_is_indexed_and_transactionally_complete(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            directory, structured, item = _materialize_structured(root, "scripture")
+            analyze_publication(directory, root)
+            config = _config(root)
+            target = root / "index.json"
+            publication_index.update_global_index(root, target, config)
+            entry = json.loads(target.read_text(encoding="utf-8"))["publications"][0]
+            self.assertEqual(entry["assets"], [])
+            self.assertEqual(entry["structured"]["model"], "scripture")
+            self.assertEqual(entry["structured"]["semantic"]["natural_units"], 4)
+            self.assertEqual(
+                entry["structured"]["chunking_manifest"],
+                manifest_path_for(structured).relative_to(root).as_posix(),
+            )
+            serialized = json.dumps(entry["structured"], ensure_ascii=False)
+            self.assertNotIn("content", serialized)
+            allowed = validate_complete_publication(
+                item,
+                root,
+                REPOSITORY_ROOT,
+            )
+            self.assertIn(manifest_path_for(structured).relative_to(REPOSITORY_ROOT), allowed)
+
+    def test_generic_json_is_not_discovered_or_parsed_as_plain_text(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            root.mkdir(parents=True)
+            generic = root / "generic.json"
+            generic.write_text('{"text":"prosa genérica"}', encoding="utf-8")
+            with self.assertRaises(ContractError):
+                inspect_asset(generic)
+            with self.assertRaisesRegex(AnalysisError, "sem ativos analisáveis"):
+                analyze_scope(root, root)
+
     def test_global_analysis_commits_each_publication_and_resumes_without_rework(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:
             repository = Path(temporary)
@@ -571,6 +775,14 @@ class PublicationIntelligenceTests(unittest.TestCase):
             self.assertEqual(len(repaired["publications"]), 1)
 
     def test_index_manifest_is_agnostic_to_index_state_and_quantity(self) -> None:
+        self.assertEqual(
+            json.loads(
+                (REPOSITORY_ROOT / "src" / "publications" / "index.manifest.json").read_text(
+                    encoding="utf-8"
+                )
+            ),
+            publication_index.INDEX_MANIFEST,
+        )
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
             index = Path(temporary) / "index.json"
             manifest = publication_index.write_index_manifest(index)

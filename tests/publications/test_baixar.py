@@ -35,6 +35,7 @@ from publication_contract import (  # noqa: E402
     write_json_atomic,
 )
 from publication_index import build_index_entry  # noqa: E402
+from publication_analysis import analyze_publication  # noqa: E402
 
 
 class _Progress:
@@ -348,6 +349,7 @@ class DownloaderTests(unittest.TestCase):
             self.assertTrue((directory / structured[0]["path"]).is_file())
             self.assertTrue((directory / item.publication_identity().asset_name("epub", "derived")).is_file())
             self.assertFalse(any(directory.glob("*.pdf")))
+            analyze_publication(directory, root / "publications")
             indexed = build_index_entry(
                 directory / item.publication_identity().metadata_name(),
                 root / "publications",

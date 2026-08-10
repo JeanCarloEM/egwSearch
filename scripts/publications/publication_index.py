@@ -48,9 +48,9 @@ from publication_transaction import exclusive_process_lock, recover_tracked_publ
 
 
 INDEX_SCHEMA = "publication-global-index/v1"
-INDEX_MANIFEST_SCHEMA = "publication-index-manifest/v1"
+INDEX_MANIFEST_SCHEMA = "publication-index-manifest/v2"
 GENERATOR_ID = "egwSearch/publication_index.py"
-GENERATOR_VERSION = "1"
+GENERATOR_VERSION = "2"
 _INDEX_LOCK = threading.Lock()
 
 INDEX_MANIFEST = {
@@ -127,6 +127,16 @@ INDEX_MANIFEST = {
             "url": "string",
             "size": "integer",
             "hashes": "hashes",
+            "chunking_manifest": "string",
+            "semantic": "structured_semantic",
+        },
+        "structured_semantic": {
+            "hierarchy_levels": "string[]",
+            "natural_units": "integer",
+            "first_identity": "object",
+            "last_identity": "object",
+            "unit_ids_sha256": "hex(64)",
+            "unit_payloads_sha256": "hex(64)",
         },
         "hashes": {"sha1": "hex(40)", "sha256": "hex(64)", "sha512": "hex(128)"},
         "formative": {"book": "book", "urls": "url[]", "global_hashes": "global_hash[]"},
@@ -435,8 +445,6 @@ def build_index_entry(metadata_path: Path, source_root: Path, config: dict) -> d
         for asset in sorted(metadata_path.parent.iterdir())
         if asset.is_file() and asset.suffix.casefold() in {".pdf", ".epub"}
     ]
-    if not assets:
-        raise IndexError(f"publicação sem ativo editorial: {metadata_path}")
     structured = None
     if value.get("schema_version") == "publication-source/v3":
         structured_records = [
@@ -458,6 +466,25 @@ def build_index_entry(metadata_path: Path, source_root: Path, config: dict) -> d
                 document = validate_structured_artifact(candidate, str(record.get("model") or ""))
             except ContractError as error:
                 raise IndexError(f"corpus estruturado inválido: {metadata_path}") from error
+            analysis_path = manifest_path_for(candidate)
+            analysis = _read_json(analysis_path) if analysis_path.is_file() else None
+            reference = analysis.get("reference") if isinstance(analysis, dict) else None
+            if (
+                not isinstance(analysis, dict)
+                or analysis.get("schema_version") != MANIFEST_SCHEMA
+                or (analysis.get("asset") or {}).get("hashes") != evidence.as_dict()
+                or (analysis.get("asset") or {}).get("format") != "json"
+                or not isinstance(reference, dict)
+                or reference.get("semantic_model") != record.get("model")
+                or not isinstance(reference.get("natural_units"), int)
+                or reference["natural_units"] <= 0
+                or not isinstance(reference.get("hierarchy_levels"), list)
+                or not isinstance(reference.get("first_identity"), dict)
+                or not isinstance(reference.get("last_identity"), dict)
+                or not re.fullmatch(r"[0-9a-f]{64}", str(reference.get("unit_ids_sha256") or ""))
+                or not re.fullmatch(r"[0-9a-f]{64}", str(reference.get("unit_payloads_sha256") or ""))
+            ):
+                raise IndexError(f"análise estruturada ausente ou divergente: {metadata_path}")
             relative = candidate.relative_to(source_root).as_posix()
             structured = {
                 "model": record["model"],
@@ -466,7 +493,18 @@ def build_index_entry(metadata_path: Path, source_root: Path, config: dict) -> d
                 "url": _public_url(public_root, relative),
                 "size": evidence.size,
                 "hashes": evidence.as_dict(),
+                "chunking_manifest": analysis_path.relative_to(source_root).as_posix(),
+                "semantic": {
+                    "hierarchy_levels": reference["hierarchy_levels"],
+                    "natural_units": reference["natural_units"],
+                    "first_identity": reference["first_identity"],
+                    "last_identity": reference["last_identity"],
+                    "unit_ids_sha256": reference["unit_ids_sha256"],
+                    "unit_payloads_sha256": reference["unit_payloads_sha256"],
+                },
             }
+    if not assets and structured is None:
+        raise IndexError(f"publicação sem ativo editorial: {metadata_path}")
     formative_state, formative_data = _formative(identity, records)
     relative_directory = metadata_path.parent.relative_to(source_root).as_posix()
     remote_id = str(identity.get("remote_id") or _remote_id(records))

@@ -112,6 +112,7 @@ def _downloader_progress_fingerprint(
     collections: list[dict],
     *,
     schema: int | None = None,
+    analyzer_version: str = ANALYZER_VERSION,
 ) -> str:
     return progress_fingerprint(
         {
@@ -126,7 +127,7 @@ def _downloader_progress_fingerprint(
                 }
                 for collection in collections
             ],
-            "analyzer": ANALYZER_VERSION,
+            "analyzer": analyzer_version,
         }
     )
 
@@ -139,7 +140,14 @@ def _known_legacy_downloader_fingerprints(
     if not all(identity in by_id for identity in V4_GLOBAL_COLLECTION_IDS):
         return set()
     legacy = [by_id[identity] for identity in V4_GLOBAL_COLLECTION_IDS]
-    return {_downloader_progress_fingerprint(config, legacy, schema=4)}
+    return {
+        _downloader_progress_fingerprint(
+            config,
+            legacy,
+            schema=4,
+            analyzer_version="2",
+        )
+    }
 
 
 class OfficialCoverMissing(DownloadError):

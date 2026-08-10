@@ -1,5 +1,5 @@
 {
-  "schema_version": "publication-index-manifest/v1",
+  "schema_version": "publication-index-manifest/v2",
   "describes": "publication-global-index/v1",
   "notation": {
     "T?": "T|null",
@@ -66,6 +66,14 @@
       "size": "integer",
       "hashes": "hashes"
     },
+    "structured_semantic": {
+      "hierarchy_levels": "string[]",
+      "natural_units": "integer",
+      "first_identity": "object",
+      "last_identity": "object",
+      "unit_ids_sha256": "hex(64)",
+      "unit_payloads_sha256": "hex(64)"
+    },
     "asset": {
       "format": "pdf|epub",
       "path": "string",
@@ -80,7 +88,9 @@
       "path": "string",
       "url": "string",
       "size": "integer",
-      "hashes": "hashes"
+      "hashes": "hashes",
+      "chunking_manifest": "string",
+      "semantic": "structured_semantic"
     },
     "hashes": {
       "sha1": "hex(40)",

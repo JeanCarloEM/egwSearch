@@ -1,7 +1,7 @@
 # Repository: https://github.com/JeanCarloEM/egwSearch
 # License: MPL-2.0 - https://www.mozilla.org/MPL/2.0/
 
-"""Executa experimentos de chunking em EPUB/PDF sem persistir o corpus.
+"""Executa experimentos de chunking em EPUB/PDF/JSON sem persistir o corpus.
 
 A capacidade constrói uma referência textual efêmera, executa segmentadores
 locais reais, mede sua fidelidade e grava somente métricas e hashes de prova.
@@ -39,13 +39,14 @@ from publication_contract import (
 )
 from acquisition import AcquisitionLedger
 from publication_console import PublicationProgress, PublicationReporter
+from structured_content import validate_structured_artifact
 
 
 MANIFEST_SCHEMA = "publication-chunking-analysis/v2"
 LEARNING_SCHEMA = "publication-chunking-learning/v1"
 CATALOG_SCHEMA = "publication-chunking-method-catalog/v1"
 ANALYZER_ID = "egwSearch/publication_analysis.py"
-ANALYZER_VERSION = "2"
+ANALYZER_VERSION = "3"
 CATALOG_PATH = REPOSITORY_ROOT / "config" / "publication-chunking-methods.json"
 MAX_ZIP_ENTRIES = 10_000
 MAX_ZIP_EXPANDED = 512 * 1024 * 1024
@@ -786,6 +787,9 @@ def inspect_asset(asset: Path, evidence=None) -> dict:
     elif suffix == ".pdf":
         publication_format = "pdf"
         report = _pdf_report(asset)
+    elif suffix == ".json":
+        publication_format = "json"
+        report = _structured_report(asset)
     else:
         raise AnalysisError(f"formato não analisável: {asset.name}")
     evidence = evidence or hash_file(asset)
@@ -1060,8 +1064,150 @@ def _measure_experiment(
     }
 
 
+def _semantic_groups(units: list[dict], level: str) -> list[list[dict]]:
+    if level in {"verse", "entry"}:
+        return [[unit] for unit in units]
+    groups: list[list[dict]] = []
+    current_key: tuple[str, ...] | None = None
+    for unit in units:
+        key = tuple(unit["parents"][level])
+        if key != current_key:
+            groups.append([])
+            current_key = key
+        groups[-1].append(unit)
+    return groups
+
+
+def _measure_semantic_experiment(
+    method: str,
+    groups: list[list[dict]],
+    model: dict,
+) -> dict:
+    """Mede integridade tipada além da igualdade superficial de tokens."""
+
+    semantic = model["semantic"]
+    reference_units = semantic["units"]
+    output_units = [unit for group in groups for unit in group]
+    chunks = ["\n\n".join(unit.get("text", "") for unit in group) for group in groups]
+    result = _measure_experiment(
+        method,
+        chunks,
+        {"semantic_model": semantic["model"], "preserve_children": True},
+        None,
+        model,
+    )
+    reference_ids = [
+        _fingerprint({"identity": unit["identity"], "payload": unit["payload_sha256"]})
+        for unit in reference_units
+    ]
+    output_ids = [
+        _fingerprint({"identity": unit.get("identity"), "payload": unit.get("payload_sha256")})
+        for unit in output_units
+    ]
+    lost_units = sum((Counter(reference_ids) - Counter(output_ids)).values())
+    duplicated_units = sum((Counter(output_ids) - Counter(reference_ids)).values())
+    reordered_units = sum(
+        left != right for left, right in zip(reference_ids, output_ids)
+    ) + abs(len(reference_ids) - len(output_ids))
+    reference_by_identity = {
+        unit["identity_sha256"]: unit["payload_sha256"] for unit in reference_units
+    }
+    fragmented_units = sum(
+        1
+        for unit in output_units
+        if unit.get("identity_sha256") in reference_by_identity
+        and unit.get("payload_sha256") != reference_by_identity[unit["identity_sha256"]]
+    )
+    invalid_groups = 0
+    if method in {"scripture-verse", "lexical-entry", "concordance-entry"}:
+        invalid_groups = sum(len(group) != 1 for group in groups)
+    elif method == "scripture-chapter":
+        invalid_groups = sum(
+            len({tuple(unit.get("parents", {}).get("chapter", [])) for unit in group}) != 1
+            for group in groups
+        )
+    elif method == "scripture-book":
+        invalid_groups = sum(
+            len({tuple(unit.get("parents", {}).get("book", [])) for unit in group}) != 1
+            for group in groups
+        )
+    semantic_diagnostics = []
+    for value, diagnostic in (
+        (lost_units, "semantic-unit-loss"),
+        (duplicated_units, "semantic-unit-duplication"),
+        (reordered_units, "semantic-unit-order"),
+        (fragmented_units, "semantic-unit-fragmentation"),
+        (invalid_groups, "semantic-unit-fusion"),
+    ):
+        if value:
+            semantic_diagnostics.append(diagnostic)
+    if semantic_diagnostics:
+        result["status"] = "rejected"
+        result["diagnostics"] = sorted(set(result["diagnostics"] + semantic_diagnostics))
+        result["metrics"]["accuracy_ppm"] = 0
+        result["metrics"]["error_ppm"] = 1_000_000
+    result["metrics"]["boundary_precision_ppm"] = (
+        0 if invalid_groups else 1_000_000
+    )
+    result["metrics"]["boundary_recall_ppm"] = (
+        0 if invalid_groups else 1_000_000
+    )
+    result["efficiency"]["boundary_checks"] = max(0, len(groups) - 1)
+    result["metrics"].update(
+        {
+            "natural_units": len(reference_units),
+            "lost_units": lost_units,
+            "duplicated_units": duplicated_units,
+            "reordered_units": reordered_units,
+            "fragmented_units": fragmented_units,
+            "invalid_semantic_groups": invalid_groups,
+        }
+    )
+    result["proof"].update(
+        {
+            "reference_units_sha256": _fingerprint(reference_ids),
+            "output_units_sha256": _fingerprint(output_ids),
+            "group_children_sha256": _fingerprint(
+                [[unit.get("identity_sha256") for unit in group] for group in groups]
+            ),
+        }
+    )
+    result["tested_parameters"]["unit"] = (
+        "verse" if method == "scripture-verse"
+        else "chapter" if method == "scripture-chapter"
+        else "book" if method == "scripture-book"
+        else "entry"
+    )
+    return result
+
+
+def _structured_experiments(report: dict) -> list[dict]:
+    semantic = report["_model"]["semantic"]
+    units = semantic["units"]
+    if semantic["model"] == "scripture":
+        candidates = (
+            ("scripture-verse", "verse"),
+            ("scripture-chapter", "chapter"),
+            ("scripture-book", "book"),
+        )
+    elif semantic["model"] == "lexical":
+        candidates = (("lexical-entry", "entry"),)
+    else:
+        candidates = (("concordance-entry", "entry"),)
+    return [
+        _measure_semantic_experiment(
+            method,
+            _semantic_groups(units, level),
+            report["_model"],
+        )
+        for method, level in candidates
+    ]
+
+
 def _run_experiments(report: dict, context: dict) -> list[dict]:
     model = report["_model"]
+    if "semantic" in model:
+        return _structured_experiments(report)
     if not model["complete"] or not model["tokens"]:
         return [
             {
@@ -1128,6 +1274,34 @@ def _publication_context(directory: Path) -> tuple[dict, Path | None]:
     return (dict(identity) if isinstance(identity, dict) else {}), metadata_path
 
 
+def _publication_assets(directory: Path) -> list[Path]:
+    """Descobre JSON somente pela derivação tipada do metadado canônico."""
+
+    assets = [
+        path
+        for path in directory.iterdir()
+        if path.is_file() and path.suffix.casefold() in {".epub", ".pdf"}
+    ]
+    metadata_paths = sorted(directory.glob("*.source.json"))
+    if len(metadata_paths) == 1:
+        try:
+            document = json.loads(metadata_paths[0].read_text(encoding="utf-8-sig"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise AnalysisError(f"metadado inválido: {metadata_paths[0]}") from error
+        for record in document.get("derivations") or []:
+            if not isinstance(record, dict) or record.get("method") != "structured-json":
+                continue
+            candidate = (directory / str(record.get("path") or "")).resolve()
+            if (
+                directory.resolve() not in candidate.parents
+                or candidate.suffix.casefold() != ".json"
+                or not candidate.is_file()
+            ):
+                raise AnalysisError("derivação estruturada ausente ou fora da publicação")
+            assets.append(candidate)
+    return sorted(set(assets))
+
+
 def _distribution(values: list[int]) -> dict | None:
     if not values:
         return None
@@ -1163,6 +1337,9 @@ def _structural_profile(report: dict, context: dict) -> str:
         {
             "format": report["format"],
             "parser": report["parser"]["selected"],
+            "semantic_model": structure.get("model"),
+            "natural_units": _magnitude_bucket(structure.get("natural_units")),
+            "hierarchy_levels": structure.get("hierarchy_levels"),
             "type": context.get("type"),
             "language": context.get("language"),
             "pages": _magnitude_bucket(structure.get("pages", structure.get("spine_documents"))),
@@ -1275,7 +1452,7 @@ def _analyze_assets(
     if not publication.is_dir() or (publication != root and root not in publication.parents):
         raise AnalysisError("publicação fora da raiz configurada")
     if not assets:
-        raise AnalysisError(f"publicação sem EPUB/PDF: {publication}")
+        raise AnalysisError(f"publicação sem EPUB/PDF/JSON estruturado: {publication}")
     catalog, catalog_hash = _catalog()
     context, metadata_path = _publication_context(publication)
     current_time = _effective_now(now)
@@ -1350,21 +1527,7 @@ def _analyze_assets(
             "metadata_evidence": report["metadata_evidence"],
             "structure": report["structure"],
             "fingerprint": report["fingerprint"],
-            "reference": {
-                "complete": model["complete"],
-                "characters": len(model["text"]),
-                "tokens": len(model["tokens"]),
-                "blocks": len(model["blocks"]),
-                "paragraph_boundaries": len(model["boundaries"]["paragraph"]),
-                "sentence_boundaries": len(model["boundaries"]["sentence"]),
-                "page_boundaries": len(model["boundaries"]["page"]),
-                "noise_patterns_removed": len(model["noise"]),
-                "noise_occurrences_removed": sum(entry["occurrences"] for entry in model["noise"]),
-                "cross_page_continuations": len(model["cross_page"]),
-                "tokens_sha256": _token_hash(model["tokens"]),
-                "noise_proof_sha256": _fingerprint(model["noise"]),
-                "continuity_proof_sha256": _fingerprint(model["cross_page"]),
-            },
+            "reference": _reference_summary(model),
             "experiments": persisted_experiments,
             "recommendation": {
                 "status": "validated" if validated else "inconclusive",
@@ -1409,14 +1572,10 @@ def analyze_publication(
     force_recalculate: bool = False,
     now: datetime | None = None,
 ) -> list[Path]:
-    """Analisa todos os EPUB/PDF diretos de uma publicação como uma unidade."""
+    """Analisa ativos binários e derivações estruturadas da publicação."""
 
     publication = directory.resolve()
-    assets = sorted(
-        path
-        for path in publication.iterdir()
-        if path.is_file() and path.suffix.casefold() in {".epub", ".pdf"}
-    ) if publication.is_dir() else []
+    assets = _publication_assets(publication) if publication.is_dir() else []
     return _analyze_assets(
         publication,
         assets,
@@ -1440,7 +1599,7 @@ def publication_directories(target: Path, source_root: Path) -> list[Path]:
         raise AnalysisError("arquivo deve ser tratado como ativo específico")
     if not candidate.is_dir():
         raise AnalysisError("escopo de análise inexistente")
-    direct_assets = list(candidate.glob("*.epub")) + list(candidate.glob("*.pdf"))
+    direct_assets = _publication_assets(candidate)
     if direct_assets:
         return [candidate]
     directories = {
@@ -1449,7 +1608,49 @@ def publication_directories(target: Path, source_root: Path) -> list[Path]:
         for path in candidate.rglob(pattern)
         if path.is_file()
     }
+    directories.update(
+        metadata.parent
+        for metadata in candidate.rglob("*.source.json")
+        if _publication_assets(metadata.parent)
+    )
     return sorted(directories)
+
+
+def _reference_summary(model: dict) -> dict:
+    summary = {
+        "complete": model["complete"],
+        "characters": len(model["text"]),
+        "tokens": len(model["tokens"]),
+        "blocks": len(model["blocks"]),
+        "paragraph_boundaries": len(model["boundaries"]["paragraph"]),
+        "sentence_boundaries": len(model["boundaries"]["sentence"]),
+        "page_boundaries": len(model["boundaries"]["page"]),
+        "noise_patterns_removed": len(model["noise"]),
+        "noise_occurrences_removed": sum(entry["occurrences"] for entry in model["noise"]),
+        "cross_page_continuations": len(model["cross_page"]),
+        "tokens_sha256": _token_hash(model["tokens"]),
+        "noise_proof_sha256": _fingerprint(model["noise"]),
+        "continuity_proof_sha256": _fingerprint(model["cross_page"]),
+    }
+    semantic = model.get("semantic")
+    if semantic:
+        units = semantic["units"]
+        summary.update(
+            {
+                "semantic_model": semantic["model"],
+                "natural_units": len(units),
+                "hierarchy_levels": list(semantic["hierarchy_levels"]),
+                "first_identity": units[0]["identity"],
+                "last_identity": units[-1]["identity"],
+                "unit_ids_sha256": _fingerprint(
+                    [unit["identity_sha256"] for unit in units]
+                ),
+                "unit_payloads_sha256": _fingerprint(
+                    [unit["payload_sha256"] for unit in units]
+                ),
+            }
+        )
+    return summary
 
 
 def analyze_scope(
@@ -1466,8 +1667,13 @@ def analyze_scope(
     if candidate.is_file():
         if candidate != root and root not in candidate.parents:
             raise AnalysisError("ativo fora da raiz de publicações")
-        if candidate.suffix.casefold() not in {".epub", ".pdf"}:
-            raise AnalysisError("--asset exige EPUB ou PDF")
+        if candidate.suffix.casefold() not in {".epub", ".pdf", ".json"}:
+            raise AnalysisError("--asset exige EPUB, PDF ou JSON estruturado")
+        if (
+            candidate.suffix.casefold() == ".json"
+            and candidate not in _publication_assets(candidate.parent)
+        ):
+            raise AnalysisError("JSON estruturado não declarado no metadado")
         return _analyze_assets(
             candidate.parent,
             [candidate],
@@ -1508,6 +1714,212 @@ def analyze_and_commit_scope(
 ) -> tuple[list[Path], list[str]]:
     """Fecha e commita cada publicação do escopo pela transação compartilhada."""
 
+    root = source_root.resolve()
+    candidate = target.resolve()
+    asset = candidate if candidate.is_file() else None
+    if asset is not None and asset.suffix.casefold() not in {".epub", ".pdf", ".json"}:
+        raise AnalysisError("--asset exige EPUB, PDF ou JSON estruturado")
+    if (
+        asset is not None
+        and asset.suffix.casefold() == ".json"
+        and asset not in _publication_assets(asset.parent)
+    ):
+        raise AnalysisError("JSON estruturado não declarado no metadado")
+    directories = [candidate.parent] if asset is not None else publication_directories(candidate, root)
+    if not directories:
+        raise AnalysisError("escopo sem ativos analisáveis")
+    by_identity = {
+        directory.relative_to(root).as_posix(): directory for directory in directories
+    }
+    return _finish_analyze_and_commit_scope(
+        root,
+        candidate,
+        asset,
+        directories,
+        by_identity,
+        config,
+        reporter,
+        force_recalculate,
+        reset,
+    )
+
+
+def _typed_strings(value: object) -> list[str]:
+    """Extrai valores textuais tipados sem serializar o JSON como prosa."""
+
+    if isinstance(value, str):
+        normalized = _normalize_text(value)
+        return [normalized] if normalized else []
+    if isinstance(value, list):
+        return [text for item in value for text in _typed_strings(item)]
+    if isinstance(value, dict):
+        return [
+            text
+            for key in sorted(value)
+            for text in _typed_strings(value[key])
+        ]
+    return []
+
+
+def _semantic_reference_model(
+    units: list[dict],
+    *,
+    model: str,
+    hierarchy_levels: list[str],
+) -> dict:
+    """Projeta unidades validadas no modelo efêmero comum do laboratório."""
+
+    blocks = [
+        {"kind": "semantic-unit", "text": unit["text"], "identity": unit["identity"]}
+        for unit in units
+    ]
+    reference = _reference_model(
+        blocks,
+        [],
+        complete=True,
+        noise=[],
+        cross_page=[],
+    )
+    reference["boundaries"]["natural"] = _boundary_positions(
+        unit["text"] for unit in units
+    )
+    reference["semantic"] = {
+        "model": model,
+        "units": units,
+        "hierarchy_levels": hierarchy_levels,
+    }
+    return reference
+
+
+def _hierarchy_sort(value: str) -> tuple[int, str]:
+    match = re.fullmatch(r"(\d+)(.*)", value)
+    return (int(match.group(1)), match.group(2)) if match else (sys.maxsize, value)
+
+
+def _structured_report(asset: Path) -> dict:
+    """Adapta schemas universais já validados sem fallback textual genérico."""
+
+    document = validate_structured_artifact(asset)
+    schema = str(document["schema"])
+    model = {
+        "scripture-corpus/v1": "scripture",
+        "lexical-corpus/v1": "lexical",
+        "concordance-corpus/v1": "concordance",
+    }[schema]
+    units: list[dict] = []
+    structure: dict[str, object] = {"model": model, "schema": schema}
+    if model == "scripture":
+        meta = document["meta"]
+        collection_meta = meta.get("collections") or {}
+        book_meta = meta.get("books") or {}
+        versions = document["text"]
+        for version_code in sorted(versions):
+            collections = versions[version_code]
+            for collection_code in sorted(
+                collections,
+                key=lambda key: (int((collection_meta.get(key) or {}).get("order") or 0), key),
+            ):
+                books = collections[collection_code]
+                for book_code in sorted(
+                    books,
+                    key=lambda key: (int((book_meta.get(key) or {}).get("order") or 0), key),
+                ):
+                    for chapter in sorted(books[book_code], key=_hierarchy_sort):
+                        for verse in sorted(books[book_code][chapter], key=_hierarchy_sort):
+                            payload = books[book_code][chapter][verse]
+                            identity = {
+                                "version": version_code,
+                                "collection": collection_code,
+                                "book": book_code,
+                                "chapter": chapter,
+                                "verse": verse,
+                            }
+                            text = _normalize_text(
+                                "".join(run["text"] for run in payload["content"])
+                            )
+                            units.append(
+                                {
+                                    "identity": identity,
+                                    "identity_sha256": _fingerprint(identity),
+                                    "payload_sha256": _fingerprint(payload),
+                                    "text": text,
+                                    "parents": {
+                                        "chapter": [version_code, collection_code, book_code, chapter],
+                                        "book": [version_code, collection_code, book_code],
+                                    },
+                                }
+                            )
+        structure.update(
+            {
+                "versions": len(versions),
+                "collections": len({unit["identity"]["collection"] for unit in units}),
+                "books": len({unit["identity"]["book"] for unit in units}),
+                "chapters": len({tuple(unit["parents"]["chapter"]) for unit in units}),
+                "natural_units": len(units),
+                "hierarchy_levels": ["version", "collection", "book", "chapter", "verse"],
+            }
+        )
+    else:
+        entries = document["entries"]
+        for identifier in sorted(entries):
+            payload = entries[identifier]
+            identity = {"entry": identifier}
+            units.append(
+                {
+                    "identity": identity,
+                    "identity_sha256": _fingerprint(identity),
+                    "payload_sha256": _fingerprint(payload),
+                    "text": "\n".join(_typed_strings(payload)),
+                    "parents": {},
+                }
+            )
+        structure.update(
+            {
+                "natural_units": len(units),
+                "references": sum(len(entry.get("references") or []) for entry in entries.values()),
+                "relations": sum(len(entry.get("relations") or []) for entry in entries.values()),
+                "hierarchy_levels": ["entry"],
+            }
+        )
+    if not units or any(not unit["text"] for unit in units):
+        raise AnalysisError("corpus estruturado sem unidade semântica textual")
+    hierarchy_levels = list(structure["hierarchy_levels"])
+    structure["first_identity"] = units[0]["identity"]
+    structure["last_identity"] = units[-1]["identity"]
+    return {
+        "parser": {
+            "selected": "egwSearch/structured_content.py",
+            "attempts": [{"id": "egwSearch/structured_content.py", "status": "passed"}],
+        },
+        "metadata_evidence": {
+            "schema": schema,
+            "model": model,
+            "content_sha256": document["proof"]["content_sha256"],
+            "meta_sha256": _fingerprint(document["meta"]),
+        },
+        "structure": structure,
+        "limitations": [],
+        "_model": _semantic_reference_model(
+            units,
+            model=model,
+            hierarchy_levels=hierarchy_levels,
+        ),
+    }
+
+
+def _finish_analyze_and_commit_scope(
+    root: Path,
+    candidate: Path,
+    asset: Path | None,
+    directories: list[Path],
+    by_identity: dict[str, Path],
+    config: dict,
+    reporter: PublicationReporter | None,
+    force_recalculate: bool,
+    reset: bool,
+) -> tuple[list[Path], list[str]]:
+    """Executa o fechamento após descoberta comum de ativos tipados."""
+
     from publication_index import configured_index_path, update_global_index
     from publication_transaction import (
         GlobalProgressJournal,
@@ -1516,17 +1928,6 @@ def analyze_and_commit_scope(
         progress_fingerprint,
     )
 
-    root = source_root.resolve()
-    candidate = target.resolve()
-    asset = candidate if candidate.is_file() else None
-    if asset is not None and asset.suffix.casefold() not in {".epub", ".pdf"}:
-        raise AnalysisError("--asset exige EPUB ou PDF")
-    directories = [candidate.parent] if asset is not None else publication_directories(candidate, root)
-    if not directories:
-        raise AnalysisError("escopo sem ativos analisáveis")
-    by_identity = {
-        directory.relative_to(root).as_posix(): directory for directory in directories
-    }
     order = list(by_identity)
     paths = runtime_paths(config, REPOSITORY_ROOT)
     index_path = configured_index_path(config)
@@ -1641,7 +2042,7 @@ def analyze_and_commit_scope(
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Analisa estruturas EPUB/PDF e recomenda chunking sem gerar chunks."
+        description="Analisa EPUB/PDF/JSON estruturado e recomenda chunking sem gerar chunks."
     )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG_PATH)
     parser.add_argument(

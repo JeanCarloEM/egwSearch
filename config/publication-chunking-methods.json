@@ -1,8 +1,43 @@
 {
   "schema_version": "publication-chunking-method-catalog/v1",
   "catalog_id": "egwSearch/chunking-methods",
-  "version": 1,
+  "version": 2,
   "methods": [
+    {
+      "id": "scripture-verse",
+      "family": "domain-structural",
+      "hypothesis": "Cada versículo validado é a unidade bíblica atômica para recuperação precisa.",
+      "risks": [],
+      "references": []
+    },
+    {
+      "id": "scripture-chapter",
+      "family": "domain-structural",
+      "hypothesis": "Capítulos podem agrupar versículos completos mantendo todos os filhos identificáveis.",
+      "risks": ["context-size"],
+      "references": []
+    },
+    {
+      "id": "scripture-book",
+      "family": "domain-structural",
+      "hypothesis": "Livros podem agrupar a hierarquia bíblica completa quando o orçamento downstream comportar.",
+      "risks": ["context-size", "retrieval-noise"],
+      "references": []
+    },
+    {
+      "id": "lexical-entry",
+      "family": "domain-structural",
+      "hypothesis": "A entrada lexical completa preserva lema, definições, traduções, referências e relações.",
+      "risks": ["uneven-size"],
+      "references": []
+    },
+    {
+      "id": "concordance-entry",
+      "family": "domain-structural",
+      "hypothesis": "A entrada de concordância completa preserva termo, formas e associações referenciais.",
+      "risks": ["uneven-size"],
+      "references": []
+    },
     {
       "id": "fixed-window",
       "family": "lexical",

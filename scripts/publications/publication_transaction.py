@@ -447,6 +447,7 @@ def validate_complete_publication(
                 raise PublicationTransactionError("hash de segmento divergente")
             referenced.add(candidate)
 
+    structured_assets: list[Path] = []
     for record in derivations:
         relative = record.get("path")
         hashes = record.get("hashes") or {}
@@ -472,6 +473,7 @@ def validate_complete_publication(
                 )
             except ContractError as error:
                 raise PublicationTransactionError("derivado estruturado inválido") from error
+            structured_assets.append(candidate)
         referenced.add(candidate)
 
     editorial_assets = sorted(
@@ -479,9 +481,10 @@ def validate_complete_publication(
         for path in referenced
         if path.suffix.casefold() in {".epub", ".pdf"}
     )
-    if not editorial_assets:
-        raise PublicationTransactionError("publicação sem EPUB/PDF analisável")
-    for asset in editorial_assets if require_intelligence else []:
+    analyzable_assets = sorted(set(editorial_assets + structured_assets))
+    if not analyzable_assets:
+        raise PublicationTransactionError("publicação sem EPUB/PDF/JSON estruturado analisável")
+    for asset in analyzable_assets if require_intelligence else []:
         manifest_path = asset.with_name(f"{asset.name}.chunking.json")
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -495,6 +498,7 @@ def validate_complete_publication(
             manifest.get("schema_version") != MANIFEST_SCHEMA
             or declared.get("size") != evidence.size
             or (declared.get("hashes") or {}).get("sha512") != evidence.sha512
+            or declared.get("format") != asset.suffix.casefold().lstrip(".")
             or not isinstance(manifest.get("experiments"), list)
             or not isinstance(manifest.get("reference"), dict)
             or not isinstance(manifest.get("recommendation"), dict)
@@ -503,6 +507,18 @@ def validate_complete_publication(
             raise PublicationTransactionError(
                 f"manifesto de chunking divergente: {asset.name}"
             )
+        if asset.suffix.casefold() == ".json":
+            reference = manifest.get("reference") or {}
+            if (
+                reference.get("semantic_model") not in {"scripture", "lexical", "concordance"}
+                or not isinstance(reference.get("natural_units"), int)
+                or reference["natural_units"] <= 0
+                or not isinstance(reference.get("first_identity"), dict)
+                or not isinstance(reference.get("last_identity"), dict)
+            ):
+                raise PublicationTransactionError(
+                    f"manifesto semântico divergente: {asset.name}"
+                )
         referenced.add(manifest_path)
 
     files = sorted(path for path in directory.rglob("*") if path.is_file())

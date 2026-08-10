@@ -174,14 +174,14 @@ class PublicationReporter:
             )
             accuracy = ((best or {}).get("metrics") or {}).get("accuracy_ppm")
             error = ((best or {}).get("metrics") or {}).get("error_ppm")
-            label_width = max(24, self.width - 61)
-            label = compact_path(str(asset), label_width)
-            line = (
-                f"{label:<{label_width}}  "
+            suffix = (
                 f"{str((best or {}).get('method') or 'inconclusive')[:22]:<22}  "
                 f"ok={len(passed):>2} erro={len(rejected):>2} inc={len(inconclusive):>2}  "
                 f"acerto={_percent(accuracy):>6} erro={_percent(error):>6}"
             )
+            label_width = max(12, self.width - len(suffix) - 2)
+            label = compact_path(str(asset), label_width)
+            line = f"{label:<{label_width}}  {suffix}"
             if self._rich:
                 self._console.print(line, style="green" if passed else "yellow", no_wrap=True, overflow="ellipsis")
             else:
