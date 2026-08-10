@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:50:43.208860Z"
+    "completed_at": "2026-08-10T00:19:25.717526Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/pt-br/devocionais/jesus-meu-modelo/jmm.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "11167",
+    "author_key": "egw",
+    "language": "pt-BR",
+    "category": "egw",
+    "type": "devocionais",
     "generated_epub": false
   },
   "parser": {
@@ -120,6 +120,45 @@
         "reference_tokens_sha256": "166b8c2cf7cff9144db27f822584c36456ecc521a81a73995a053e46d1dd34ac",
         "output_tokens_sha256": "166b8c2cf7cff9144db27f822584c36456ecc521a81a73995a053e46d1dd34ac",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 385,
+      "efficiency": {
+        "characters_per_chunk": 2145,
+        "tokens_per_chunk": 440,
+        "boundary_checks": 384
+      },
+      "chunk_words": {
+        "minimum": 1,
+        "median": 387,
+        "maximum": 486
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 0,
+        "cross_page_reconstructed": 0,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "166b8c2cf7cff9144db27f822584c36456ecc521a81a73995a053e46d1dd34ac",
+        "output_tokens_sha256": "166b8c2cf7cff9144db27f822584c36456ecc521a81a73995a053e46d1dd34ac",
+        "boundaries_sha256": "2b5a3afc22742b5593c705f4ae9ed23fd56f3021fe90d27cada67197d0c9cafb"
       },
       "diagnostics": []
     },
@@ -404,7 +443,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "166b8c2cf7cff9144db27f822584c36456ecc521a81a73995a053e46d1dd34ac",
       "output_tokens_sha256": "166b8c2cf7cff9144db27f822584c36456ecc521a81a73995a053e46d1dd34ac",
@@ -414,9 +453,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "fdcad796c82429ab21276331a47a3e70c7d0e9ac258c07ece4fc66e91e3a61d4"
+    "profile": "5975779e89979d5044134000d3df5897cd2a27849ee051204ef2dd4642acfa8a"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "f6e236f1c8a00628a03cedb6b893b30b0e1de959e8523b2e2124e17aaa3e1e62"
+  "integrity": "5582bdd0fcb0fd5cf83f7e1f339c71ffcdb9651ff920a28eea8be831666198fc"
 }
