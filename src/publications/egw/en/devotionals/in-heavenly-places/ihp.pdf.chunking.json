@@ -6,7 +6,7 @@
   },
   "execution": {
     "status": "completed",
-    "completed_at": "2026-08-03T02:53:59.506661Z"
+    "completed_at": "2026-08-10T00:37:17.283635Z"
   },
   "catalog": {
     "id": "egwSearch/chunking-methods",
@@ -27,11 +27,11 @@
   },
   "publication": {
     "metadata": "egw/en/devotionals/in-heavenly-places/ihp.source.json",
-    "remote_id": null,
-    "author_key": null,
-    "language": null,
-    "category": null,
-    "type": null,
+    "remote_id": "38",
+    "author_key": "egw",
+    "language": "en",
+    "category": "egw",
+    "type": "devotionals",
     "generated_epub": false
   },
   "parser": {
@@ -112,6 +112,45 @@
         "reference_tokens_sha256": "f7ab2bbaf259f5f34e6425917a11278ba19ecf0e2eddcb1dc7598749f1ab0efe",
         "output_tokens_sha256": "f7ab2bbaf259f5f34e6425917a11278ba19ecf0e2eddcb1dc7598749f1ab0efe",
         "boundaries_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+      },
+      "diagnostics": []
+    },
+    {
+      "method": "editorial-unit",
+      "implementation": "egwSearch/publication_analysis.py@2",
+      "status": "passed",
+      "tested_parameters": {
+        "unit": "day",
+        "boundary_source": "heading-regex+publication-type"
+      },
+      "chunk_count": 20,
+      "efficiency": {
+        "characters_per_chunk": 42231,
+        "tokens_per_chunk": 9357,
+        "boundary_checks": 19
+      },
+      "chunk_words": {
+        "minimum": 27,
+        "median": 6604,
+        "maximum": 22950
+      },
+      "metrics": {
+        "coverage_ppm": 1000000,
+        "order_ppm": 1000000,
+        "lost_tokens": 0,
+        "duplicated_tokens": 0,
+        "contamination_occurrences": 0,
+        "boundary_precision_ppm": 1000000,
+        "boundary_recall_ppm": 1000000,
+        "cross_page_total": 5,
+        "cross_page_reconstructed": 5,
+        "accuracy_ppm": 1000000,
+        "error_ppm": 0
+      },
+      "proof": {
+        "reference_tokens_sha256": "f7ab2bbaf259f5f34e6425917a11278ba19ecf0e2eddcb1dc7598749f1ab0efe",
+        "output_tokens_sha256": "f7ab2bbaf259f5f34e6425917a11278ba19ecf0e2eddcb1dc7598749f1ab0efe",
+        "boundaries_sha256": "bfa199e6ce219a8343c58d9002418cea044d98773e7e2ed36848314d9cc6ca18"
       },
       "diagnostics": []
     },
@@ -436,7 +475,7 @@
   ],
   "recommendation": {
     "status": "validated",
-    "method": "hierarchical-structure",
+    "method": "editorial-unit",
     "experiment_proof": {
       "reference_tokens_sha256": "f7ab2bbaf259f5f34e6425917a11278ba19ecf0e2eddcb1dc7598749f1ab0efe",
       "output_tokens_sha256": "f7ab2bbaf259f5f34e6425917a11278ba19ecf0e2eddcb1dc7598749f1ab0efe",
@@ -446,9 +485,9 @@
   "knowledge": {
     "schema": "publication-chunking-learning/v1",
     "path": "chunking-learning.json",
-    "profile": "b6952242347e7e5e802b06a01b46d62c652358bc27e8c6e658e4a44800e74f4b"
+    "profile": "d6d3d21c649c57027837d1f58c0a2f5a13b4f74a3bceac66aec8df847bc2a9df"
   },
   "limitations": [],
   "chunks_materialized": false,
-  "integrity": "02bb8870a672e4f5d067c5ec18c97ae7722b5b61a973db9b885a278c1b82e7c9"
+  "integrity": "4c7f8b0fd2354a8467985b5af2b6cdc090f893e51567a5d9b47d5eee4bcbe66f"
 }
