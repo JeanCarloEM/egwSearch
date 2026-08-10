@@ -3954,7 +3954,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--force-recalculate",
         action="store_true",
-        help="Ignora análises concluídas há menos de 24 horas e recalcula.",
+        help="Ignora hash e mtime válidos das análises e recalcula.",
     )
     parser.add_argument(
         "--publication",

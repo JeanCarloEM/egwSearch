@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import sys
 import subprocess
@@ -469,23 +470,29 @@ class PublicationIntelligenceTests(unittest.TestCase):
                 "",
             )
 
-    def test_fresh_success_skips_for_24_hours_and_force_recalculates(self) -> None:
+    def test_incremental_gate_uses_hash_mtime_and_force_without_expiration(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
             root = Path(temporary) / "publications"
-            directory, _epub, _pdf = _materialize(root, _item())
+            directory, epub, _pdf = _materialize(root, _item())
             started = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
-            manifests = analyze_publication(directory, root, now=started)
-            before = {path: path.stat().st_mtime_ns for path in manifests}
-            learning_before = learning_path_for(root).stat().st_mtime_ns
+            manifest = manifest_path_for(epub)
 
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_scope(epub, root, now=started)
+            self.assertEqual(inspector.call_count, 1)
+            self.assertTrue(manifest.is_file())
+            recorded = json.loads(manifest.read_text(encoding="utf-8"))
+            self.assertEqual(recorded["asset"]["hashes"], hash_file(epub).as_dict())
+
+            before = manifest.stat().st_mtime_ns
+            learning_before = learning_path_for(root).stat().st_mtime_ns
             with patch("publication_analysis.inspect_asset") as inspector:
-                analyze_publication(
-                    directory,
-                    root,
-                    now=started + timedelta(hours=23, minutes=59),
-                )
+                analyze_scope(epub, root, now=started + timedelta(days=365))
             inspector.assert_not_called()
-            self.assertEqual(before, {path: path.stat().st_mtime_ns for path in manifests})
+            self.assertEqual(before, manifest.stat().st_mtime_ns)
             self.assertEqual(learning_before, learning_path_for(root).stat().st_mtime_ns)
 
             forced_at = started + timedelta(hours=1)
@@ -493,31 +500,79 @@ class PublicationIntelligenceTests(unittest.TestCase):
                 "publication_analysis.inspect_asset",
                 wraps=inspect_asset,
             ) as inspector:
-                analyze_publication(
-                    directory,
-                    root,
-                    now=forced_at,
-                    force_recalculate=True,
-                )
-            self.assertEqual(inspector.call_count, 2)
-            refreshed = json.loads(manifests[0].read_text(encoding="utf-8"))
+                analyze_scope(epub, root, now=forced_at, force_recalculate=True)
+            self.assertEqual(inspector.call_count, 1)
+            refreshed = json.loads(manifest.read_text(encoding="utf-8"))
             self.assertEqual(refreshed["execution"]["status"], "completed")
             self.assertEqual(refreshed["execution"]["completed_at"], "2026-08-02T13:00:00Z")
 
-    def test_expired_or_failed_proof_recalculates(self) -> None:
+    def test_incremental_gate_recalculates_for_hash_or_source_mtime(self) -> None:
         with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
             root = Path(temporary) / "publications"
-            directory, epub, _pdf = _materialize(root, _item())
+            _directory, _epub, pdf = _materialize(root, _item())
             started = datetime(2026, 8, 2, 12, tzinfo=timezone.utc)
-            analyze_publication(directory, root, now=started)
+            manifest = analyze_scope(pdf, root, now=started)[0]
+
+            original_source_mtime = pdf.stat().st_mtime_ns
+            stale_mtime = original_source_mtime - 5_000_000_000
+            os.utime(manifest, ns=(stale_mtime, stale_mtime))
             with patch(
                 "publication_analysis.inspect_asset",
                 wraps=inspect_asset,
             ) as inspector:
-                analyze_publication(directory, root, now=started + timedelta(hours=24))
-            self.assertEqual(inspector.call_count, 2)
+                analyze_scope(pdf, root, now=started + timedelta(days=30))
+            self.assertEqual(inspector.call_count, 1)
+            self.assertGreaterEqual(manifest.stat().st_mtime_ns, pdf.stat().st_mtime_ns)
 
+            with patch("publication_analysis.inspect_asset") as inspector:
+                analyze_scope(pdf, root, now=started + timedelta(days=60))
+            inspector.assert_not_called()
+
+            previous_hash = json.loads(manifest.read_text(encoding="utf-8"))["asset"][
+                "hashes"
+            ]["sha256"]
+            pdf.write_bytes(pdf.read_bytes() + b"\n% hash changed\n")
+            with patch(
+                "publication_analysis.inspect_asset",
+                wraps=inspect_asset,
+            ) as inspector:
+                analyze_scope(pdf, root, now=started + timedelta(days=90))
+            self.assertEqual(inspector.call_count, 1)
+            refreshed = json.loads(manifest.read_text(encoding="utf-8"))
+            self.assertNotEqual(refreshed["asset"]["hashes"]["sha256"], previous_hash)
+            self.assertEqual(refreshed["asset"]["hashes"], hash_file(pdf).as_dict())
+
+    def test_failed_or_interrupted_recalculation_never_publishes_partial_result(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            _directory, epub, _pdf = _materialize(root, _item())
             manifest = manifest_path_for(epub)
+
+            for failure in (AnalysisError("falha injetada"), KeyboardInterrupt()):
+                with self.subTest(failure=type(failure).__name__):
+                    manifest.unlink(missing_ok=True)
+                    with patch("publication_analysis.inspect_asset", side_effect=failure):
+                        with self.assertRaises(type(failure)):
+                            analyze_scope(epub, root)
+                    self.assertFalse(manifest.exists())
+
+            analyze_scope(epub, root)
+            complete = manifest.read_bytes()
+            source_mtime = manifest.stat().st_mtime_ns + 1_000_000_000
+            os.utime(epub, ns=(source_mtime, source_mtime))
+            with patch(
+                "publication_analysis.inspect_asset",
+                side_effect=AnalysisError("falha após resultado anterior"),
+            ):
+                with self.assertRaises(AnalysisError):
+                    analyze_scope(epub, root)
+            self.assertEqual(manifest.read_bytes(), complete)
+
+    def test_invalid_completion_status_recalculates(self) -> None:
+        with tempfile.TemporaryDirectory(dir=REPOSITORY_ROOT) as temporary:
+            root = Path(temporary) / "publications"
+            _directory, epub, _pdf = _materialize(root, _item())
+            manifest = analyze_scope(epub, root)[0]
             document = json.loads(manifest.read_text(encoding="utf-8"))
             document["execution"]["status"] = "failed"
             write_json_atomic(manifest, document)
@@ -525,17 +580,7 @@ class PublicationIntelligenceTests(unittest.TestCase):
                 "publication_analysis.inspect_asset",
                 wraps=inspect_asset,
             ) as inspector:
-                analyze_scope(epub, root, now=started + timedelta(hours=25))
-            self.assertEqual(inspector.call_count, 1)
-
-            document = json.loads(manifest.read_text(encoding="utf-8"))
-            document["execution"]["completed_at"] = "2026-08-04T12:00:00Z"
-            write_json_atomic(manifest, document)
-            with patch(
-                "publication_analysis.inspect_asset",
-                wraps=inspect_asset,
-            ) as inspector:
-                analyze_scope(epub, root, now=started + timedelta(hours=26))
+                analyze_scope(epub, root)
             self.assertEqual(inspector.call_count, 1)
 
     def test_force_flag_propagates_through_downloader_and_indexer(self) -> None:

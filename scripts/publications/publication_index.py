@@ -864,7 +864,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--analyze",
         action="store_true",
-        help="executa antes o avaliador, respeitando a janela de 24 horas",
+        help="executa antes o avaliador, reutilizando resultados por hash e mtime",
     )
     parser.add_argument(
         "--force-recalculate",

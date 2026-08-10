@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 import hashlib
 import json
 import math
@@ -54,7 +54,6 @@ MAX_XML_BYTES = 16 * 1024 * 1024
 MAX_EPUB_TEXT_BYTES = 128 * 1024 * 1024
 MAX_PDF_TEXT_BYTES = 128 * 1024 * 1024
 MAX_EXPERIMENT_CHUNKS = 250_000
-FRESHNESS_WINDOW = timedelta(hours=24)
 
 
 class AnalysisError(ContractError):
@@ -97,27 +96,25 @@ def _effective_now(now: datetime | None = None) -> datetime:
     return value.astimezone(timezone.utc)
 
 
-def _successful_age(document: dict, now: datetime) -> timedelta | None:
-    """Retorna a idade somente de uma conclusão temporal íntegra."""
+def _completed_execution(document: dict) -> bool:
+    """Aceita somente conclusão íntegra, sem impor expiração temporal."""
 
     execution = document.get("execution")
     if not isinstance(execution, dict) or execution.get("status") != "completed":
-        return None
+        return False
     completed_at = execution.get("completed_at")
     if not isinstance(completed_at, str):
-        return None
+        return False
     try:
         completed = datetime.fromisoformat(completed_at.replace("Z", "+00:00"))
     except ValueError:
-        return None
-    if completed.tzinfo is None:
-        return None
-    age = now - completed.astimezone(timezone.utc)
-    return age if age >= timedelta(0) else None
+        return False
+    return completed.tzinfo is not None
 
 
 def _current_manifest(
     target: Path,
+    asset: Path,
     evidence,
     catalog_hash: str,
     metadata_path: Path | None,
@@ -133,6 +130,7 @@ def _current_manifest(
     asset_state = current.get("asset") if isinstance(current, dict) else None
     generator = current.get("generator") if isinstance(current, dict) else None
     current_catalog = current.get("catalog") if isinstance(current, dict) else None
+    source_current = target.stat().st_mtime_ns >= asset.stat().st_mtime_ns
     metadata_current = (
         metadata_path is None
         or target.stat().st_mtime_ns >= metadata_path.stat().st_mtime_ns
@@ -140,6 +138,7 @@ def _current_manifest(
     if not (
         isinstance(current, dict)
         and current.get("schema_version") == MANIFEST_SCHEMA
+        and _completed_execution(current)
         and isinstance(generator, dict)
         and generator.get("id") == ANALYZER_ID
         and generator.get("version") == ANALYZER_VERSION
@@ -148,6 +147,7 @@ def _current_manifest(
         and isinstance(asset_state, dict)
         and asset_state.get("size") == evidence.size
         and asset_state.get("hashes") == evidence.as_dict()
+        and source_current
         and metadata_current
     ):
         return None
@@ -1455,23 +1455,23 @@ def _analyze_assets(
         raise AnalysisError(f"publicação sem EPUB/PDF/JSON estruturado: {publication}")
     catalog, catalog_hash = _catalog()
     context, metadata_path = _publication_context(publication)
-    current_time = _effective_now(now)
+    current_time = None
     written = []
     recalculated = False
     for asset in assets:
         target = manifest_path_for(asset)
         evidence = hash_file(asset)
-        current = _current_manifest(target, evidence, catalog_hash, metadata_path)
-        age = _successful_age(current, current_time) if current is not None else None
-        fresh = age is not None and age < FRESHNESS_WINDOW
-        if current is not None and not force_recalculate and fresh:
+        current = _current_manifest(target, asset, evidence, catalog_hash, metadata_path)
+        if current is not None and not force_recalculate:
             if reporter is not None:
                 reporter.notice(
                     "Análise reutilizada",
-                    f"{asset.relative_to(root).as_posix()} · menos de 24 h",
+                    f"{asset.relative_to(root).as_posix()} · hash e mtime atuais",
                 )
             written.append(target)
             continue
+        if current_time is None:
+            current_time = _effective_now(now)
         report = inspect_asset(asset, evidence)
         experiments = _run_experiments(report, context)
         persisted_experiments = [
@@ -1552,7 +1552,7 @@ def _analyze_assets(
                 }
             ),
         }
-        _write_json_if_changed(target, document)
+        write_json_atomic(target, document)
         recalculated = True
         if reporter is not None:
             reporter.experiments(asset.relative_to(root), experiments)
@@ -2048,12 +2048,12 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--resume",
         action="store_true",
-        help="mantido por compatibilidade; o reuso válido por 24 h já é automático",
+        help="mantido por compatibilidade; o reuso válido por hash e mtime já é automático",
     )
     parser.add_argument(
         "--force-recalculate",
         action="store_true",
-        help="ignora a conclusão válida das últimas 24 horas e recalcula",
+        help="ignora hash e mtime válidos e recalcula",
     )
     parser.add_argument(
         "--reset",
