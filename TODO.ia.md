@@ -1,22 +1,30 @@
 # RCF — Governança da TO-DO
 
+Esta seção de governança DEVE permanecer no topo do arquivo, NÃO PODE ser removida nem editada e rege todas as TO-DOs posteriores até o marcador explícito de início das TO-DOs operacionais.
+
 ## 1. Estrutura normativa do arquivo
 
 Este arquivo constitui uma lista normativa e operacional de TO-DOs convergentes.
 
 Todo item de topo DEVE:
 
-- iniciar exatamente com `- [ ]`;
+- iniciar exatamente com `- [ ]` ou `- [x]`;
 - começar sem indentação;
 - representar uma frente autônoma subordinada às normas deste RCF.
 
-Todo conteúdo imediatamente posterior a um item de topo, enquanto não houver outro item iniciado exatamente por `- [ ]` sem indentação, DEVE ser interpretado como subordinado ao item de topo imediatamente anterior.
+Todo conteúdo imediatamente posterior a um item de topo, enquanto não houver outro item iniciado sem indentação por `- [ ]` ou `- [x]`, DEVE ser interpretado como subordinado ao item de topo imediatamente anterior.
 
 A forma interna dessa subordinação é livre: PODE conter subtítulos, subitens, regras em estilo RCF, ordens, critérios, listas de afazeres, etapas, notas ou estruturas equivalentes. A semântica hierárquica prevalece sobre a forma.
 
 A formatação do arquivo DEVE preservar indentação visual coerente e inequívoca de todo conteúdo subordinado. Títulos, listas, blocos e demais conteúdos pertencentes a um item de topo DEVEM permanecer visualmente aninhados a ele.
 
-## 2. Regra perene de convergência
+## 2. Status, andamento e conclusão
+
+A marcação `[x]` NÃO significa conclusão: indica apenas que o item foi lido, teve sua FT criada e encontra-se em andamento. Itens NÃO iniciados DEVEM permanecer como `[ ]`.
+
+TO-DOs integralmente concluídas DEVEM ser removidas, mantendo o arquivo limpo.
+
+## 3. Regra perene de convergência
 
 - [ ] Equalizar e executar as TO-DOs como frentes convergentes de um único objetivo
   - Este item rege todas as demais TO-DOs. Cada uma DEVE ser tratada como frente complementar de uma única execução, conciliada com as demais e convergente ao objetivo principal do projeto.
@@ -44,13 +52,15 @@ A formatação do arquivo DEVE preservar indentação visual coerente e inequív
     - dependências e ordem recomendada;
     - impedimentos materiais identificados.
 
-  - Toda alteração que modifique o modo de codificar Markdown DEVE ser documentada no respectivo modo de uso.
+  - Somente quando aplicável ao contexto do repositório, toda alteração que modifique o modo de codificar Markdown DEVE ser documentada no respectivo modo de uso.
 
-  - TO-DOs integralmente concluídas DEVEM ser removidas, mantendo o arquivo limpo.
+  - Este item e toda a seção `# RCF — Governança da TO-DO` são perenes: NÃO PODEM ser marcados como concluídos, removidos ou alterados. Sua contabilização somente é necessária enquanto existir ao menos uma TO-DO por eles regida.
 
-  - A marcação `[x]` NÃO significa conclusão: indica apenas que o item foi lido, teve sua FT criada e encontra-se em andamento. Itens NÃO iniciados DEVEM permanecer como `[ ]`.
+---
 
-  - Este item e "# RCF — Governança da TO-DO" é perene: NÃO PODE ser marcado como concluído, removido ou alterado. Sua contabilização somente é necessária enquanto existir ao menos uma TO-DO por ele regida.
+# TO-DOs
+
+Este marcador encerra a seção de governança e inicia exclusivamente as TO-DOs operacionais. Todo item de topo abaixo dele está sujeito integralmente ao RCF acima.
 
 - [x] Corrigir o posicionamento público e reorganizar a documentação do **egwSearch**.
   - Ler integralmente, antes de qualquer edição, o `AGENTS.md` — na extensão efetivamente aplicável —, o RCF vigente, o `README.md`, a página pública e todos os respectivos fontes, processos de build e assets responsáveis pelo conteúdo publicado.
