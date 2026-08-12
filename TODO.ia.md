@@ -62,6 +62,8 @@ TO-DOs integralmente concluídas DEVEM ser removidas, mantendo o arquivo limpo.
 
 Este marcador encerra a seção de governança e inicia exclusivamente as TO-DOs operacionais. Todo item de topo abaixo dele está sujeito integralmente ao RCF acima.
 
+---
+
 - [x] Corrigir o posicionamento público e reorganizar a documentação do **egwSearch**.
   - Ler integralmente, antes de qualquer edição, o `AGENTS.md` — na extensão efetivamente aplicável —, o RCF vigente, o `README.md`, a página pública e todos os respectivos fontes, processos de build e assets responsáveis pelo conteúdo publicado.
 
