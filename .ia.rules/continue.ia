@@ -1,14 +1,14 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-03T00:50:19-03:00`.
+Atualizado_em: `2026-08-25T22:30:43-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: FT-019 concluida e validada localmente.
-Fonte_local: `.ia.rules/state/TODO.ia.md`.
-Fonte_original: solicitação humana capturada em `.ia.rules/state/requests/FT-014/source.md`.
+Escopo_atual: Equalização concluída; FT-029 normativa em andamento e FT-030 técnica bloqueada até autorização expressa.
+Fonte_local: `.ia.rules/state/TODO.ia.md` e `TODO.ia.md:67`.
+Fonte_original: solicitação humana atual e fonte local versionada `TODO.ia.md`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
 Fonte_atual_sha256: `nao_aplicavel; fonte local Git integral`.
-Contexto_mestre: `.ia.rules/state/contexts/FT-014/master.md`.
+Contexto_mestre: `.ia.rules/state/contexts/FT-029/master.md`.
 Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 
 ## FT-001 - Inicializacao normativa do projeto
@@ -37,7 +37,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - nao_escopo: duplicar componentes concluidos e validados na FT-004.
 - decomposicao_futura: indices e metadados; recuperacao profunda; citacoes e localizacao; traducao; composicao argumentativa; interface dos modos; sessao e rastreabilidade; avaliacao, desempenho e degradacao.
 - aceite: conformidade integral e verificavel com o RCF, preservacao do Modo Pesquisa e operacao local/CLI sem regressao.
-- proximo_ponto: aguardar conclusao da FT-004 e autorizacao especifica.
+- proximo_ponto: dependências anteriores concluídas; aguardar autorização humana específica depois da FT-029, sem absorver a FT-030.
 
 ## FT-003 - Normatizacao integrada das frentes do TODO
 
@@ -257,14 +257,14 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/requests/FT-009/source.md`
 - escopo: técnico
 - prioridade: alta
-- status: normativa concluída; código pendente de autorização
+- status: concluída pela implementação e validação da FT-011
 - objetivo: normatizar o bootstrap idempotente de dependências declaradas de runtimes suportados, acionado por `npm install` e pelo fluxo de atualização correspondente, incluindo os requisitos do coletor Python.
 - dependências: FT-008 concluída; `scripts/publications/requirements.txt` existente.
 - não_escopo: executar o coletor, navegar, realizar coleta remota, instalar ferramentas não declaradas ou alterar o núcleo gerenciado.
 - contexto_mestre: `.ia.rules/state/contexts/FT-009/master.md`
 - autorização: prompt humano de `2026-07-27` solicitou que `npm install` e o equivalente a update instalem dependências de outras linguagens, quando necessárias, por subscripts se adequado.
-- fase_normativa: concluída; RCF global/especializado validados e duas sentenças implementáveis aguardam commit causal de código.
-- próximo_ponto: interromper e aguardar autorização humana explícita para implementar o bootstrap, os hooks npm, o invocador do coletor e os testes.
+- fase_normativa: concluída; bootstrap, hooks npm, invocador do coletor e testes foram materializados e validados pela FT-011.
+- próximo_ponto: nenhuma pendência na FT-009.
 
 ## FT-010 - Normatização conclusiva do downloader e estado de runtime
 
@@ -273,7 +273,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - origem: `.ia.rules/state/TODO.ia.md:1416`, `.ia.rules/state/TODO.ia.md:1577` e `.ia.rules/state/TODO.ia.md:1763`
 - escopo: Técnico
 - prioridade: alta
-- status: reaberta para aprimoramento
+- status: concluída; evolução técnica materializada pela FT-011
 - fase_global: 1 de 2 desta evolução da cadeia pública
 - objetivo: consolidar no RCF o handoff humano sem evasão, a raiz única de runtime e a unidade transacional completa por publicação, conciliando FT-004, FT-008 e FT-009.
 - dependencias: FT-003, FT-006, FT-007 e FT-008 concluídas; merge `8998fe1` concluído.
@@ -286,7 +286,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - aceite: origem integral absorvida no RCF global e especializado, sem contradição, duplicação ou antecipação técnica; validação normativa e commit exclusivo.
 - validacao: `npm run agent:rcf` aprovado com 117 entradas e 116 linhas materiais no RCF especializado; `git diff --check` sem erro após normalização.
 - decisoes_consolidadas: handoff humano desacoplado sem evasão; `runtime_state_root` único; transação `completa_e_pareada`; efeito Git opt-in por allowlist.
-- proximo_ponto: FT-011 autorizada e iniciada.
+- proximo_ponto: nenhuma pendência na FT-010.
 
 ## FT-011 - Conclusão funcional do downloader
 
@@ -786,3 +786,53 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   sincronização pendente do presente fechamento.
 - proximo_ponto: nenhuma pendência da FT-028; manter o downloader concorrente
   como proprietário exclusivo de suas publicações e saídas operacionais.
+
+## FT-029 - Equalização e norma de no-op material
+
+- tipo: `implementação normativa`.
+- criado_em: `2026-08-25T22:30:43-03:00`.
+- origem: `TODO.ia.md:67`, equalizada com `.ia.rules/state/TODO.ia.md` e as
+  FTs 020, 024, 027 e 028.
+- status: em andamento; equalização concluída e normatização iniciada.
+- prioridade: alta.
+- objetivo: centralizar o contrato de idempotência física e causal da cadeia de
+  aquisição, análise, chunking, indexação e commit, sem enfraquecer a fórmula
+  incremental hash+`mtime` nem duplicar abstrações existentes.
+- dependencias: FTs 020, 024, 027 e 028 concluídas; fontes locais lidas
+  integralmente; estado real de writers, finalização e propagação auditado.
+- decisões:
+  - estado comprovadamente reutilizável é no-op físico e não reescreve saída;
+  - invalidação por `force`, ausência, hash divergente ou fonte posterior exige
+    recálculo; atualização estritamente necessária da prova temporal não é
+    mudança material Git e não autoriza commit;
+  - persistência compara bytes candidatos antes de escrever, salvo renovação
+    causal indispensável da prova após recálculo obrigatório;
+  - `changed/no-op` deve atravessar chamadas diretas e compostas até o gate Git;
+  - commit exige diff versionado real dentro da allowlist da unidade.
+- não_escopo: modificar Python/TypeScript/JavaScript, executar downloader,
+  recalcular ativos, reindexar publicações ou incorporar saídas concorrentes.
+- contexto_mestre: `.ia.rules/state/contexts/FT-029/master.md`.
+- aceite: RCF principal, RCF de publicações e RCF operacional coerentes,
+  rastreáveis e sem a regra obsoleta de expiração por 24 horas.
+- proximo_ponto: concluir a norma, validar e interromper antes da FT-030.
+
+## FT-030 - No-op determinístico da cadeia de publicações
+
+- tipo: `implementação de código`.
+- criado_em: `2026-08-25T22:30:44-03:00`.
+- origem: `TODO.ia.md:67`.
+- status: pendente de autorização humana expressa.
+- prioridade: alta.
+- objetivo: reutilizar e completar os mecanismos comuns de comparação,
+  persistência e finalização para que downloader, analisador de chunks,
+  indexador e orquestradores propaguem `changed/no-op`, preservem bytes/`mtime`
+  quando atuais e nunca criem commit sem diff material.
+- dependencias: FT-029 concluída e nova autorização humana expressa.
+- não_escopo: alterar a fórmula incremental da FT-027/028, mascarar diff por
+  restore/reset/limpeza destrutiva ou absorver publicação/saída concorrente.
+- contexto_mestre: `.ia.rules/state/contexts/FT-029/master.md` e subcontexto
+  `.ia.rules/state/contexts/FT-029/implementacao.md`.
+- aceite: cenários de no-op e alteração real da fonte integral, chamadas
+  diretas/compostas, determinismo byte a byte, preservação temporal aplicável,
+  diff/commit e regressão dos formatos existentes aprovados.
+- proximo_ponto: aguardar conclusão da FT-029 e autorização expressa.

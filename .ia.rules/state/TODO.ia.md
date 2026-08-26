@@ -1413,6 +1413,15 @@
     - métricas de precisão, fidelidade, cobertura, latência e custo disponíveis;
     - limitações, pendências e riscos remanescentes.
 
+- [x] Impedir escrita e commits espúrios quando a cadeia de publicações não produzir alteração material
+  - Fonte integral preservada em `TODO.ia.md:67`, lida e equalizada com as
+    frentes canônicas deste arquivo e com as FTs 020, 024, 027 e 028.
+  - A normatização pertence à FT-029; a implementação, os testes e a validação
+    funcional pertencem à FT-030 e aguardam autorização humana expressa.
+  - Reuso comprovado DEVE ser no-op físico; recálculo obrigatório por `force`,
+    ausência, hash divergente ou fonte posterior permanece distinto de mudança
+    material e somente PODE produzir commit quando houver diff versionado real.
+
 - [x] Corrigir o tratamento de desafios anti-bot com intervenção humana real
 
   ## Objetivo e limites
