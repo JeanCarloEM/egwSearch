@@ -564,6 +564,14 @@ Na primeira atualização incremental, índice ausente ou incompatível DEVE ser
 
 A escrita DEVE ser atômica e determinística. Identidade, configuração e fingerprint das entradas DEVEM integrar a geração; relógio, ordem de varredura, cwd e estado de rede NÃO PODEM alterar bytes para o mesmo corpus. [62596f1]
 
+Downloader, analisador, calculador de chunks, indexador e seus orquestradores DEVEM reutilizar uma capacidade comum de persistência que serialize deterministicamente, compare o candidato com os bytes existentes antes de escrever e devolva estado explícito de mudança material; candidato idêntico DEVE preservar o arquivo e seu `mtime`, sem replace atômico, normalização de EOL/BOM, alteração de mode ou atualização de metadado volátil. [PENDENTE-CODIGO]
+
+Cada chamada direta ou composta DEVE propagar, sem inferência pela mera execução, ao menos `reused`, `proof_refreshed` e `changed`: `reused` não toca o filesystem; `proof_refreshed` limita-se à renovação causal indispensável após invalidação e recálculo obrigatórios; somente `changed` representa bytes ou estado versionado materialmente divergentes, e índice, aprendizado, manifesto, checkpoint e derivado global somente DEVEM ser persistidos quando seu próprio candidato exigir o efeito correspondente. [PENDENTE-CODIGO]
+
+A finalização Git DEVE calcular a allowlist causal e o diff versionado real depois das validações; execução bem-sucedida, publicação visitada, arquivo regravado, alteração isolada de `mtime` ou estado interno de conclusão NÃO autorizam staging, `PUBLICATION_COMMITTED` ou commit; ausência de diff material DEVE concluir como no-op sem commit, e alteração real DEVE incluir somente os paths efetivamente divergentes da unidade. [PENDENTE-CODIGO]
+
+Logs DEVEM distinguir reutilização, renovação de prova sem mudança material, mudança material, commit criado e no-op sem commit; falha ou interrupção NÃO PODEM publicar candidato parcial, promover `changed` nem fazer estado incompleto parecer válido. [PENDENTE-CODIGO]
+
 ### 43.2 Manifesto de análise de chunking
 
 Cada EPUB/PDF incorporado ou gerado DEVE possuir manifesto derivado próprio, identificado pelo path e hashes integrais do ativo, contendo somente observações, experimentos, métricas, provas e decisões específicas daquele recurso; descrição, benefício, risco, parâmetro genérico, justificativa didática e hipótese ainda não executada pertencem ao catálogo normativo global e NÃO DEVEM ser repetidos no manifesto. [62596f1]
@@ -584,9 +592,11 @@ O analisador DEVE produzir fingerprint de formato/estrutura e atualizar uma base
 
 Invocação DEVE aceitar exatamente um escopo entre ativo, publicação, diretório/subárvore e corpus integral. O resultado por ativo DEVE ser idempotente, versionado, explicável e invalidado quando bytes, parser, algoritmo, configuração ou sinais causais mudarem. [62596f1]
 
-Antes de executar experimentos, toda invocação direta ou indireta do avaliador DEVE validar uma prova persistida de conclusão bem-sucedida cuja idade seja inferior a 24 horas e cuja identidade do ativo, hashes, versão do analisador, catálogo/configuração causal e contexto editorial permaneçam íntegros; prova válida DEVE produzir `skipped` sem reescrever manifesto, aprendizado, índice, checkpoint ou timestamp. [f0c7638]
+Antes de parsing, experimento ou cálculo custoso, toda invocação direta ou indireta do avaliador DEVE decidir por arquivo-fonte segundo `recalcular = force || !resultado_existe || hash_atual != hash_registrado || mtime_fonte > mtime_resultado`, preservadas as validações de schema, ativo, tamanho, analisador, catálogo/configuração causal e contexto editorial; resultado válido igual ou posterior à fonte e com hash idêntico DEVE produzir `skipped` sem reescrever manifesto, aprendizado, índice, checkpoint ou timestamp. [PENDENTE-CODIGO]
 
-Somente `--force-recalculate` PODE ignorar a janela válida; downloader, indexador quando invocar análise, wrappers TypeScript e comandos npm DEVEM propagar essa opção sem perda ou mudança semântica. Prova ausente, falha/incompleta, instante futuro/inválido, idade igual ou superior a 24 horas ou mudança material DEVE executar novamente os experimentos. [f0c7638]
+`--force-recalculate` DEVE prevalecer e ser propagado sem perda pelo downloader, indexador, wrappers TypeScript e comandos npm; recálculo concluído DEVE atualizar atomicamente hash, metadados e `mtime` da prova, ainda que a serialização final coincida quando isso for indispensável para satisfazer a invalidação temporal; esse refresh NÃO constitui mudança material Git, e falha ou interrupção NÃO DEVE substituir a última prova íntegra. [PENDENTE-CODIGO]
+
+Testes sem rede DEVEM cobrir estado integralmente atual, hash/`mtime` atuais, fonte ausente de resultado, conteúdo/hash alterado, fonte posterior, resultado posterior com hash idêntico, `force` direto e propagado, falha/interrupção, apenas uma publicação alterada, índice/chunks iguais e divergentes, múltiplas publicações sem mudança, toque temporal não semântico, serialização repetida e worktree limpa; no-op DEVE provar bytes e `mtime` preservados quando aplicável, diff vazio e nenhum commit, e mudança real DEVE provar persistência e commit somente dos paths efetivamente alterados. [PENDENTE-CODIGO]
 
 O downloader DEVE executar sincronicamente a análise de todos os EPUB/PDF da unidade e a atualização compartilhada do índice depois de validar/promover os ativos e antes de confirmar o checkpoint; falha preserva a publicação material, impede confirmação e permite retomada estritamente local sem nova requisição à origem. [62596f1]
 

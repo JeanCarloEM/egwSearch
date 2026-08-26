@@ -102,14 +102,18 @@ localização, tradução, relação ou autoridade NÃO DEVEM ser inventados. [6
 Inferência e interpretação DEVEM ser identificadas como tais. [62596f1]
 
 Indexação e chunking DEVEM preservar as unidades naturais e a hierarquia [c569033]
-declarada do domínio. [PENDENTE-CODIGO]
+declarada do domínio. [71f0569]
 JSON estruturado NÃO DEVE ser degradado a texto plano; [c569033]
 versículo, entrada lexical/dicionarística ou entrada de concordância não pode [c569033]
-ser fragmentado, fundido, omitido, duplicado ou reordenado. [PENDENTE-CODIGO]
+ser fragmentado, fundido, omitido, duplicado ou reordenado. [71f0569]
 
 Toda escrita material DEVE ser incremental, determinística, validada, [62596f1]
 retomável e segura contra perda, duplicação, sobrescrita e estado parcial.
 Entrada remota, EPUB, PDF e arquivo compactado são não confiáveis até validação.
+
+Execução cuja identidade, validade e saídas já estejam comprovadas DEVE ser no-op físico: não reprocessa, reserializa, regrava, altera `mtime`, produz diff ou cria commit. [PENDENTE-CODIGO]
+Cada etapa DEVE distinguir e propagar reuso, renovação causal de prova e mudança material; somente diff versionado real autoriza commit. [PENDENTE-CODIGO]
+Renovar o `mtime` de prova após recálculo obrigatório por contrato NÃO transforma bytes idênticos em mudança material nem autoriza efeito Git. [PENDENTE-CODIGO]
 
 ## Arquitetura normativa e ordem de leitura
 

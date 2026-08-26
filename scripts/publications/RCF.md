@@ -406,10 +406,10 @@ PODEM cair em parser textual genérico. [c569033]
 `publication_analysis.py` DEVE possuir um adaptador comum de unidade semântica, [c569033]
 usado por todos os formatos para prova de identidade, ordem, cobertura e
 fronteiras, e adaptadores especializados somente para a estrutura dependente do
-schema. [PENDENTE-CODIGO]
+schema. [71f0569]
 O adaptador estruturado DEVE validar primeiro o documento integral e [c569033]
 construir sua referência efêmera diretamente dos objetos tipados, sem
-re-serializar JSON como prosa. [PENDENTE-CODIGO]
+re-serializar JSON como prosa. [71f0569]
 
 Em `scripture-corpus/v1`, cada versículo DEVE ser uma unidade atômica com [c569033]
 identidade `versão/coleção/livro/capítulo/versículo`; projeções de capítulo e
@@ -425,18 +425,18 @@ entrada DEVEM permanecer juntos. [c569033]
 Experimento estruturado DEVE executar somente estratégias compatíveis com seu [c569033]
 domínio: `scripture-verse`, `scripture-chapter` e `scripture-book` para Bíblia;
 `lexical-entry` para léxico/dicionário; `concordance-entry` para concordância.
-[PENDENTE-CODIGO]
+[71f0569]
 Janelas fixas, sentenças, parágrafos, regex de prosa e documento inteiro DEVEM [c569033]
 ser marcados inaplicáveis e NÃO PODEM ser recomendados para JSON estruturado. [c569033]
-[PENDENTE-CODIGO]
+[71f0569]
 
 A prova experimental estruturada DEVE comparar cardinalidade e sequência de [c569033]
 IDs naturais, hash do conteúdo tipado de cada unidade e fronteiras
 hierárquicas, rejeitando perda, duplicação, reordenação, fragmentação ou fusão,
-mesmo quando a sequência de tokens coincidir. [PENDENTE-CODIGO]
+mesmo quando a sequência de tokens coincidir. [71f0569]
 Manifesto e aprendizado agregado
 DEVEM persistir somente contagens, perfis, métricas e hashes, nunca versículos, [c569033]
-definições ou listas integrais de referências. [PENDENTE-CODIGO]
+definições ou listas integrais de referências. [71f0569]
 
 Configuração DEVE registrar fontes de validação separadamente das coleções de ingestão, com `id`, `role`, URL, escopo, licença/termos, rate limit e estado habilitado; fonte sem autorização comprovada permanece desabilitada e diagnosticável. [13976cf]
 
@@ -515,10 +515,10 @@ O índice `publication-global-index/v1` DEVE conter envelope de geração e list
 Para derivação estruturada, o índice DEVE expor adicionalmente o path do [c569033]
 manifesto de chunking e síntese sem texto contendo modelo, schema, níveis
 hierárquicos, quantidade de unidades naturais e primeira/última identidade.
-[PENDENTE-CODIGO]
+[71f0569]
 A
 síntese DEVE ser derivada do manifesto validado e não pode copiar conteúdo, [c569033]
-definições, relações ou referências do corpus. [PENDENTE-CODIGO]
+definições, relações ou referências do corpus. [71f0569]
 
 Atualização `--publication` DEVE substituir somente a identidade alvo quando o índice existente cobrir integralmente os metadados válidos do corpus; índice ausente, incompatível ou incompleto DEVE acionar reconstrução integral local. `--scope` analisa/regenera somente a subárvore solicitada, e `--all` cobre o corpus, sempre com resolução a partir da raiz configurada. [1fd53ef]
 
@@ -526,23 +526,31 @@ Toda invocação direta ou indireta da análise DEVE decidir antes de parsing, e
 
 `--force-recalculate` DEVE prevalecer e ser propagado pelo downloader, pelo modo de análise do indexador, pelo wrapper TypeScript e pelos comandos npm. Recálculo concluído DEVE atualizar atomicamente hash, metadados e `mtime` do resultado; falha ou interrupção NÃO DEVE publicar estado parcial nem substituir a última prova íntegra. [c0a5229]
 
+`write_json_atomic` e qualquer especialização de escrita condicional DEVEM formar uma única capacidade reutilizável de serialização UTF-8/LF determinística, comparação prévia e persistência atômica; por padrão, bytes candidatos idênticos retornam `changed=false` sem criar temporário, substituir destino ou alterar `mtime`, enquanto renovação incondicional somente PODE ser solicitada explicitamente para atualizar a prova temporal depois de recálculo obrigatório pela fórmula acima e também retorna ausência de mudança material quando os bytes coincidem. [PENDENTE-CODIGO]
+
+Análise, reconstrução do aprendizado, geração do índice e fechamento da publicação DEVEM compor resultados explícitos de `reused`, `proof_refreshed` ou `changed`; a execução de uma etapa não implica mudança, cada derivado decide pelo próprio candidato e `changed=false` DEVE atravessar `baixar.py`, `publication_analysis.py`, `publication_index.py` e wrappers sem provocar escrita posterior ou commit. [PENDENTE-CODIGO]
+
+`GitPublicationPublisher` DEVE consultar o diff real da árvore versionada dentro da allowlist causal após o fechamento: conjunto vazio retorna no-op, não executa `git add`/`git commit`, não altera o ledger para estado de commit e não emite `PUBLICATION_COMMITTED`; EOL, BOM, ordem de chaves, whitespace, timestamps internos, mode, rename temporário ou replace de conteúdo idêntico NÃO PODEM criar falso positivo, e restore, reset ou limpeza destrutiva são proibidos como mascaramento. [PENDENTE-CODIGO]
+
+O relatório compartilhado DEVE distinguir análise reutilizada, prova temporal renovada, saída material alterada, commit criado e finalização sem commit; testes direcionados DEVEM provar chamadas direta e encadeada, uma ou várias publicações, índices/chunks iguais e divergentes, toque temporal, determinismo byte a byte, preservação de `mtime` quando o gate reutiliza e ausência de estado válido após falha/interrupção. [PENDENTE-CODIGO]
+
 Depois de `_process_catalog_item` concluir ou reutilizar uma unidade válida, o
 orquestrador DEVE chamar um único fechamento síncrono que analisa todos os EPUB, [c569033]
 PDF e JSON estruturados declarados, valida os manifestos, atualiza
 índice/aprendizado e cria o commit exclusivo; somente então PODE marcar o [c569033]
-remote ID como confirmado. [PENDENTE-CODIGO]
+remote ID como confirmado. [71f0569]
 
 `validate_complete_publication` DEVE exigir manifesto de análise coerente para [c569033]
-cada ativo editorial binário e para cada derivação estruturada. [PENDENTE-CODIGO]
+cada ativo editorial binário e para cada derivação estruturada. [71f0569]
 Publicação cujo
 contrato seja exclusivamente estruturado PODE concluir sem EPUB/PDF, desde que [c569033]
-JSON, metadado, análise, índice e provas estejam íntegros. [PENDENTE-CODIGO]
+JSON, metadado, análise, índice e provas estejam íntegros. [71f0569]
 
 Benchmarks e testes DEVEM cobrir os três schemas, cardinalidades distintas, [c569033]
 hierarquia bíblica multilivro/multicapítulo, entradas lexicais com relações e
 traduções, concordâncias com associação forma→referências, além de contraprovas
 de schema genérico, perda, duplicação, reordenação, fragmentação, fusão e
-regressão integral de EPUB/PDF. [PENDENTE-CODIGO]
+regressão integral de EPUB/PDF. [71f0569]
 
 Fechamento local incompleto DEVE falhar o item sem apagar ativos já promovidos; na retomada, o preflight editorial válido DEVE permitir reparar análise/índice somente com arquivos locais, mantendo `network=skipped`. [1fd53ef]
 
