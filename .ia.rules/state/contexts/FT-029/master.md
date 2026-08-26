@@ -46,3 +46,11 @@ reconciliado nesta equalização.
 
 Nenhuma publicação, índice, manifesto operacional, aprendizado, cache, diário,
 log ou saída concorrente pertence aos commits desta fase.
+
+## Resultado normativo
+
+- equalização e FT registradas em `df5bd44`;
+- RCF principal, subordinado e operacional atualizados em `26f65e1`;
+- 14 cláusulas implementáveis vinculadas à FT-030;
+- `agent:rcf` aprovado com 1.079 entradas e 936 cláusulas materiais;
+- FT-029 concluída; FT-030 aguarda autorização humana expressa.

@@ -1,9 +1,9 @@
 # Estado operacional - egwSearch
 
 Formato: `continue.ia/v1`.
-Atualizado_em: `2026-08-25T22:30:43-03:00`.
+Atualizado_em: `2026-08-25T22:47:00-03:00`.
 Branch_operacional: `dev`.
-Escopo_atual: Equalização concluída; FT-029 normativa em andamento e FT-030 técnica bloqueada até autorização expressa.
+Escopo_atual: FT-029 concluída; FT-030 técnica bloqueada até autorização expressa.
 Fonte_local: `.ia.rules/state/TODO.ia.md` e `TODO.ia.md:67`.
 Fonte_original: solicitação humana atual e fonte local versionada `TODO.ia.md`.
 Fonte_original_sha256: `nao_aplicavel; fonte local Git integral`.
@@ -793,7 +793,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - criado_em: `2026-08-25T22:30:43-03:00`.
 - origem: `TODO.ia.md:67`, equalizada com `.ia.rules/state/TODO.ia.md` e as
   FTs 020, 024, 027 e 028.
-- status: em andamento; equalização concluída e normatização iniciada.
+- status: concluída e validada.
 - prioridade: alta.
 - objetivo: centralizar o contrato de idempotência física e causal da cadeia de
   aquisição, análise, chunking, indexação e commit, sem enfraquecer a fórmula
@@ -812,9 +812,16 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
 - não_escopo: modificar Python/TypeScript/JavaScript, executar downloader,
   recalcular ativos, reindexar publicações ou incorporar saídas concorrentes.
 - contexto_mestre: `.ia.rules/state/contexts/FT-029/master.md`.
-- aceite: RCF principal, RCF de publicações e RCF operacional coerentes,
-  rastreáveis e sem a regra obsoleta de expiração por 24 horas.
-- proximo_ponto: concluir a norma, validar e interromper antes da FT-030.
+- resultado: contrato de no-op físico, renovação causal de prova, propagação
+  `reused/proof_refreshed/changed`, determinismo e gate Git centralizados nos
+  três níveis de RCF; regra obsoleta de expiração por 24 horas removida.
+- rastreabilidade: 14 cláusulas novas vinculadas à FT-030; marcadores estruturados
+  da FT-025 reconciliados com o commit material já registrado.
+- validação: `agent:rcf` aprovado com 1.079 entradas e 936 cláusulas materiais;
+  `git diff --check` aprovado; estado global conhecido `RCF_DEGRADED` preservado.
+- commits: estado `df5bd44` e norma `26f65e1`.
+- aceite: concluído.
+- proximo_ponto: interromper e solicitar autorização humana expressa para a FT-030.
 
 ## FT-030 - No-op determinístico da cadeia de publicações
 
@@ -827,7 +834,7 @@ Estado_de_recusas: acervo local ausente; triagem concluida sem candidato.
   persistência e finalização para que downloader, analisador de chunks,
   indexador e orquestradores propaguem `changed/no-op`, preservem bytes/`mtime`
   quando atuais e nunca criem commit sem diff material.
-- dependencias: FT-029 concluída e nova autorização humana expressa.
+- dependencias: FT-029 concluída; falta nova autorização humana expressa.
 - não_escopo: alterar a fórmula incremental da FT-027/028, mascarar diff por
   restore/reset/limpeza destrutiva ou absorver publicação/saída concorrente.
 - contexto_mestre: `.ia.rules/state/contexts/FT-029/master.md` e subcontexto
